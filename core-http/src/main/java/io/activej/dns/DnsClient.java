@@ -62,13 +62,12 @@ public final class DnsClient extends AbstractNioReactive
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;
-	public static final InetSocketAddress GOOGLE_PUBLIC_DNS = new InetSocketAddress("8.8.8.8", DNS_SERVER_PORT);
-	public static final InetSocketAddress LOCAL_DNS = new InetSocketAddress("192.168.0.1", DNS_SERVER_PORT);
 
 	private final Map<DnsTransaction, SettablePromise<DnsResponse>> transactions = new HashMap<>();
 
+	private final InetSocketAddress dnsServerAddress;
+
 	private DatagramSocketSettings datagramSocketSettings = DatagramSocketSettings.create();
-	private InetSocketAddress dnsServerAddress = GOOGLE_PUBLIC_DNS;
 	private Duration timeout = DEFAULT_TIMEOUT;
 
 	private @Nullable IUdpSocket socket;
@@ -76,16 +75,26 @@ public final class DnsClient extends AbstractNioReactive
 	private @Nullable UdpSocket.Inspector socketInspector;
 	private @Nullable Inspector inspector;
 
-	private DnsClient(NioReactor reactor) {
+	private DnsClient(NioReactor reactor, InetSocketAddress dnsServerAddress) {
 		super(reactor);
+		this.dnsServerAddress = dnsServerAddress;
 	}
 
-	public static DnsClient create(NioReactor reactor) {
-		return builder(reactor).build();
+	public static DnsClient create(NioReactor reactor, InetSocketAddress dnsServerAddress) {
+		return builder(reactor, dnsServerAddress).build();
 	}
 
-	public static Builder builder(NioReactor reactor) {
-		return new DnsClient(reactor).new Builder();
+	public static DnsClient create(NioReactor reactor, InetAddress dnsServerAddress) {
+		return builder(reactor, dnsServerAddress).build();
+	}
+
+	public static Builder builder(NioReactor reactor, InetSocketAddress dnsServerAddress) {
+		return new DnsClient(reactor, dnsServerAddress).new Builder();
+	}
+
+	public static Builder builder(NioReactor reactor, InetAddress dnsServerAddress) {
+		InetSocketAddress address = new InetSocketAddress(dnsServerAddress, DNS_SERVER_PORT);
+		return new DnsClient(reactor, address).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, DnsClient> {
@@ -100,18 +109,6 @@ public final class DnsClient extends AbstractNioReactive
 		public Builder withTimeout(Duration timeout) {
 			checkNotBuilt(this);
 			DnsClient.this.timeout = timeout;
-			return this;
-		}
-
-		public Builder withDnsServerAddress(InetSocketAddress address) {
-			checkNotBuilt(this);
-			DnsClient.this.dnsServerAddress = address;
-			return this;
-		}
-
-		public Builder withDnsServerAddress(InetAddress address) {
-			checkNotBuilt(this);
-			DnsClient.this.dnsServerAddress = new InetSocketAddress(address, DNS_SERVER_PORT);
 			return this;
 		}
 

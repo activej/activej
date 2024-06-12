@@ -7,6 +7,7 @@ import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.dns.DnsClient;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.http.HttpClient;
@@ -18,6 +19,7 @@ import io.activej.inject.module.Module;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -36,6 +38,7 @@ import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.crdt.json.JsonCodecs.ofCrdtData;
 import static io.activej.http.HttpMethod.PUT;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.json.JsonCodecs.ofInteger;
 import static io.activej.json.JsonCodecs.ofString;
 import static io.activej.json.JsonUtils.toJsonBytes;
@@ -163,7 +166,9 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithHTTP() {
-		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		NioReactor reactor = Reactor.getCurrentReactor();
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		IHttpClient client = HttpClient.create(reactor, dnsClient);
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
@@ -174,7 +179,7 @@ public final class CrdtClusterTest {
 								ofCrdtData(ofString(), ofInteger()),
 								new CrdtData<>(
 									"value_" + i,
-									Reactor.getCurrentReactor().currentTimeMillis(),
+									reactor.currentTimeMillis(),
 									i
 								)))
 							.build())

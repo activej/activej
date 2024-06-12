@@ -25,7 +25,6 @@ import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.dns.DnsClient;
 import io.activej.dns.IDnsClient;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
@@ -95,7 +94,8 @@ public final class HttpClient extends AbstractNioReactive
 	public static final HttpHeaderValue WEBSOCKET_HEADER = HttpHeaderValue.ofBytes(encodeAscii("Websocket"));
 	public static final HttpHeaderValue WEBSOCKET_VERSION_HEADER = HttpHeaderValue.ofBytes(WEB_SOCKET_VERSION);
 
-	private IDnsClient dnsClient;
+	private final IDnsClient dnsClient;
+
 	private SocketSettings socketSettings = SocketSettings.defaultInstance();
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
@@ -311,13 +311,12 @@ public final class HttpClient extends AbstractNioReactive
 		this.dnsClient = dnsClient;
 	}
 
-	public static HttpClient create(NioReactor reactor) {
-		return builder(reactor).build();
+	public static HttpClient create(NioReactor reactor, IDnsClient dnsClient) {
+		return builder(reactor, dnsClient).build();
 	}
 
-	public static Builder builder(NioReactor reactor) {
-		IDnsClient defaultDnsClient = DnsClient.create(reactor);
-		return new HttpClient(reactor, defaultDnsClient).new Builder();
+	public static Builder builder(NioReactor reactor, IDnsClient dnsClient) {
+		return new HttpClient(reactor, dnsClient).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, HttpClient> {
@@ -326,12 +325,6 @@ public final class HttpClient extends AbstractNioReactive
 		public Builder withSocketSettings(SocketSettings socketSettings) {
 			checkNotBuilt(this);
 			HttpClient.this.socketSettings = socketSettings;
-			return this;
-		}
-
-		public Builder withDnsClient(IDnsClient dnsClient) {
-			checkNotBuilt(this);
-			HttpClient.this.dnsClient = dnsClient;
 			return this;
 		}
 

@@ -10,6 +10,7 @@ import io.activej.common.ref.Ref;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSuppliers;
+import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpClient.JmxInspector;
 import io.activej.http.HttpMessage.Builder;
@@ -64,6 +65,7 @@ public final class AbstractHttpConnectionTest {
 	private static final byte[] HELLO_WORLD = encodeAscii("Hello, World!");
 	private static final Random RANDOM = ThreadLocalRandom.current();
 
+	private DnsClient dnsClient;
 	private HttpClient client;
 
 	private int port;
@@ -73,7 +75,9 @@ public final class AbstractHttpConnectionTest {
 	public void setUp() {
 		port = getFreePort();
 		url = "http://127.0.0.1:" + port;
-		client = HttpClient.builder(Reactor.getCurrentReactor())
+		NioReactor reactor = Reactor.getCurrentReactor();
+		dnsClient = DnsClient.create(reactor, HttpUtils.inetAddress("8.8.8.8"));
+		client = HttpClient.builder(reactor, dnsClient)
 			.withInspector(new JmxInspector())
 			.build();
 	}
@@ -134,7 +138,7 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testClientWithMaxKeepAliveRequests() throws Exception {
-		client = HttpClient.builder(Reactor.getCurrentReactor())
+		client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withInspector(new JmxInspector())
 			.withKeepAliveTimeout(Duration.ofSeconds(1))
 			.withMaxKeepAliveRequests(5)
@@ -151,7 +155,7 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testServerWithMaxKeepAliveRequests() throws Exception {
-		client = HttpClient.builder(Reactor.getCurrentReactor())
+		client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(1))
 			.build();
 
@@ -167,7 +171,7 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testServerWithNoKeepAlive() throws Exception {
-		client = HttpClient.builder(Reactor.getCurrentReactor())
+		client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(30))
 			.build();
 
@@ -200,7 +204,7 @@ public final class AbstractHttpConnectionTest {
 			.withImplReadBufferSize(MemSize.of(1))
 			.build();
 
-		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withSocketSettings(socketSettings)
 			.build();
 
@@ -217,7 +221,7 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	@Ignore("Takes a long time")
 	public void testContentLengthPastMaxInt() throws IOException {
-		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor(), dnsClient);
 
 		Checksum inChecksum = new CRC32();
 		Checksum outChecksum = new CRC32();
@@ -277,7 +281,7 @@ public final class AbstractHttpConnectionTest {
 			.build()
 			.listen();
 
-		ByteBuf result = await(HttpClient.create(Reactor.getCurrentReactor()).request(HttpRequest.get("http://127.0.0.1:" + port).build())
+		ByteBuf result = await(HttpClient.create(Reactor.getCurrentReactor(), dnsClient).request(HttpRequest.get("http://127.0.0.1:" + port).build())
 			.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}
@@ -328,7 +332,7 @@ public final class AbstractHttpConnectionTest {
 		char[] chars = new char[16 * 1024];
 		Arrays.fill(chars, 'a');
 
-		client = HttpClient.builder(Reactor.getCurrentReactor())
+		client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(30))
 			.build();
 
@@ -354,7 +358,7 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testContentLengthExceedsMaxBodySize() throws Exception {
-		client = HttpClient.create(Reactor.getCurrentReactor());
+		client = HttpClient.create(Reactor.getCurrentReactor(), dnsClient);
 
 		HttpServer.JmxInspector inspector = new HttpServer.JmxInspector();
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), $ -> {
@@ -401,7 +405,7 @@ public final class AbstractHttpConnectionTest {
 
 		server.listen();
 
-		HttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+		HttpClient client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(10))
 			.withInspector(clientInspector)
 			.build();
@@ -451,7 +455,7 @@ public final class AbstractHttpConnectionTest {
 
 		server.listen();
 
-		HttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+		HttpClient client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(10))
 			.withInspector(clientInspector)
 			.build();
@@ -514,7 +518,7 @@ public final class AbstractHttpConnectionTest {
 
 		server.listen();
 
-		IHttpClient client = HttpClient.builder(reactor)
+		IHttpClient client = HttpClient.builder(reactor, dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(10))
 			.build();
 
@@ -528,7 +532,7 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testClosedKeepAliveConnections() throws IOException {
-		client = HttpClient.builder(Reactor.getCurrentReactor())
+		client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(1))
 			.build();
 

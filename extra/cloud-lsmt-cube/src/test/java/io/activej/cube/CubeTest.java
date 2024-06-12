@@ -10,6 +10,7 @@ import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.dns.DnsClient;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
@@ -47,6 +48,7 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
@@ -163,9 +165,11 @@ public final class CubeTest {
 	public void testRemoteFileSystemAggregationStorage() throws Exception {
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		HttpServer server1 = startServer(executor, serverStorage);
-		IHttpClient httpClient = HttpClient.create(getCurrentReactor());
-		HttpClientFileSystem storage = HttpClientFileSystem.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
-		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), stubChunkIdGenerator(), FRAME_FORMAT, storage);
+		NioReactor reactor = getCurrentReactor();
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		IHttpClient httpClient = HttpClient.create(reactor, dnsClient);
+		HttpClientFileSystem storage = HttpClientFileSystem.create(reactor, "http://localhost:" + listenPort, httpClient);
+		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(), FRAME_FORMAT, storage);
 		cubeReporting = createCubeReporting(cubeReporting.getStructure(), executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));

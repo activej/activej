@@ -1,11 +1,10 @@
 package io.activej.launchers.http;
 
 import io.activej.async.service.TaskScheduler;
+import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.HttpClient;
-import io.activej.http.HttpResponse;
-import io.activej.http.HttpServer;
-import io.activej.http.IHttpClient;
+import io.activej.http.*;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
@@ -100,10 +99,15 @@ public class ObjectNameRenameTest {
 		}
 
 		@Provides
+		IDnsClient dnsClient(NioReactor reactor){
+			return DnsClient.create(reactor, HttpUtils.inetAddress("8.8.8.8"));
+		}
+
+		@Provides
 		@Named("Test")
 		@Eager
-		IHttpClient httpClient(NioReactor reactor) {
-			return HttpClient.create(reactor);
+		IHttpClient httpClient(NioReactor reactor, IDnsClient dnsClient) {
+			return HttpClient.create(reactor, dnsClient);
 		}
 
 		@Provides

@@ -1,6 +1,8 @@
 package io.activej.http;
 
+import io.activej.dns.DnsClient;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -10,6 +12,7 @@ import org.junit.Test;
 import java.io.IOException;
 
 import static io.activej.http.HttpHeaders.ALLOW;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +33,8 @@ public final class TestClientMultilineHeaders {
 
 	@Test
 	public void testMultilineHeaders() throws IOException {
-		HttpServer.builder(Reactor.getCurrentReactor(),
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer.builder(reactor,
 				request -> HttpResponse.ok200()
 					.withHeader(ALLOW, "GET,\r\n HEAD")
 					.toPromise())
@@ -39,7 +43,8 @@ public final class TestClientMultilineHeaders {
 			.build()
 			.listen();
 
-		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		IHttpClient client = HttpClient.create(reactor, dnsClient);
 		String allowHeader = await(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 			.map(response -> response.getHeader(ALLOW)));
 

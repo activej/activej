@@ -6,6 +6,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
+import io.activej.dns.DnsClient;
 import io.activej.http.HttpServer.JmxInspector;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
@@ -42,7 +43,6 @@ public final class HttpStreamTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-	public static final String CRLF = "\r\n";
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
@@ -56,11 +56,13 @@ public final class HttpStreamTest {
 
 	private List<ByteBuf> expectedList;
 	private int port;
+	private DnsClient dnsClient;
 
 	@Before
 	public void setUp() {
 		port = getFreePort();
 		expectedList = getBufsList(requestBody.getBytes());
+		dnsClient = DnsClient.create(Reactor.getCurrentReactor(), HttpUtils.inetAddress("8.8.8.8"));
 	}
 
 	@Test
@@ -72,7 +74,7 @@ public final class HttpStreamTest {
 			.whenComplete(TestUtils.assertCompleteFn(buf -> assertEquals(requestBody, buf.asString(UTF_8))))
 			.then(s -> Promise.of(HttpResponse.ok200().build())));
 
-		Integer code = await(HttpClient.create(Reactor.getCurrentReactor())
+		Integer code = await(HttpClient.create(Reactor.getCurrentReactor(), dnsClient)
 			.request(HttpRequest.post("http://127.0.0.1:" + port)
 				.withBodyStream(ChannelSuppliers.ofList(expectedList)
 					.mapAsync(item -> Promises.delay(200L, item)))
@@ -91,7 +93,7 @@ public final class HttpStreamTest {
 					.mapAsync(item -> Promises.delay(1L, item)))
 				.toPromise());
 
-		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor(), dnsClient)
 			.request(HttpRequest.post("http://127.0.0.1:" + port).build())
 			.async()
 			.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
@@ -109,7 +111,7 @@ public final class HttpStreamTest {
 			.map(ChannelSuppliers::ofList)
 			.then(bodyStream -> HttpResponse.ok200().withBodyStream(bodyStream.async()).toPromise()));
 
-		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor(), dnsClient)
 			.request(HttpRequest.post("http://127.0.0.1:" + port)
 				.withBodyStream(ChannelSuppliers.ofList(expectedList)
 					.mapAsync(item -> Promises.delay(1L, item)))
@@ -128,7 +130,7 @@ public final class HttpStreamTest {
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofList(expectedList);
 
-		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor(), dnsClient)
 			.request(HttpRequest.post("http://127.0.0.1:" + port)
 				.withBodyStream(supplier)
 				.build())
@@ -250,7 +252,7 @@ public final class HttpStreamTest {
 			.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()));
 
 		Exception e = awaitException(
-			HttpClient.create(Reactor.getCurrentReactor())
+			HttpClient.create(Reactor.getCurrentReactor(), dnsClient)
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 					.withBodyStream(ChannelSuppliers.concat(
 						ChannelSuppliers.ofList(expectedList),

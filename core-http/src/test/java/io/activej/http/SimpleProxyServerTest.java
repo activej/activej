@@ -69,12 +69,10 @@ public final class SimpleProxyServerTest {
 			.withCurrentThread()
 			.build();
 
-		IHttpClient httpClient = HttpClient.builder(eventloop2)
-			.withDnsClient(CachedDnsClient.create(eventloop2, DnsClient.builder(eventloop2)
-				.withDatagramSocketSetting(DatagramSocketSettings.create())
-				.withDnsServerAddress(HttpUtils.inetAddress("8.8.8.8"))
-				.build()))
-			.build();
+		CachedDnsClient dnsClient = CachedDnsClient.create(eventloop2, DnsClient.builder(eventloop2, HttpUtils.inetAddress("8.8.8.8"))
+			.withDatagramSocketSetting(DatagramSocketSettings.create())
+			.build());
+		IHttpClient httpClient = HttpClient.create(eventloop2, dnsClient);
 
 		HttpServer proxyServer = HttpServer.builder(eventloop2,
 				request -> {

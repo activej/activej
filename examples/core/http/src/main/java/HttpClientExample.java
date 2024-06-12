@@ -40,15 +40,12 @@ public final class HttpClientExample extends Launcher {
 	//[START REGION_1]
 	@Provides
 	IHttpClient client(NioReactor reactor, IDnsClient dnsClient) {
-		return HttpClient.builder(reactor)
-			.withDnsClient(dnsClient)
-			.build();
+		return HttpClient.create(reactor, dnsClient);
 	}
 
 	@Provides
 	IDnsClient dnsClient(NioReactor reactor, Config config) {
-		return DnsClient.builder(reactor)
-			.withDnsServerAddress(config.get(ofInetAddress(), "dns.address"))
+		return DnsClient.builder(reactor, config.get(ofInetAddress(), "dns.address"))
 			.withTimeout(config.get(ofDuration(), "dns.timeout"))
 			.build();
 	}

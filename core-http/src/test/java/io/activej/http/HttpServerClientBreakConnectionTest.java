@@ -1,5 +1,6 @@
 package io.activej.http;
 
+import io.activej.dns.DnsClient;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -51,7 +52,8 @@ public class HttpServerClientBreakConnectionTest {
 			.withAcceptOnce()
 			.build();
 
-		client = HttpClient.create(reactor);
+		DnsClient dnsClient = DnsClient.create(reactor, HttpUtils.inetAddress("8.8.8.8"));
+		client = HttpClient.create(reactor, dnsClient);
 		server.listen();
 	}
 

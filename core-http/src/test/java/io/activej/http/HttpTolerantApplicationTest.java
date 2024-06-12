@@ -1,8 +1,10 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -19,6 +21,7 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.http.TestUtils.assertEmpty;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.promise.TestUtils.await;
@@ -129,7 +132,9 @@ public final class HttpTolerantApplicationTest {
 		})
 			.start();
 
-		String header = await(HttpClient.create(Reactor.getCurrentReactor())
+		NioReactor reactor = Reactor.getCurrentReactor();
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		String header = await(HttpClient.create(reactor, dnsClient)
 			.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 			.then(response -> response.loadBody()
 				.whenResult(body -> assertEquals(text, body.getString(UTF_8)))

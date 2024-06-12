@@ -36,13 +36,11 @@ public final class TestHttpsClient {
 	public void testClient() throws NoSuchAlgorithmException {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		IDnsClient dnsClient = CachedDnsClient.create(reactor, DnsClient.builder(reactor)
+		IDnsClient dnsClient = CachedDnsClient.create(reactor, DnsClient.builder(reactor, inetAddress("8.8.8.8"))
 			.withTimeout(Duration.ofMillis(500))
-			.withDnsServerAddress(inetAddress("8.8.8.8"))
 			.build());
 
-		IHttpClient client = HttpClient.builder(reactor)
-			.withDnsClient(dnsClient)
+		IHttpClient client = HttpClient.builder(reactor, dnsClient)
 			.withSslEnabled(SSLContext.getDefault(), Executors.newSingleThreadExecutor())
 			.build();
 		Integer code = await(client.request(HttpRequest.get("https://en.wikipedia.org/wiki/Wikipedia")

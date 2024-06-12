@@ -1,7 +1,9 @@
 package io.activej;
 
+import io.activej.dns.DnsClient;
 import io.activej.http.*;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -20,6 +22,7 @@ import java.util.List;
 
 import static io.activej.http.HttpHeaderValue.*;
 import static io.activej.http.HttpHeaders.*;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.time.ZoneOffset.UTC;
@@ -61,7 +64,8 @@ public final class HttpApiTest {
 	@Before
 	public void setUp() {
 		port = getFreePort();
-		server = HttpServer.builder(Reactor.getCurrentReactor(),
+		NioReactor reactor = Reactor.getCurrentReactor();
+		server = HttpServer.builder(reactor,
 				request -> {
 					testRequest(request);
 					return createResponse().toPromise();
@@ -69,7 +73,8 @@ public final class HttpApiTest {
 			.withListenPort(port)
 			.build();
 
-		client = HttpClient.create(Reactor.getCurrentReactor());
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		client = HttpClient.create(reactor, dnsClient);
 
 		// setup request and response data
 		requestAcceptContentTypes.add(AcceptMediaType.of(MediaTypes.ANY_AUDIO, 90));

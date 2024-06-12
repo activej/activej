@@ -1,9 +1,8 @@
+import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.HttpClient;
-import io.activej.http.HttpRequest;
-import io.activej.http.IWebSocket;
+import io.activej.http.*;
 import io.activej.http.IWebSocket.Message;
-import io.activej.http.IWebSocketClient;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
@@ -35,8 +34,13 @@ public final class WebSocketEchoClientExample extends Launcher {
 	}
 
 	@Provides
-	IWebSocketClient client(NioReactor reactor) {
-		return HttpClient.create(reactor);
+	IDnsClient dnsClient(NioReactor reactor) {
+		return DnsClient.create(reactor, HttpUtils.inetAddress("8.8.8.8"));
+	}
+
+	@Provides
+	IWebSocketClient client(NioReactor reactor, IDnsClient dnsClient) {
+		return HttpClient.create(reactor, dnsClient);
 	}
 
 	@Override

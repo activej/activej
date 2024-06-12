@@ -20,6 +20,7 @@ import io.activej.common.annotation.StaticFactories;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
+import io.activej.dns.DnsClient;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.cluster.ClusterFileSystem;
@@ -33,6 +34,7 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.trigger.TriggersModuleSettings;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,11 +70,14 @@ public class Initializers {
 		Map<Object, IFileSystem> partitions = new LinkedHashMap<>();
 		partitions.put(config.get("fs.repartition.localPartitionId"), local);
 
+		InetSocketAddress dnsServerAddress = config.get(ofInetSocketAddress(), "dns.server.address", new InetSocketAddress("8.8.8.8", 53));
+		DnsClient dnsClient = DnsClient.create(reactor, dnsServerAddress);
+
 		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", List.of());
 		for (String toAdd : partitionStrings) {
 			IFileSystem client;
 			if (toAdd.startsWith("http")) {
-				client = HttpClientFileSystem.create(reactor, toAdd, HttpClient.create(reactor));
+				client = HttpClientFileSystem.create(reactor, toAdd, HttpClient.create(reactor, dnsClient));
 			} else {
 				client = RemoteFileSystem.create(reactor, parseInetSocketAddressResolving(toAdd));
 			}

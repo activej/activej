@@ -2,6 +2,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.file.ChannelFileWriter;
+import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.http.*;
 import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.inject.Injector;
@@ -71,8 +73,13 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	IHttpClient client;
 
 	@Provides
-	IHttpClient client(NioReactor reactor) {
-		return HttpClient.create(reactor);
+	IDnsClient dnsClient(NioReactor reactor) {
+		return DnsClient.create(reactor, HttpUtils.inetAddress("8.8.8.8"));
+	}
+
+	@Provides
+	IHttpClient client(NioReactor reactor, IDnsClient dnsClient) {
+		return HttpClient.create(reactor, dnsClient);
 	}
 
 	@Provides

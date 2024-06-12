@@ -3,6 +3,7 @@ package io.activej.fs.cluster;
 import io.activej.async.executor.ReactorExecutor;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.supplier.ChannelSuppliers;
+import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
@@ -48,6 +49,7 @@ import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.fs.FileSystem.DEFAULT_TEMP_DIR;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -124,7 +126,9 @@ public final class TestClusterDeadPartitionCheck {
 				new ClientServerFactory() {
 					@Override
 					public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
-						return HttpClientFileSystem.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
+						DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+						HttpClient httpClient = HttpClient.create(reactor, dnsClient);
+						return HttpClientFileSystem.create(reactor, "http://localhost:" + address.getPort(), httpClient);
 					}
 
 					@Override

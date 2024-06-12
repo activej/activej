@@ -3,7 +3,9 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
+import io.activej.dns.DnsClient;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -29,6 +31,7 @@ import static io.activej.http.GzipProcessorUtils.fromGzip;
 import static io.activej.http.GzipProcessorUtils.toGzip;
 import static io.activej.http.HttpHeaders.ACCEPT_ENCODING;
 import static io.activej.http.HttpHeaders.CONTENT_ENCODING;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
@@ -104,7 +107,8 @@ public final class TestGzipProcessorUtils {
 
 	@Test
 	public void testGzippedCommunicationBetweenClientServer() throws IOException {
-		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer server = HttpServer.builder(reactor,
 				request -> request.loadBody(CHARACTERS_COUNT)
 					.then(body -> {
 						assertEquals("gzip", request.getHeader(CONTENT_ENCODING));
@@ -120,7 +124,8 @@ public final class TestGzipProcessorUtils {
 			.withListenPort(port)
 			.build();
 
-		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		IHttpClient client = HttpClient.create(reactor, dnsClient);
 
 		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
 			.withHeader(ACCEPT_ENCODING, "gzip")

@@ -35,6 +35,7 @@ import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.datastream.processor.reducer.StreamReducer;
 import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
@@ -78,6 +79,7 @@ import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 import static io.activej.datastream.supplier.StreamSuppliers.ofChannelSupplier;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
@@ -419,7 +421,9 @@ public final class PartitionedStreamTest {
 
 	private static IFileSystem createClient(NioReactor reactor, HttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
-		return HttpClientFileSystem.create(reactor, "http://localhost:" + port, HttpClient.create(reactor));
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		HttpClient httpClient = HttpClient.create(reactor, dnsClient);
+		return HttpClientFileSystem.create(reactor, "http://localhost:" + port, httpClient);
 	}
 
 	private void assertSorted(Collection<List<String>> result) {

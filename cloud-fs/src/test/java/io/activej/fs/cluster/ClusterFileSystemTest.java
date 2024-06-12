@@ -6,6 +6,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.supplier.ChannelSuppliers;
+import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
@@ -37,6 +38,7 @@ import java.util.stream.IntStream;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -82,7 +84,8 @@ public final class ClusterFileSystemTest {
 		Map<Object, IFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		NioReactor reactor = Reactor.getCurrentReactor();
-		IHttpClient httpClient = HttpClient.create(reactor);
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		IHttpClient httpClient = HttpClient.create(reactor, dnsClient);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();

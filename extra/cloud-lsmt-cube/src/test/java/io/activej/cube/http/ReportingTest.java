@@ -15,6 +15,7 @@ import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.dns.DnsClient;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
@@ -57,6 +58,7 @@ import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.cube.json.JsonCodecs.createAggregationPredicateCodec;
 import static io.activej.cube.json.JsonCodecs.createQueryResultCodec;
 import static io.activej.cube.measure.ComputedMeasures.*;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
@@ -356,7 +358,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		IHttpClient httpClient = HttpClient.builder(reactor)
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		IHttpClient httpClient = HttpClient.builder(reactor, dnsClient)
 			.withNoKeepAlive()
 			.build();
 

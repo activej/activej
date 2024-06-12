@@ -8,6 +8,7 @@ import io.activej.common.ref.Ref;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.decoder.ByteBufsDecoder;
 import io.activej.csp.supplier.ChannelSuppliers;
+import io.activej.dns.DnsClient;
 import io.activej.http.HttpClient.JmxInspector;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.SimpleServer;
@@ -35,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.https.SslUtils.createTestSslContext;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -55,6 +57,7 @@ public final class HttpClientTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private int port;
+	private DnsClient dnsClient;
 
 	public void startServer() throws IOException {
 		HttpServer.builder(Reactor.getCurrentReactor(),
@@ -76,13 +79,14 @@ public final class HttpClientTest {
 	@Before
 	public void setUp() {
 		port = getFreePort();
+		dnsClient = DnsClient.create(Reactor.getCurrentReactor(), inetAddress("8.8.8.8"));
 	}
 
 	@Test
 	public void testAsyncClient() throws Exception {
 		startServer();
 
-		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor(), dnsClient);
 		await(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 			.then(response -> response.loadBody()
 				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))));
@@ -91,7 +95,7 @@ public final class HttpClientTest {
 	@Test
 	@Ignore("Requires DNS look up, may flood remote server")
 	public void testClientTimeoutConnect() {
-		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withConnectTimeout(Duration.ofMillis(1))
 			.build();
 		Exception e = awaitException(client.request(HttpRequest.get("http://google.com").build()));
@@ -105,7 +109,7 @@ public final class HttpClientTest {
 
 		int maxBodySize = HELLO_WORLD.length - 1;
 
-		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor(), dnsClient);
 		MalformedHttpException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 			.then(response -> response.loadBody(maxBodySize)));
 		assertThat(e.getMessage(), containsString("HTTP body size exceeds load limit " + maxBodySize));
@@ -123,7 +127,7 @@ public final class HttpClientTest {
 			.build()
 			.listen();
 
-		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor(), dnsClient);
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 			.then(response -> response.loadBody()));
 
@@ -144,7 +148,7 @@ public final class HttpClientTest {
 		server.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		IHttpClient httpClient = HttpClient.builder(reactor)
+		IHttpClient httpClient = HttpClient.builder(reactor, dnsClient)
 			.withNoKeepAlive()
 			.withConnectTimeout(Duration.ofMillis(20))
 			.withReadWriteTimeout(Duration.ofMillis(20))
@@ -187,7 +191,7 @@ public final class HttpClientTest {
 			.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		IHttpClient httpClient = HttpClient.builder(reactor)
+		IHttpClient httpClient = HttpClient.builder(reactor, dnsClient)
 			.withInspector(inspector)
 			.build();
 
@@ -213,7 +217,7 @@ public final class HttpClientTest {
 		server.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		IHttpClient httpClient = HttpClient.builder(reactor)
+		IHttpClient httpClient = HttpClient.builder(reactor, dnsClient)
 			.withNoKeepAlive()
 			.withReadWriteTimeout(Duration.ofMillis(20))
 			.withInspector(inspector)
@@ -320,7 +324,7 @@ public final class HttpClientTest {
 			}
 		}).start();
 
-		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(30))
 			.build();
 
@@ -369,7 +373,7 @@ public final class HttpClientTest {
 			.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withInspector(inspector)
 			.build();
 
@@ -403,7 +407,7 @@ public final class HttpClientTest {
 			.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withInspector(inspector)
 			.build();
 
@@ -447,7 +451,7 @@ public final class HttpClientTest {
 		}
 		builder.build().listen();
 		String url = "http" + (ssl ? "s" : "") + "://127.0.0.1:" + port;
-		return HttpClient.builder(Reactor.getCurrentReactor())
+		return HttpClient.builder(Reactor.getCurrentReactor(), dnsClient)
 			.withSslEnabled(createTestSslContext(), Executors.newSingleThreadExecutor())
 			.build()
 			.request(HttpRequest.get(url).build());

@@ -42,8 +42,7 @@ public final class CachedDnsClientTest {
 	@Before
 	public void setUp() {
 		NioReactor reactor = Reactor.getCurrentReactor();
-		cachedDnsClient = CachedDnsClient.create(reactor, DnsClient.builder(reactor)
-			.withDnsServerAddress(LOCAL_DNS)
+		cachedDnsClient = CachedDnsClient.create(reactor, DnsClient.builder(reactor, LOCAL_DNS)
 			.build());
 	}
 
@@ -73,7 +72,7 @@ public final class CachedDnsClientTest {
 
 	@Test
 	public void testDnsClient() {
-		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor());
+		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor(), LOCAL_DNS);
 
 		List<DnsResponse> list = await(Promises.toList(Stream.of("www.google.com", "www.github.com", "www.kpi.ua")
 			.map(dnsClient::resolve4)));
@@ -83,9 +82,8 @@ public final class CachedDnsClientTest {
 
 	@Test
 	public void testDnsClientTimeout() {
-		IDnsClient dnsClient = DnsClient.builder(Reactor.getCurrentReactor())
+		IDnsClient dnsClient = DnsClient.builder(Reactor.getCurrentReactor(), UNREACHABLE_DNS)
 			.withTimeout(Duration.ofMillis(20))
-			.withDnsServerAddress(UNREACHABLE_DNS)
 			.build();
 
 		DnsQueryException e = awaitException(dnsClient.resolve4("www.google.com"));
@@ -94,7 +92,7 @@ public final class CachedDnsClientTest {
 
 	@Test
 	public void testDnsNameError() {
-		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor());
+		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor(), LOCAL_DNS);
 
 		DnsQueryException e = awaitException(dnsClient.resolve4("example.ensure-such-top-domain-it-will-never-exist"));
 		assertEquals(NAME_ERROR, e.getResult().getErrorCode());
@@ -102,7 +100,7 @@ public final class CachedDnsClientTest {
 
 	@Test
 	public void testDnsLabelSize() {
-		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor());
+		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor(), LOCAL_DNS);
 
 		String domainName = "example.huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label.com";
 		IllegalArgumentException e = awaitException(dnsClient.resolve4(domainName));

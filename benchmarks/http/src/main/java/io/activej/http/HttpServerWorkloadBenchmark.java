@@ -3,6 +3,8 @@ package io.activej.http;
 import io.activej.async.callback.Callback;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
+import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Named;
@@ -72,8 +74,13 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	}
 
 	@Provides
-	IHttpClient client() {
-		return HttpClient.builder(clientReactor)
+	IDnsClient dnsClient() {
+		return DnsClient.create(clientReactor, HttpUtils.inetAddress("8.8.8.8"));
+	}
+
+	@Provides
+	IHttpClient client(IDnsClient dnsClient) {
+		return HttpClient.builder(clientReactor, dnsClient)
 			.withKeepAliveTimeout(Duration.ofSeconds(config.get(ofInteger(),
 				"client.keepAlive", KEEP_ALIVE)))
 			.build();
