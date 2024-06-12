@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 import static io.activej.async.function.AsyncRunnables.ofExecutor;
@@ -118,8 +119,8 @@ public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractRe
 	}
 
 	@Override
-	public StateChangesSupplier<D> subscribeToStateChanges() {
-		return new StateChangesListener();
+	public StateChangesSupplier<D> subscribeToStateChanges(Predicate<D> predicate) {
+		return new StateChangesListener(predicate);
 	}
 
 	@Override
@@ -445,15 +446,18 @@ public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractRe
 
 	private final class StateChangesListener extends AbstractAsyncCloseable implements StateChangesSupplier<D> {
 		private final Queue<D> diffs = new ArrayDeque<>(STATE_SUBSCRIBER_BUFFER_SIZE);
+		private final Predicate<D> predicate;
 
 		private SettablePromise<D> pending;
 
-		public StateChangesListener() {
+		public StateChangesListener(Predicate<D> predicate) {
+			this.predicate = predicate;
 			listeners.add(this);
 		}
 
 		void onStateChange(D diff) {
 			if (isClosed()) return;
+			if (!predicate.test(diff)) return;
 			if (pending != null) {
 				SettablePromise<D> pending = this.pending;
 				this.pending = null;

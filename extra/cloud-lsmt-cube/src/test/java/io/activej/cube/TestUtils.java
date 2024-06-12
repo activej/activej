@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.promise.TestUtils.await;
@@ -139,7 +140,7 @@ public final class TestUtils {
 			}
 
 			@Override
-			public StateChangesSupplier<LogDiff<CubeDiff>> subscribeToStateChanges() {
+			public StateChangesSupplier<LogDiff<CubeDiff>> subscribeToStateChanges(Predicate<LogDiff<CubeDiff>> predicate) {
 				throw new UnsupportedOperationException();
 			}
 

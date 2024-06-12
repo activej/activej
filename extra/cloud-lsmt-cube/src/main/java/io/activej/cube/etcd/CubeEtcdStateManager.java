@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
@@ -276,8 +277,8 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	}
 
 	@Override
-	public StateChangesSupplier<LogDiff<CubeDiff>> subscribeToStateChanges() {
-		return new StateChangesListener();
+	public StateChangesSupplier<LogDiff<CubeDiff>> subscribeToStateChanges(Predicate<LogDiff<CubeDiff>> predicate) {
+		return new StateChangesListener(predicate);
 	}
 
 	public void subscribeToStateTransitions(StateTransitionListener listener) {
@@ -400,17 +401,23 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	private final class StateChangesListener extends AbstractAsyncCloseable
 		implements StateTransitionListener, StateChangesSupplier<LogDiff<CubeDiff>> {
 
+		private final Predicate<LogDiff<CubeDiff>> predicate;
+
 		private final ChannelZeroBuffer<LogDiff<CubeDiff>> zeroBuffer = new ChannelZeroBuffer<>();
 		private final Queue queue = new Queue();
 
-		public StateChangesListener() {
+		public StateChangesListener(Predicate<LogDiff<CubeDiff>> predicate) {
+			this.predicate = predicate;
 			subscribeToStateTransitions(this);
 		}
 
 		@Override
 		public void onStateChange(LogDiff<CubeDiff> diff) {
+			if (!predicate.test(diff)) return;
+
 			if (queue.isSaturated()) {
 				unsubscribeFromStateTransitions(this);
+				logger.error("Queue is saturated");
 				Exception exception = new AsyncCloseException("State changes rate exceed supplier rate");
 				reactor.execute(() -> closeEx(exception));
 				return;
