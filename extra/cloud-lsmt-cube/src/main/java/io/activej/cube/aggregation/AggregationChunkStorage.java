@@ -56,7 +56,10 @@ import org.slf4j.Logger;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.LongPredicate;
 import java.util.stream.Collectors;
 
@@ -206,10 +209,10 @@ public final class AggregationChunkStorage extends AbstractReactive
 		return fileSystem.download(toPath(chunkId))
 			.mapException(e -> new AggregationException("Failed to download chunk '" + chunkId + '\'', e))
 			.whenComplete(promiseOpenR.recordStats())
-			.map(supplier -> supplier
+			.map(supplier -> ChannelSuppliers.ofLazyProvider(() -> supplier
 				.transformWith(readFile)
 				.transformWith(ChannelFrameDecoder.create(frameFormat))
-				.transformWith(readDecompress)
+				.transformWith(readDecompress))
 				.transformWith(ChannelDeserializer.create(
 					createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader)))
 				.transformWith((StreamStats<T>) (detailed ? readDeserializeDetailed : readDeserialize))
