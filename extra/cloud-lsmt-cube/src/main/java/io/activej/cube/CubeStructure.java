@@ -371,7 +371,7 @@ public final class CubeStructure {
 
 			List<String> compatibleMeasures = storedMeasures.stream().filter(structure.getMeasures()::contains).toList();
 			if (compatibleMeasures.isEmpty()) continue;
-			AggregationPredicate intersection = and(where, entry.getValue().getPredicate()).simplify();
+			AggregationPredicate intersection = and(where, structure.getPredicate()).simplify();
 
 			if (!intersection.equals(where)) continue;
 			compatibleAggregations.add(entry.getKey());
@@ -394,7 +394,7 @@ public final class CubeStructure {
 				.collect(entriesToLinkedHashMap());
 			if (aggregationMeasureFields.isEmpty()) continue;
 
-			AggregationPredicate aggregationPredicate = entry.getValue().getPredicate().simplify();
+			AggregationPredicate aggregationPredicate = structure.getPredicate().simplify();
 
 			AggregationPredicate intersection = and(aggregationPredicate, dataPredicate).simplify();
 			if (alwaysFalse().equals(intersection)) continue;

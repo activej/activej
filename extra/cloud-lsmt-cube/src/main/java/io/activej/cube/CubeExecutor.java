@@ -354,7 +354,7 @@ public final class CubeExecutor extends AbstractReactive
 
 		for (Entry<String, AggregationPredicate> entry : compatibleAggregations.entrySet()) {
 			String aggregationId = entry.getKey();
-			AggregationExecutor aggregationExecutor = aggregationExecutors.get(entry.getKey());
+			AggregationExecutor aggregationExecutor = aggregationExecutors.get(aggregationId);
 
 			AggregationStructure aggregationStructure = aggregationExecutor.getStructure();
 			List<String> keys = aggregationStructure.getKeys();
