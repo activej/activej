@@ -241,7 +241,7 @@ public final class AggregationExecutor extends AbstractReactive
 			.transformWith(sorter);
 	}
 
-	private Promise<List<ProtoAggregationChunk>> doConsolidation(List<AggregationChunk> chunksToConsolidate) {
+	private Promise<List<ProtoAggregationChunk>> doConsolidation(List<AggregationChunk> chunksToConsolidate, AggregationPredicate consolidationPredicate) {
 		Set<String> aggregationFields = new HashSet<>(structure.getMeasures());
 		Set<String> chunkFields = chunksToConsolidate.stream()
 			.flatMap(chunk -> chunk.getMeasures().stream())
@@ -254,7 +254,7 @@ public final class AggregationExecutor extends AbstractReactive
 		Class<Object> resultClass = createRecordClass(structure, structure.getKeys(), measures, classLoader);
 
 		StreamSupplier<Object> consolidatedSupplier = consolidatedSupplier(structure.getKeys(), measures, resultClass,
-			alwaysTrue(), alwaysTrue(), chunksToConsolidate, classLoader);
+			consolidationPredicate, alwaysTrue(), chunksToConsolidate, classLoader);
 		AggregationChunker chunker = AggregationChunker.create(
 			structure, measures, resultClass,
 			createPartitionPredicate(resultClass, structure.getPartitioningKey(), classLoader),
@@ -439,13 +439,13 @@ public final class AggregationExecutor extends AbstractReactive
 		return supplier.transformWith(StreamTransformers.filter(filterPredicate));
 	}
 
-	Promise<ProtoAggregationDiff> consolidate(List<AggregationChunk> chunks) {
+	Promise<ProtoAggregationDiff> consolidate(List<AggregationChunk> chunks, AggregationPredicate consolidationPredicate) {
 		checkInReactorThread(this);
 
 		consolidationStarted = reactor.currentTimeMillis();
 		logger.info("Starting consolidation of aggregation '{}'", this);
 
-		return doConsolidation(chunks)
+		return doConsolidation(chunks, consolidationPredicate)
 			.map(newChunks -> new ProtoAggregationDiff(new LinkedHashSet<>(newChunks), new LinkedHashSet<>(chunks)))
 			.whenResult(() -> {
 				consolidationLastTimeMillis = reactor.currentTimeMillis() - consolidationStarted;

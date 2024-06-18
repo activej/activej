@@ -3,6 +3,7 @@ package io.activej.cube;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
+import io.activej.cube.CubeConsolidator.ConsolidationStrategy;
 import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
@@ -41,6 +42,7 @@ import java.util.stream.Stream;
 import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
+import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.withConsolidationPredicate;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
@@ -362,6 +364,37 @@ public final class CubeTest {
 			List.of("key1", "key2"),
 			List.of("metric1", "metric2", "metric3"),
 			and(eq("key1", 1), eq("key2", 4)),
+			DataItemResult.class, classLoader
+		).toList());
+
+		assertEquals(expected, list);
+	}
+
+	@Test
+	public void testConsolidationPredicate() {
+		List<DataItemResult> expected = List.of(new DataItemResult(1, 0, 0, 100, 0));
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeReporting.getStateManager(), cubeReporting.getExecutor());
+
+		await(
+			consume(cubeReporting, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
+			consume(cubeReporting, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 25, 20)),
+			consume(cubeReporting, chunkStorage, new DataItem2(1, 2, 15, 20), new DataItem2(1, 4, 35, 20)),
+			consume(cubeReporting, chunkStorage, new DataItem2(1, 4, 20, 20), new DataItem2(1, 5, 40, 200))
+		);
+
+		ConsolidationStrategy strategy = withConsolidationPredicate(hotSegment(), $ -> gt("metric2", 20L));
+
+		List<String> aggregationIds = List.copyOf(cubeReporting.getStructure().getAggregationIds());
+		CubeDiff diff = await(cubeConsolidator.consolidate(aggregationIds, strategy));
+		assertFalse(diff.isEmpty());
+
+		diff = await(cubeConsolidator.consolidate(aggregationIds, strategy));
+		assertTrue(diff.isEmpty());
+
+		List<DataItemResult> list = await(cubeReporting.queryRawStream(
+			List.of("key1"),
+			List.of("metric2"),
+			alwaysTrue(),
 			DataItemResult.class, classLoader
 		).toList());
 
