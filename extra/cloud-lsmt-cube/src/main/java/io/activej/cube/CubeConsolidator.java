@@ -113,7 +113,7 @@ public final class CubeConsolidator extends AbstractReactive
 					.<AsyncRunnable>map(chunks -> () -> {
 						if (chunks.isEmpty()) return Promise.complete();
 						lockedChunks.put(aggregationId, chunks);
-						return consolidateAggregationChunks(aggregationId, chunks, strategy.getConsolidationPredicate(aggregationId))
+						return consolidateAggregationChunks(aggregationId, chunks, strategy)
 							.whenResult(diff -> {if (!diff.isEmpty()) diffMap.put(aggregationId, diff);})
 							.toVoid();
 					})))
@@ -155,9 +155,9 @@ public final class CubeConsolidator extends AbstractReactive
 				}));
 	}
 
-	private Promise<ProtoAggregationDiff> consolidateAggregationChunks(String aggregationId, List<AggregationChunk> chunks, AggregationPredicate consolidationPredicate) {
+	private Promise<ProtoAggregationDiff> consolidateAggregationChunks(String aggregationId, List<AggregationChunk> chunks, ConsolidationPredicateFactory consolidationPredicateFactory) {
 		AggregationExecutor aggregationExecutor = executor.getAggregationExecutors().get(aggregationId);
-		return aggregationExecutor.consolidate(chunks, consolidationPredicate)
+		return aggregationExecutor.consolidate(aggregationId, chunks, consolidationPredicateFactory)
 			.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
 			.whenComplete(toLogger(logger, thisMethod(), aggregationId));
 	}
@@ -200,10 +200,11 @@ public final class CubeConsolidator extends AbstractReactive
 			}));
 	}
 
-	public interface ConsolidationStrategy {
+	public interface ConsolidationStrategy extends ConsolidationPredicateFactory {
 		List<AggregationChunk> getChunksForConsolidation(String id, AggregationState state, int maxChunksToConsolidate, int chunkSize, Set<Long> lockedChunkIds);
 
-		default AggregationPredicate getConsolidationPredicate(String id) {
+		@Override
+		default AggregationPredicate createConsolidationPredicate(String aggregationId, List<String> keys, Set<String> measures) {
 			return AggregationPredicates.alwaysTrue();
 		}
 
@@ -224,7 +225,7 @@ public final class CubeConsolidator extends AbstractReactive
 				);
 		}
 
-		static ConsolidationStrategy withConsolidationPredicate(ConsolidationStrategy strategy, Function<String, AggregationPredicate> consolidationPredicateFactory) {
+		static ConsolidationStrategy withConsolidationPredicateFactory(ConsolidationStrategy strategy, ConsolidationPredicateFactory consolidationPredicateFactory) {
 			return new ConsolidationStrategy() {
 				@Override
 				public List<AggregationChunk> getChunksForConsolidation(String id, AggregationState state, int maxChunksToConsolidate, int chunkSize, Set<Long> lockedChunkIds) {
@@ -232,8 +233,9 @@ public final class CubeConsolidator extends AbstractReactive
 				}
 
 				@Override
-				public AggregationPredicate getConsolidationPredicate(String id) {
-					return AggregationPredicates.and(strategy.getConsolidationPredicate(id), consolidationPredicateFactory.apply(id)).simplify();
+				public AggregationPredicate createConsolidationPredicate(String aggregationId, List<String> keys, Set<String> measures) {
+					AggregationPredicate strategyPredicate = strategy.createConsolidationPredicate(aggregationId, keys, measures);
+					return AggregationPredicates.and(strategyPredicate, consolidationPredicateFactory.createConsolidationPredicate(aggregationId, keys, measures));
 				}
 			};
 		}

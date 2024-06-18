@@ -56,6 +56,7 @@ import java.util.function.Predicate;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.cube.aggregation.util.Utils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.min;
@@ -182,9 +183,9 @@ public final class AggregationExecutor extends AbstractReactive
 		return consume(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass));
 	}
 
-	<T> StreamSupplier<T> query(List<AggregationChunk> chunks, AggregationQuery query, Class<T> outputClass) {
+	<T> StreamSupplier<T> query(String aggregationId, List<AggregationChunk> chunks, AggregationQuery query, Class<T> outputClass) {
 		checkInReactorThread(this);
-		return query(chunks, query, outputClass, classLoader);
+		return query(aggregationId, chunks, query, outputClass, classLoader);
 	}
 
 	/**
@@ -196,6 +197,7 @@ public final class AggregationExecutor extends AbstractReactive
 	 * @return supplier that streams query results
 	 */
 	<T> StreamSupplier<T> query(
+		String aggregationId,
 		List<AggregationChunk> chunks,
 		AggregationQuery query,
 		Class<T> outputClass,
@@ -205,8 +207,8 @@ public final class AggregationExecutor extends AbstractReactive
 		checkArgument(iterate(queryClassLoader, Objects::nonNull, ClassLoader::getParent).anyMatch(isEqual(classLoader)),
 			"Unrelated queryClassLoader");
 		List<String> fields = structure.findFields(query.getMeasures());
-		return consolidatedSupplier(query.getKeys(),
-			fields, outputClass, query.getPredicate(), query.getPrecondition(), chunks, queryClassLoader)
+		return consolidatedSupplier(aggregationId, query.getKeys(),
+			fields, outputClass, query.getPredicate(), query.getPrecondition(), ConsolidationPredicateFactory.alwaysTrue(), chunks, queryClassLoader)
 			.withEndOfStream(eos -> eos
 				.mapException(e -> new AggregationException("Query " + query + " failed", e)));
 	}
@@ -241,7 +243,7 @@ public final class AggregationExecutor extends AbstractReactive
 			.transformWith(sorter);
 	}
 
-	private Promise<List<ProtoAggregationChunk>> doConsolidation(List<AggregationChunk> chunksToConsolidate, AggregationPredicate consolidationPredicate) {
+	private Promise<List<ProtoAggregationChunk>> doConsolidation(String aggregationId, List<AggregationChunk> chunksToConsolidate, ConsolidationPredicateFactory consolidationPredicateFactory) {
 		Set<String> aggregationFields = new HashSet<>(structure.getMeasures());
 		Set<String> chunkFields = chunksToConsolidate.stream()
 			.flatMap(chunk -> chunk.getMeasures().stream())
@@ -253,8 +255,8 @@ public final class AggregationExecutor extends AbstractReactive
 			.collect(toList());
 		Class<Object> resultClass = createRecordClass(structure, structure.getKeys(), measures, classLoader);
 
-		StreamSupplier<Object> consolidatedSupplier = consolidatedSupplier(structure.getKeys(), measures, resultClass,
-			consolidationPredicate, alwaysTrue(), chunksToConsolidate, classLoader);
+		StreamSupplier<Object> consolidatedSupplier = consolidatedSupplier(aggregationId, structure.getKeys(), measures, resultClass,
+			alwaysTrue(), alwaysTrue(), consolidationPredicateFactory, chunksToConsolidate, classLoader);
 		AggregationChunker chunker = AggregationChunker.create(
 			structure, measures, resultClass,
 			createPartitionPredicate(resultClass, structure.getPartitioningKey(), classLoader),
@@ -305,8 +307,10 @@ public final class AggregationExecutor extends AbstractReactive
 	}
 
 	private <R, S> StreamSupplier<R> consolidatedSupplier(
+		String aggregationId,
 		List<String> queryKeys, List<String> measures, Class<R> resultClass,
 		AggregationPredicate where, AggregationPredicate precondition,
+		ConsolidationPredicateFactory consolidationPredicateFactory,
 		List<AggregationChunk> individualChunks, DefiningClassLoader queryClassLoader
 	) {
 		QueryPlan plan = createPlan(individualChunks, measures);
@@ -322,6 +326,9 @@ public final class AggregationExecutor extends AbstractReactive
 				structure.getKeys(),
 				sequence.getChunksFields(),
 				classLoader);
+
+			AggregationPredicate consolidationPredicate = consolidationPredicateFactory.createConsolidationPredicate(aggregationId, structure.getKeys(), sequence.getChunksFields());
+			where = and(consolidationPredicate, where).simplify();
 
 			StreamSupplier<S> stream = sequenceStream(where, precondition, sequence.getChunks(), sequenceClass, queryClassLoader);
 			if (!alreadySorted) {
@@ -439,13 +446,13 @@ public final class AggregationExecutor extends AbstractReactive
 		return supplier.transformWith(StreamTransformers.filter(filterPredicate));
 	}
 
-	Promise<ProtoAggregationDiff> consolidate(List<AggregationChunk> chunks, AggregationPredicate consolidationPredicate) {
+	Promise<ProtoAggregationDiff> consolidate(String aggregationId, List<AggregationChunk> chunks, ConsolidationPredicateFactory consolidationPredicateFactory) {
 		checkInReactorThread(this);
 
 		consolidationStarted = reactor.currentTimeMillis();
 		logger.info("Starting consolidation of aggregation '{}'", this);
 
-		return doConsolidation(chunks, consolidationPredicate)
+		return doConsolidation(aggregationId, chunks, consolidationPredicateFactory)
 			.map(newChunks -> new ProtoAggregationDiff(new LinkedHashSet<>(newChunks), new LinkedHashSet<>(chunks)))
 			.whenResult(() -> {
 				consolidationLastTimeMillis = reactor.currentTimeMillis() - consolidationStarted;

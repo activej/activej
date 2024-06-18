@@ -417,6 +417,7 @@ public final class CubeExecutor extends AbstractReactive
 			aggregationQuery.setPrecondition(aggregation.getStructure().getPrecondition());
 
 			StreamSupplier<S> aggregationSupplier = aggregation.query(
+				compatibleAggregation.id(),
 				compatibleAggregation.chunks(),
 				aggregationQuery,
 				aggregationClass,

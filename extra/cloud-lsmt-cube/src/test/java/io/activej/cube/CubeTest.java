@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
-import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.withConsolidationPredicate;
+import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.withConsolidationPredicateFactory;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
@@ -382,7 +382,11 @@ public final class CubeTest {
 			consume(cubeReporting, chunkStorage, new DataItem2(1, 4, 20, 20), new DataItem2(1, 5, 40, 200))
 		);
 
-		ConsolidationStrategy strategy = withConsolidationPredicate(hotSegment(), $ -> gt("metric2", 20L));
+		ConsolidationStrategy strategy = withConsolidationPredicateFactory(hotSegment(), ($1, $2, measures) -> {
+			String measure = "metric2";
+			if (!measures.contains(measure)) return alwaysTrue();
+			return gt(measure, 20L);
+		});
 
 		List<String> aggregationIds = List.copyOf(cubeReporting.getStructure().getAggregationIds());
 		CubeDiff diff = await(cubeConsolidator.consolidate(aggregationIds, strategy));
@@ -423,60 +427,60 @@ public final class CubeTest {
 		assertNotEquals(intersection, query);
 
 		predicate = AggregationPredicates.eq("dimensionA", 1);
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionA"), AggregationPredicates.eq("dimensionB", 2)).simplify();
+		query = AggregationPredicates.and(has("dimensionA"), AggregationPredicates.eq("dimensionB", 2)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertNotEquals(intersection, query);
 
-		predicate = AggregationPredicates.has("dimensionX");
+		predicate = has("dimensionX");
 		query = AggregationPredicates.and(AggregationPredicates.eq("dimensionA", 1), AggregationPredicates.eq("dimensionB", 2)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertNotEquals(intersection, query);
 
-		predicate = AggregationPredicates.has("dimensionX");
+		predicate = has("dimensionX");
 		query = AggregationPredicates.and(AggregationPredicates.eq("dimensionX", 1), AggregationPredicates.eq("dimensionB", 2)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertEquals(intersection, query);
 
-		predicate = AggregationPredicates.has("dimensionX");
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.and(AggregationPredicates.eq("dimensionX", 1), AggregationPredicates.eq("dimensionB", 2))).simplify();
+		predicate = has("dimensionX");
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.and(AggregationPredicates.eq("dimensionX", 1), AggregationPredicates.eq("dimensionB", 2))).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertEquals(intersection, query);
 
-		predicate = AggregationPredicates.has("dimensionX");
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.eq("dimensionX", 1), AggregationPredicates.eq("dimensionB", 2)).simplify();
+		predicate = has("dimensionX");
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.eq("dimensionX", 1), AggregationPredicates.eq("dimensionB", 2)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertEquals(intersection, query);
 
 		// betweens
 
-		predicate = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.between("date", 100, 200));
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.eq("date", 1)).simplify();
+		predicate = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.between("date", 100, 200));
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.eq("date", 1)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertNotEquals(intersection, query);
 
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.eq("date", 150)).simplify();
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.eq("date", 150)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertEquals(intersection, query);
 
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.eq("date", 250)).simplify();
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.eq("date", 250)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertNotEquals(intersection, query);
 
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.between("date", 110, 190)).simplify();
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.between("date", 110, 190)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertEquals(intersection, query);
 
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.between("date", 10, 90)).simplify();
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.between("date", 10, 90)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertNotEquals(intersection, query);
 		assertEquals(intersection, AggregationPredicates.alwaysFalse());
 
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.between("date", 210, 290)).simplify();
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.between("date", 210, 290)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertNotEquals(intersection, query);
 		assertEquals(intersection, AggregationPredicates.alwaysFalse());
 
-		query = AggregationPredicates.and(AggregationPredicates.has("dimensionX"), AggregationPredicates.between("date", 10, 290)).simplify();
+		query = AggregationPredicates.and(has("dimensionX"), AggregationPredicates.between("date", 10, 290)).simplify();
 		intersection = AggregationPredicates.and(query, predicate).simplify();
 		assertNotEquals(intersection, query);
 	}

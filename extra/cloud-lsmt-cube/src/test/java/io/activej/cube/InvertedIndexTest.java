@@ -138,7 +138,7 @@ public class InvertedIndexTest {
 		query.addMeasures(List.of("documents"));
 
 		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate());
-		List<InvertedIndexQueryResult> list = await(aggregationExecutor.query(chunks, query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
+		List<InvertedIndexQueryResult> list = await(aggregationExecutor.query("", chunks, query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
 			.toList());
 
 		List<InvertedIndexQueryResult> expectedResult = List.of(

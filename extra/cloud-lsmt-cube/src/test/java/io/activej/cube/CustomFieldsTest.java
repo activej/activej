@@ -165,7 +165,7 @@ public class CustomFieldsTest {
 		query.addMeasures(List.of("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount"));
 
 		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate());
-		List<QueryResult> queryResults = await(aggregationExecutor.query(chunks, query, QueryResult.class, DefiningClassLoader.create(classLoader))
+		List<QueryResult> queryResults = await(aggregationExecutor.query("", chunks, query, QueryResult.class, DefiningClassLoader.create(classLoader))
 			.toList());
 
 		double delta = 1E-3;
