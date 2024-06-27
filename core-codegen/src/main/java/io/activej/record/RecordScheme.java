@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Checks.checkArgument;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
@@ -306,7 +307,9 @@ public final class RecordScheme {
 	}
 
 	public String getRecordClassField(String field) {
-		return recordClassFields.get(field);
+		String recordClassField = recordClassFields.get(field);
+		checkArgument(recordClassField != null, () -> "Field " + field + " not found");
+		return recordClassField;
 	}
 
 	public Variable property(Expression record, String field) {
@@ -326,7 +329,9 @@ public final class RecordScheme {
 	}
 
 	public Type getFieldType(String field) {
-		return fieldToType.get(field);
+		Type fieldType = fieldToType.get(field);
+		checkArgument(fieldType != null, () -> "Field " + field + " not found");
+		return fieldType;
 	}
 
 	public Type getFieldType(int field) {
@@ -334,7 +339,9 @@ public final class RecordScheme {
 	}
 
 	public int getFieldIndex(String field) {
-		return fieldToIndex.get(field);
+		Integer index = fieldToIndex.get(field);
+		checkArgument(index != null, () -> "Field " + field + " not found");
+		return index;
 	}
 
 	@SuppressWarnings("NullableProblems")
@@ -359,8 +366,10 @@ public final class RecordScheme {
 	}
 
 	public <T> RecordGetter<T> getter(String field) {
+		RecordGetter<?> recordGetter = recordGettersMap.get(field);
+		checkArgument(recordGetter != null, () -> "Field " + field + " not found");
 		//noinspection unchecked
-		return (RecordGetter<T>) recordGettersMap.get(field);
+		return (RecordGetter<T>) recordGetter;
 	}
 
 	public <T> RecordGetter<T> getter(int field) {
@@ -411,8 +420,10 @@ public final class RecordScheme {
 	}
 
 	public <T> RecordSetter<T> setter(String field) {
+		RecordSetter<?> recordSetter = recordSettersMap.get(field);
+		checkArgument(recordSetter != null, () -> "Field " + field + " not found");
 		//noinspection unchecked
-		return (RecordSetter<T>) recordSettersMap.get(field);
+		return (RecordSetter<T>) recordSetter;
 	}
 
 	public <T> RecordSetter<T> setter(int field) {
