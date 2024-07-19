@@ -95,6 +95,10 @@ public class HttpError extends HttpException implements ToPromise<HttpResponse> 
 		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 
+	public String getReason() {
+		return super.getMessage();
+	}
+
 	@Override
 	public String getMessage() {
 		String msg = super.getMessage();
