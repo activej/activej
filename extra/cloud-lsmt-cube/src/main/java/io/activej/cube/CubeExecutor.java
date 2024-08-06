@@ -34,6 +34,7 @@ import io.activej.cube.CubeStructure.AttributeResolverContainer;
 import io.activej.cube.CubeStructure.PreprocessedQuery;
 import io.activej.cube.aggregation.AggregationStats;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
+import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
@@ -73,6 +74,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
@@ -540,6 +542,7 @@ public final class CubeExecutor extends AbstractReactive
 			for (String attribute : query.recordAttributes()) {
 				recordSchemeBuilder.withField(attribute, structure.getAttributeType(attribute));
 			}
+			recordSchemeBuilder.withHashCodeEqualsFields(query.recordAttributes());
 			for (String measure : query.recordMeasures()) {
 				recordSchemeBuilder.withField(measure, structure.getMeasureType(measure));
 			}
@@ -558,6 +561,9 @@ public final class CubeExecutor extends AbstractReactive
 									seq.add(call(arg(1), "set", value(fieldIndex),
 										cast(structure.getDimensionTypes().get(field).toValue(
 											property(cast(arg(0), resultClass), field)), Object.class)));
+								} else if (!structure.getMeasures().containsKey(field) && !structure.getComputedMeasures().containsKey(field)) {
+									seq.add(call(arg(1), "set", value(fieldIndex),
+										cast(property(cast(arg(0), resultClass), field.replace('.', '$')), Object.class)));
 								}
 							}
 						}))
@@ -565,16 +571,15 @@ public final class CubeExecutor extends AbstractReactive
 						sequence(seq -> {
 							for (String field : recordScheme.getFields()) {
 								int fieldIndex = recordScheme.getFieldIndex(field);
-								if (!structure.getDimensionTypes().containsKey(field)) {
-									if (structure.getMeasures().containsKey(field)) {
-										Variable fieldValue = property(cast(arg(0), resultClass), field);
-										seq.add(call(arg(1), "set", value(fieldIndex),
-											cast(structure.getMeasures().get(field).getFieldType().toValue(
-												structure.getMeasures().get(field).valueOfAccumulator(fieldValue)), Object.class)));
-									} else {
-										seq.add(call(arg(1), "set", value(fieldIndex),
-											cast(property(cast(arg(0), resultClass), field.replace('.', '$')), Object.class)));
-									}
+								if (structure.getMeasures().containsKey(field)) {
+									Variable fieldValue = property(cast(arg(0), resultClass), field);
+									seq.add(call(arg(1), "set", value(fieldIndex),
+										cast(structure.getMeasures().get(field).getFieldType().toValue(
+											structure.getMeasures().get(field).valueOfAccumulator(fieldValue)), Object.class)));
+								} else if (structure.getComputedMeasures().containsKey(field)) {
+									Variable fieldValue = property(cast(arg(0), resultClass), field);
+									seq.add(call(arg(1), "set", value(fieldIndex),
+										cast(fieldValue, Object.class)));
 								}
 							}
 						}))
@@ -691,7 +696,7 @@ public final class CubeExecutor extends AbstractReactive
 				if (!attributes.isEmpty()) {
 					tasks.add(Utils.resolveAttributes(results, resolverContainer.resolver,
 						resolverContainer.dimensions, attributes,
-						fullySpecifiedDimensions, resultClass, queryClassLoader));
+						fullySpecifiedDimensions, resultClass, structure, queryClassLoader));
 				}
 			}
 
@@ -705,7 +710,9 @@ public final class CubeExecutor extends AbstractReactive
 		}
 
 		QueryResult processResults2(List<R> results, R totals, Map<String, Object> filterAttributes) {
-			results = results.stream().filter(havingPredicate).collect(toList());
+			results = (hasAllResultDimensions() ? results.stream() : remergeRecords(results))
+				.filter(havingPredicate)
+				.collect(toList());
 
 			int totalCount = results.size();
 
@@ -740,13 +747,42 @@ public final class CubeExecutor extends AbstractReactive
 			throw new AssertionError();
 		}
 
+		private boolean hasAllResultDimensions() {
+			return new HashSet<>(query.recordAttributes()).containsAll(query.resultDimensions());
+		}
+
+		private <K extends Comparable> Stream<R> remergeRecords(List<R> results) {
+			Class<K> keyClass = createKeyClass(queryClassLoader,
+				query.recordAttributes().stream()
+					.collect(toLinkedHashMap(
+						attribute -> attribute.replace(".", "$"),
+						structure::getAttributeInternalType)
+					)
+			);
+			Function<R, K> keyFunction = createKeyFunction(resultClass, keyClass,
+				query.recordAttributes().stream().map(attribute -> attribute.replace(".", "$")).toList(),
+				queryClassLoader);
+
+			LinkedHashMap<K, R> map = new LinkedHashMap<>(results.size());
+			results.forEach(r -> {
+				K key = keyFunction.apply(r);
+				map.compute(key, (k, v) -> {
+					if (v == null) return r;
+					totalsFunction.accumulate(v, r);
+					return v;
+				});
+			});
+			return map.values().stream().peek(r -> totalsFunction.computeMeasures(r));
+		}
+
 		private Promise<Void> resolveSpecifiedDimensions(
 			AttributeResolverContainer resolverContainer, Map<String, Object> result
 		) {
 			Object[] key = new Object[resolverContainer.dimensions.size()];
 			for (int i = 0; i < resolverContainer.dimensions.size(); i++) {
 				String dimension = resolverContainer.dimensions.get(i);
-				key[i] = fullySpecifiedDimensions.get(dimension);
+				FieldType fieldType = structure.getDimensionTypes().get(dimension);
+				key[i] = fieldType.toInternalValue(fullySpecifiedDimensions.get(dimension));
 			}
 
 			Ref<Object> attributesRef = new Ref<>();

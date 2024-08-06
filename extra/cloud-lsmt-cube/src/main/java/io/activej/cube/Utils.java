@@ -19,6 +19,7 @@ package io.activej.cube;
 import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.attributes.IAttributeResolver;
 import io.activej.cube.attributes.IAttributeResolver.AttributesFunction;
 import io.activej.cube.attributes.IAttributeResolver.KeyFunction;
@@ -56,17 +57,18 @@ public final class Utils {
 		);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static <R> Promise<Void> resolveAttributes(
 		List<R> results, IAttributeResolver attributeResolver, List<String> recordDimensions,
 		List<String> recordAttributes, Map<String, Object> fullySpecifiedDimensions, Class<R> recordClass,
-		DefiningClassLoader classLoader
+		CubeStructure structure, DefiningClassLoader classLoader
 	) {
 		Object[] fullySpecifiedDimensionsArray = new Object[recordDimensions.size()];
 		for (int i = 0; i < recordDimensions.size(); i++) {
 			String dimension = recordDimensions.get(i);
 			if (fullySpecifiedDimensions.containsKey(dimension)) {
-				fullySpecifiedDimensionsArray[i] = fullySpecifiedDimensions.get(dimension);
+				FieldType fieldType = structure.getDimensionTypes().get(dimension);
+				fullySpecifiedDimensionsArray[i] = fieldType.toInternalValue(fullySpecifiedDimensions.get(dimension));
 			}
 		}
 

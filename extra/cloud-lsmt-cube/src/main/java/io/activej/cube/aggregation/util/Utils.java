@@ -84,6 +84,19 @@ public class Utils {
 				.build());
 	}
 
+	public static <K extends Comparable> Class<K> createKeyClass(DefiningClassLoader classLoader, Map<String, Class<?>> keys) {
+		List<String> keyList = new ArrayList<>(keys.keySet());
+		return classLoader.ensureClass(
+			ClassKey.of(Object.class, keyList),
+			() -> ClassGenerator.builder((Class<K>) Comparable.class)
+				.initialize(b -> keys.forEach(b::withField))
+				.withMethod("compareTo", comparableImpl(keyList))
+				.withMethod("equals", equalsImpl(keyList))
+				.withMethod("hashCode", hashCodeImpl(keyList))
+				.withMethod("toString", toStringImpl(keyList))
+				.build());
+	}
+
 	public static <R> Comparator<R> createKeyComparator(
 		Class<R> recordClass, List<String> keys, DefiningClassLoader classLoader
 	) {
