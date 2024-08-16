@@ -76,9 +76,12 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 				reloadTime.recordValue(reactor.currentTimeMillis() - reloadTimestamp);
 				cache.putAll(result);
 				timestamp = reloadTimestamp;
+				scheduleReload(reloadPeriod);
 			})
-			.whenException(e -> reloadErrors++)
-			.whenComplete(() -> scheduleReload(retryPeriod));
+			.whenException(e -> {
+				reloadErrors++;
+				scheduleReload(retryPeriod);
+			});
 	}
 
 	private void scheduleReload(long period) {
