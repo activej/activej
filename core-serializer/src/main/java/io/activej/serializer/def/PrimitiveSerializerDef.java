@@ -30,7 +30,7 @@ public abstract class PrimitiveSerializerDef extends AbstractSerializerDef imple
 
 	protected PrimitiveSerializerDef(Class<?> primitiveType, boolean wrapped) {
 		if (!primitiveType.isPrimitive())
-			throw new IllegalArgumentException("Not a primitive type");
+			throw new IllegalArgumentException("Not a primitive type: " + primitiveType);
 		this.primitiveType = primitiveType;
 		this.wrappedType = wrap(primitiveType);
 		this.wrapped = wrapped;

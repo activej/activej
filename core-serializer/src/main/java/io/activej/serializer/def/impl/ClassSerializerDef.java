@@ -50,7 +50,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 
 	public record PropertyDef(Member member, SerializerDef serializer, String name, int versionAdded, int versionDeleted, Object defaultValue) {
 		public PropertyDef {
-			checkArgument(member instanceof Method || member instanceof Field);
+			checkArgument(member instanceof Method || member instanceof Field, "Property %s must be either Method or Field", member);
 			checkNotNull(serializer);
 			checkNotNull(name);
 			checkArgument(versionAdded >= -1);
@@ -139,8 +139,8 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 	}
 
 	public static Builder builder(Class<?> encodeType, Class<?> decodeType) {
-		checkArgument(!decodeType.isInterface(), "Cannot serialize an interface");
-		checkArgument(encodeType.isAssignableFrom(decodeType), format("Class should be assignable from %s", decodeType));
+		checkArgument(!decodeType.isInterface(), "Cannot serialize an interface " + decodeType.getName());
+		checkArgument(encodeType.isAssignableFrom(decodeType), format("Class %s should be assignable from %s", encodeType, decodeType));
 
 		return new ClassSerializerDef(encodeType, decodeType, new ArrayList<>(), new ArrayList<>(), null).new Builder();
 	}
@@ -150,7 +150,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 
 		public Builder withField(Field field, SerializerDef serializer, int added, int removed) {
 			checkNotBuilt(this);
-			checkArgument(isPublic(field.getModifiers()), "Method should be public");
+			checkArgument(isPublic(field.getModifiers()), "Field %s should be public", field);
 			ClassSerializerDef.this.properties.removeIf(property ->
 				property.member instanceof Field f &&
 				Objects.equals(f.getName(), field.getName()));
@@ -161,8 +161,8 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 
 		public Builder withGetter(Method method, SerializerDef serializer, int added, int removed) {
 			checkNotBuilt(this);
-			checkArgument(method.getGenericParameterTypes().length == 0, "Method should have 0 generic parameter types");
-			checkArgument(isPublic(method.getModifiers()), "Method should be public");
+			checkArgument(method.getGenericParameterTypes().length == 0, "Method %s should have 0 generic parameter types", method);
+			checkArgument(isPublic(method.getModifiers()), "Method %s should be public", method);
 			ClassSerializerDef.this.properties.removeIf(property ->
 				property.member instanceof Method m &&
 				Objects.equals(m.getName(), method.getName()) &&
@@ -180,7 +180,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 			checkNotBuilt(this);
 			checkArgument(!isPrivate(method.getModifiers()), format("Setter cannot be private: %s", method));
 			checkArgument(method.getGenericParameterTypes().length == properties.size(),
-				"Number of arguments of a method should match a size of list of properties");
+				"Number of arguments of a method %s should match a size of list of properties (%d)", method, properties.size());
 			ClassSerializerDef.this.setters.removeIf(setter ->
 				Objects.equals(setter.method.getName(), method.getName()) &&
 				Arrays.equals(setter.method.getParameterTypes(), method.getParameterTypes()));
@@ -196,7 +196,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 			checkNotBuilt(this);
 			checkArgument(!isPrivate(constructor.getModifiers()), format("Constructor cannot be private: %s", constructor));
 			checkArgument(constructor.getGenericParameterTypes().length == properties.size(),
-				"Number of arguments of a constructor should match a size of list of properties");
+				"Number of arguments of a constructor %s should match a size of list of properties (%d)", constructor, properties.size());
 			return withFactoryDef(new FactoryDef(constructor, properties));
 		}
 
@@ -205,7 +205,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 			checkArgument(!isPrivate(staticFactoryMethod.getModifiers()), format("Factory cannot be private: %s", staticFactoryMethod));
 			checkArgument(isStatic(staticFactoryMethod.getModifiers()), format("Factory must be static: %s", staticFactoryMethod));
 			checkArgument(staticFactoryMethod.getGenericParameterTypes().length == properties.size(),
-				"Number of arguments of a method should match a size of list of properties");
+				"Number of arguments of a method %s should match a size of list of properties (%d)", staticFactoryMethod, properties.size());
 			return withFactoryDef(new FactoryDef(staticFactoryMethod, properties));
 		}
 

@@ -35,6 +35,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.def.SerializerExpressions.readByte;
 import static io.activej.serializer.def.SerializerExpressions.writeByte;
+import static java.lang.String.format;
 
 @ExposedInternals
 public final class SubclassSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
@@ -65,7 +66,9 @@ public final class SubclassSerializerDef extends AbstractSerializerDef implement
 			checkArgument(!Modifier.isAbstract(subclass.getModifiers()),
 				"A subclass should not be an " +
 				(subclass.isInterface() ? "interface" : "abstract class") + ": " + subclass);
-			checkArgument(parentType.isAssignableFrom(subclass));
+			checkArgument(parentType.isAssignableFrom(subclass), format("Class %s should be a " +
+																		(parentType.isInterface() ? "superinterface" : "superclass") +
+																		" of the %s", parentType, subclass));
 			SubclassSerializerDef.this.subclassSerializers.put(subclass, serializer);
 			return this;
 		}

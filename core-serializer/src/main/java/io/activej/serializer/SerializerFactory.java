@@ -693,11 +693,11 @@ public final class SerializerFactory {
 	private SerializerDef doScan(Context<SerializerDef> ctx) {
 		Class<?> rawClass = ctx.getRawType();
 		if (rawClass.isAnonymousClass())
-			throw new IllegalArgumentException("Class should not be anonymous");
+			throw new IllegalArgumentException("Class " + rawClass.getName() + " should not be anonymous");
 		if (rawClass.isLocalClass())
-			throw new IllegalArgumentException("Class should not be local");
+			throw new IllegalArgumentException("Class " + rawClass.getName() + " should not be local");
 		if (rawClass.getEnclosingClass() != null && !Modifier.isStatic(rawClass.getModifiers()))
-			throw new IllegalArgumentException("Class should not be an inner class");
+			throw new IllegalArgumentException("Class " + rawClass.getName() + "should not be an inner class");
 
 		ClassSerializerDef.Builder classSerializerBuilder = ClassSerializerDef.builder(rawClass);
 		if (rawClass.getAnnotation(SerializeRecord.class) != null) {
@@ -895,7 +895,7 @@ public final class SerializerFactory {
 			return;
 		}
 		if (memberSerializers.stream().anyMatch(f -> f.order != Integer.MIN_VALUE)) {
-			throw new IllegalArgumentException("Explicit and auto-ordering cannot be mixed");
+			throw new IllegalArgumentException("Found mixed explicit and auto-ordering properties in " + clazz);
 		}
 		Map<String, List<MemberSerializer>> membersMap = memberSerializers.stream().collect(groupingBy(MemberSerializer::getName, toList()));
 		String pathToClass = clazz.getName().replace('.', '/') + ".class";

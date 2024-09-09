@@ -38,8 +38,8 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 	private final Class<?> decodeType;
 
 	public ArraySerializerDef(SerializerDef serializer, int fixedSize, boolean nullable, Class<?> encodeType, Class<?> decodeType) {
-		checkArgument(encodeType.isArray());
-		checkArgument(decodeType.isArray());
+		checkArgument(encodeType.isArray(), "Trying to serialize a non-array type %s as array", encodeType);
+		checkArgument(decodeType.isArray(), "Trying to deserialize a non-array type %s as array", decodeType);
 
 		this.valueSerializer = serializer;
 		this.fixedSize = fixedSize;

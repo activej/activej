@@ -889,7 +889,7 @@ public class StreamCodecs {
 		}
 
 		private void estimateMore(StreamOutput output, int positionBegin, int positionData, int dataSize, int headerSize) {
-			if (!(dataSize < MAX_SIZE)) throw new IllegalArgumentException("Unsupported size");
+			if (dataSize >= MAX_SIZE) throw new IllegalArgumentException("Unsupported size");
 
 			while (true) {
 				int estimationOld = estimation.get();
@@ -974,7 +974,7 @@ public class StreamCodecs {
 			try {
 				T item = serializer.decode(in);
 				if (in.pos() - oldPos != messageSize) {
-					throw new CorruptedDataException("Deserialized size != decoded data size");
+					throw new CorruptedDataException(String.format("Deserialized size (%d) != decoded data size (%d)", in.pos() - oldPos, messageSize));
 				}
 				return item;
 			} catch (CorruptedDataException e) {

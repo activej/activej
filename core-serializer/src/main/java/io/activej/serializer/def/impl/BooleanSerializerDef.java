@@ -45,7 +45,7 @@ public final class BooleanSerializerDef extends PrimitiveSerializerDef implement
 
 	public BooleanSerializerDef(boolean wrapped, boolean nullable) {
 		super(boolean.class, wrapped);
-		if (nullable && !wrapped) throw new IllegalArgumentException("Primitive cannot be nullable");
+		if (nullable && !wrapped) throw new IllegalArgumentException("'boolean' primitive type cannot be nullable");
 		this.nullable = nullable;
 	}
 

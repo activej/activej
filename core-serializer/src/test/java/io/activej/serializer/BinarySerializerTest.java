@@ -2766,7 +2766,7 @@ public class BinarySerializerTest {
 			serializerFactory.create(Object.class);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertEquals("Cannot serialize an interface", e.getMessage());
+			assertEquals("Cannot serialize an interface " + Interface.class.getName(), e.getMessage());
 		}
 	}
 
@@ -2780,7 +2780,7 @@ public class BinarySerializerTest {
 			serializerFactory.create(Object.class);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertEquals("Cannot serialize an interface", e.getMessage());
+			assertEquals("Cannot serialize an interface " + Annotation.class.getName(), e.getMessage());
 		}
 	}
 
