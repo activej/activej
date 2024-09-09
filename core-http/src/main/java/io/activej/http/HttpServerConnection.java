@@ -42,8 +42,7 @@ import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
-import static io.activej.http.HttpMethod.DELETE;
-import static io.activej.http.HttpMethod.GET;
+import static io.activej.http.HttpMethod.*;
 import static io.activej.http.HttpVersion.HTTP_1_0;
 import static io.activej.http.HttpVersion.HTTP_1_1;
 import static io.activej.http.Protocol.*;
@@ -273,6 +272,10 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		boolean get = line[pos] == 'G' && line[pos + 1] == 'E' && line[pos + 2] == 'T' && (line[pos + 3] == SP || line[pos + 3] == HT);
 		if (get) {
 			return GET;
+		}
+		boolean post = line[0] == 'P' && line[1] == 'O' && line[2] == 'S' && line[3] == 'T' && (line[4] == SP || line[4] == HT);
+		if (post) {
+			return POST;
 		}
 		return getHttpMethodFromMap(line, pos);
 	}
