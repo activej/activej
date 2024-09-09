@@ -16,6 +16,7 @@
 
 package io.activej.common;
 
+import org.intellij.lang.annotations.PrintFormat;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
@@ -168,7 +169,7 @@ public final class Checks {
 	 * @throws NullPointerException if an object is null
 	 * @see String#format(String, Object...)
 	 */
-	public static <T> T checkNotNull(@Nullable T reference, String template, Object... args) {
+	public static <T> T checkNotNull(@Nullable T reference, @PrintFormat String template, Object... args) {
 		if (reference != null) {
 			return reference;
 		}
@@ -234,7 +235,7 @@ public final class Checks {
 	 * @throws IllegalStateException if a state is not valid
 	 * @see String#format(String, Object...)
 	 */
-	public static void checkState(boolean expression, String template, Object... args) {
+	public static void checkState(boolean expression, @PrintFormat String template, Object... args) {
 		if (!expression) {
 			throw new IllegalStateException(String.format(template, args));
 		}
@@ -299,7 +300,7 @@ public final class Checks {
 	 * @throws IllegalArgumentException if an argument is not valid
 	 * @see String#format(String, Object...)
 	 */
-	public static void checkArgument(boolean expression, String template, Object... args) {
+	public static void checkArgument(boolean expression, @PrintFormat String template, Object... args) {
 		if (!expression) {
 			throw new IllegalArgumentException(String.format(template, args));
 		}
@@ -389,7 +390,7 @@ public final class Checks {
 	 * @param args      arguments to an error message template
 	 * @throws IllegalArgumentException if an argument is not valid
 	 */
-	public static <T> T checkArgument(T argument, Predicate<T> predicate, String template, Object... args) {
+	public static <T> T checkArgument(T argument, Predicate<T> predicate, @PrintFormat String template, Object... args) {
 		if (predicate.test(argument)) {
 			return argument;
 		}
