@@ -220,7 +220,11 @@ public final class ByteBufPool {
 		}
 		int index = 32 - numberOfLeadingZeros(size - 1); // index==32 for size==0
 		ByteBufConcurrentQueue queue = slabs[index];
+		long start = USE_WATCHDOG ? System.nanoTime() : 0L;
 		ByteBuf buf = queue.poll();
+		if (USE_WATCHDOG) {
+			slabStats[index].pollNanosTotal += (System.nanoTime() - start);
+		}
 		if (buf != null) {
 			if (ByteBuf.CHECK_RECYCLE && buf.refs != -1) throw onByteBufRecycled(buf);
 			buf.tail = 0;
@@ -533,7 +537,7 @@ public final class ByteBufPool {
 		public List<String> getPoolSlabs() {
 			List<String> result = new ArrayList<>(slabs.length + 1);
 			String header = "SlotSize,Created,Reused,InPool,Total(Kb)";
-			if (USE_WATCHDOG) header += ",RealMin,EstMean,Error,Evicted";
+			if (USE_WATCHDOG) header += ",PollMillis,RealMin,EstMean,Error,Evicted";
 			result.add(header);
 			for (int i = 0; i < slabs.length; i++) {
 				int idx = (i + 32) % slabs.length;
@@ -549,7 +553,8 @@ public final class ByteBufPool {
 				if (USE_WATCHDOG) {
 					SlabStats slabStat = slabStats[idx];
 					slabInfo +=
-						"," + slab.realMin.get() + "," +
+						"," + slabStat.pollNanosTotal / 1_000_000 + "," +
+						slab.realMin.get() + "," +
 						String.format("%.1f", slabStat.estimatedMin) + "," +
 						String.format("%.1f", slabStat.estimatedError) + "," +
 						slabStat.evictedTotal;
@@ -578,10 +583,12 @@ public final class ByteBufPool {
 		int evictedTotal;
 		int evictedLast;
 		int evictedMax;
+		long pollNanosTotal;
 		double estimatedError;
 
 		void clear() {
 			estimatedMin = estimatedError = evictedTotal = evictedLast = evictedMax = 0;
+			pollNanosTotal = 0L;
 		}
 
 		@Override
