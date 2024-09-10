@@ -23,7 +23,9 @@ import io.activej.common.MemSize;
 import java.lang.StackWalker.StackFrame;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Integer.numberOfLeadingZeros;
@@ -223,7 +225,7 @@ public final class ByteBufPool {
 		long start = USE_WATCHDOG ? System.nanoTime() : 0L;
 		ByteBuf buf = queue.poll();
 		if (USE_WATCHDOG) {
-			slabStats[index].pollNanosTotal += (System.nanoTime() - start);
+			slabStats[index].pollNanosTotal.addAndGet(System.nanoTime() - start);
 		}
 		if (buf != null) {
 			if (ByteBuf.CHECK_RECYCLE && buf.refs != -1) throw onByteBufRecycled(buf);
@@ -235,6 +237,13 @@ public final class ByteBufPool {
 			buf = ByteBuf.wrapForWriting(new byte[index == 32 ? 0 : 1 << index]);
 			buf.refs = 1;
 			if (STATS) recordNew(index);
+		}
+		if (USE_WATCHDOG) {
+			Queue<Entry> lastAllocatedEntries = slabStats[index].lastAllocatedEntries;
+			lastAllocatedEntries.add(buildRegistryEntry(buf));
+			while (lastAllocatedEntries.size() > 1000) {
+				lastAllocatedEntries.poll();
+			}
 		}
 		if (REGISTRY) allocateRegistry.put(buf, buildRegistryEntry(buf));
 		return buf;
@@ -436,6 +445,8 @@ public final class ByteBufPool {
 
 		List<Entry> queryUnrecycledBufs(int limit);
 
+		List<Entry> queryAllocatedBufs(int slotIndex, int limit);
+
 		void clear();
 
 		void clearRegistry();
@@ -534,6 +545,15 @@ public final class ByteBufPool {
 		}
 
 		@Override
+		public List<Entry> queryAllocatedBufs(int slotIndex, int limit) {
+			if (limit < 1) throw new IllegalArgumentException("Limit must be >= 1");
+			if (slotIndex < 0) throw new IllegalArgumentException("Slot index must be >= 0");
+			if (slotIndex >= slabStats.length) throw new IllegalArgumentException("Slot index must be <= " + slabStats.length);
+			if (!USE_WATCHDOG) return List.of();
+			return slabStats[slotIndex].lastAllocatedEntries.stream().sorted(comparingLong(Entry::getTimestamp)).limit(limit).collect(toList());
+		}
+
+		@Override
 		public List<String> getPoolSlabs() {
 			List<String> result = new ArrayList<>(slabs.length + 1);
 			String header = "SlotSize,Created,Reused,InPool,Total(Kb)";
@@ -553,7 +573,7 @@ public final class ByteBufPool {
 				if (USE_WATCHDOG) {
 					SlabStats slabStat = slabStats[idx];
 					slabInfo +=
-						"," + slabStat.pollNanosTotal / 1_000_000 + "," +
+						"," + slabStat.pollNanosTotal.get() / 1_000_000 + "," +
 						slab.realMin.get() + "," +
 						String.format("%.1f", slabStat.estimatedMin) + "," +
 						String.format("%.1f", slabStat.estimatedError) + "," +
@@ -583,12 +603,14 @@ public final class ByteBufPool {
 		int evictedTotal;
 		int evictedLast;
 		int evictedMax;
-		long pollNanosTotal;
+		AtomicLong pollNanosTotal = new AtomicLong();
 		double estimatedError;
+		Queue<Entry> lastAllocatedEntries = new ConcurrentLinkedQueue<>();
 
 		void clear() {
 			estimatedMin = estimatedError = evictedTotal = evictedLast = evictedMax = 0;
-			pollNanosTotal = 0L;
+			pollNanosTotal.set(0);
+			lastAllocatedEntries.clear();
 		}
 
 		@Override
