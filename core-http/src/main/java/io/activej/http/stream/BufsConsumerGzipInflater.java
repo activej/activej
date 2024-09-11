@@ -19,6 +19,7 @@ package io.activej.http.stream;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
@@ -49,13 +50,13 @@ import static java.lang.Short.reverseBytes;
  * This is a channel transformer, that converts channels of {@link ByteBuf ByteBufs}
  * decompressing the data using the DEFLATE algorithm with standard implementation from the java.util.zip package.
  * <p>
- * It is used in HTTP when {@link io.activej.http.HttpMessage#setBodyGzipCompression HttpMessage#setBodyGzipCompression}
+ * It is used in HTTP when {@link io.activej.http.HttpMessage.Builder#withBodyGzipCompression HttpMessage.Builder#withBodyGzipCompression}
  * method is used.
  */
 public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater> {
 	public static final int MAX_HEADER_FIELD_LENGTH = 4096; //4 Kb
-	public static final int DEFAULT_BUF_SIZE = 512;
+	public static final int DEFAULT_BUF_SIZE = ApplicationSettings.getInt(BufsConsumerGzipInflater.class, "bufferSize", 512);
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED};
 	private static final int GZIP_FOOTER_SIZE = 8;
