@@ -269,7 +269,9 @@ public final class ByteBufStrings {
 	}
 
 	public static ByteBuf wrapUtf8(String string) {
-		ByteBuf byteBuffer = ByteBufPool.allocate(string.length() * 3);
+		int allocationSize = string.length() * 3;
+		if (allocationSize == 0) return ByteBuf.empty();
+		ByteBuf byteBuffer = ByteBufPool.allocate(allocationSize);
 		int size = encodeUtf8(byteBuffer.array(), 0, string);
 		byteBuffer.moveTail(size);
 		return byteBuffer;
