@@ -226,7 +226,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 
 	private void inflate(ByteBufs bufs, ByteBuf src) throws DataFormatException {
 		while (true) {
-			ByteBuf buf = ByteBufPool.allocate(max(src.readRemaining(), DEFAULT_BUF_SIZE));
+			ByteBuf buf = ByteBufPool.allocate(max(src.readRemaining() * 2, DEFAULT_BUF_SIZE));
 			int beforeInflation = inflater.getTotalIn();
 			int len = inflater.inflate(buf.array(), 0, buf.writeRemaining());
 			buf.moveTail(len);
