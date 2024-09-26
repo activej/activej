@@ -350,7 +350,6 @@ public final class Injector implements ResourceLocator {
 			throw DIException.cannotConstruct(key, null);
 		}
 		Object instance = binding.getInstance(scopeCaches, -1);
-		//noinspection ConstantConditions - still have to check
 		if (instance == null) {
 			throw DIException.cannotConstruct(key, scopeDataTree.get().bindings.get(key));
 		}

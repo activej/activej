@@ -50,7 +50,7 @@ public final class Checks {
 		String enabled = System.getProperty("chk");
 		if (enabled == null) {
 			boolean asserts = false;
-			//noinspection AssertWithSideEffects,PointlessBooleanExpression,ConstantValue
+			//noinspection AssertWithSideEffects,PointlessBooleanExpression
 			assert (asserts = true) == true;
 			ENABLED_BY_DEFAULT = asserts;
 		} else if (enabled.equals("off")) {

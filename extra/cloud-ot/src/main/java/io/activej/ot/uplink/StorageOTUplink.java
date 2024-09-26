@@ -197,7 +197,6 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 	@Override
 	public Promise<FetchData<Long, D>> checkout() {
 		checkInReactorThread(this);
-		//noinspection ConstantConditions
 		return retry(
 			isResultOrException(Objects::nonNull),
 			() -> storage.getSnapshot()

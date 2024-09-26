@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 @RunWith(ActiveJServiceRunner.class)
 @UseModules({TestModule.class})
-@SuppressWarnings("BeforeOrAfterWithIncorrectSignature")
 public class ActiveJServiceRunnerTest {
 
 	private static class TestService implements Service {

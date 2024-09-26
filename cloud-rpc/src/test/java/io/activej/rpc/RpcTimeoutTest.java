@@ -98,7 +98,6 @@ public final class RpcTimeoutTest {
 	@Test
 	public void shouldTimeout() {
 		int timeout = SERVER_DELAY / 2;
-		//noinspection ConstantConditions
 		Exception exception = awaitException(client.start()
 			.then(() -> client.sendRequest(DATA, timeout))
 			.then(($, e) -> client.stop()

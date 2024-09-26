@@ -42,7 +42,6 @@ public interface Decoder<T> {
 	default T decodeOrThrow(HttpRequest request) throws DecodeException {
 		Either<T, DecodeErrors> either = decode(request);
 		if (either.isLeft()) return either.getLeft();
-		//noinspection ConstantConditions - not 'left', hence 'right'
 		throw new DecodeException(either.getRight());
 	}
 
@@ -119,7 +118,6 @@ public interface Decoder<T> {
 					if (decoded.isLeft()) {
 						args[i] = decoded.getLeft();
 					} else {
-						//noinspection ConstantConditions - not 'left', hence 'right'
 						errorsBuilder.with(decoder.getId(), decoded.getRight());
 					}
 				}

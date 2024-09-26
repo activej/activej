@@ -255,7 +255,6 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 		AtomicReference<Class<?>> reference = cachedClasses.computeIfAbsent(key, k -> new AtomicReference<>());
 		Class<?> generatedClass = reference.get();
 		if (generatedClass == null) {
-			//noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (reference) {
 				generatedClass = reference.get();
 				if (generatedClass == null) {

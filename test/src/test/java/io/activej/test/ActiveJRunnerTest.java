@@ -120,7 +120,6 @@ public class ActiveJRunnerTest {
 		}
 
 		@Before
-		@SuppressWarnings("BeforeOrAfterWithIncorrectSignature")
 		public void setup(Setupable setupable) {
 			setupable.info = "hello world";
 		}

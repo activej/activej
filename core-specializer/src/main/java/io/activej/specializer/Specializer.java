@@ -45,7 +45,6 @@ import static org.objectweb.asm.Type.getType;
 import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 import static org.objectweb.asm.commons.Method.getMethod;
 
-@SuppressWarnings("unchecked")
 public final class Specializer {
 	private static final AtomicInteger STATIC_VALUE_N = new AtomicInteger();
 	private static final Map<Integer, Object> STATIC_VALUES = new ConcurrentHashMap<>();
@@ -94,7 +93,6 @@ public final class Specializer {
 		return this;
 	}
 
-	@SuppressWarnings("PointlessBooleanExpression")
 	public final class Specialization {
 		public static final String THIS = "$this";
 
@@ -342,7 +340,6 @@ public final class Specializer {
 				}
 
 				// preserving old 'switch' style for readability
-				//noinspection EnhancedSwitchMigration
 				switch (opcode) {
 					case ACONST_NULL:
 					case ICONST_M1:
@@ -420,7 +417,7 @@ public final class Specializer {
 						else if (top == Opcodes.LONG) topType = Type.LONG_TYPE;
 						else if (top == Opcodes.NULL) topType = getType(Object.class);
 						else if (top instanceof String) topType = Type.getType(internalizeClassName((String) top));
-						else throw new UnsupportedOperationException("" + top + " " + insn);
+						else throw new UnsupportedOperationException(top + " " + insn);
 						@Nullable Remapping remapping = var < remappings.size() ? remappings.get(var) : null;
 						if (remapping != null && topType.getSort() == remapping.type.getSort()) {
 							g.storeLocal(remapping.slot);
@@ -683,7 +680,7 @@ public final class Specializer {
 						break;
 
 					default:
-						throw new UnsupportedOperationException("" + opcode + " " + insn);
+						throw new UnsupportedOperationException(opcode + " " + insn);
 				}
 			}
 
@@ -832,6 +829,7 @@ public final class Specializer {
 		for (Specialization s : specializations.values()) {
 			s.ensureClass();
 		}
+		//noinspection unchecked
 		return (T) specialization.ensureInstance();
 	}
 
