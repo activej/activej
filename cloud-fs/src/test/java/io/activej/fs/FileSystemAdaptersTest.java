@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 public final class FileSystemAdaptersTest {
 
@@ -80,12 +80,8 @@ public final class FileSystemAdaptersTest {
 
 		expect("test.txt", "deeper/test.txt");
 
-		try {
-			upload(prefixed, "nonPrefix/test.txt");
-			fail("should've failed");
-		} catch (AssertionError e) {
-			assertThat(e.getCause(), instanceOf(ForbiddenPathException.class));
-		}
+		AssertionError e = assertThrows(AssertionError.class, () -> upload(prefixed, "nonPrefix/test.txt"));
+		assertThat(e.getCause(), instanceOf(ForbiddenPathException.class));
 	}
 
 	@Test

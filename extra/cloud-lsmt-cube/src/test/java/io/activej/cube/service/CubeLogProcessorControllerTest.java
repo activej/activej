@@ -50,6 +50,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 	private CubeLogProcessorController controller;
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();

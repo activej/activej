@@ -116,7 +116,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testDoUpload() throws IOException {
+	public void upload() throws IOException {
 		Path path = clientPath.resolve("c.txt");
 
 		try (
@@ -130,17 +130,17 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test(expected = DirectoryNotEmptyException.class)
-	public void testUploadToDirectory() throws IOException {
+	public void uploadToDirectory() throws IOException {
 		client.upload("1").close();
 	}
 
 	@Test(expected = DirectoryNotEmptyException.class)
-	public void testAppendToDirectory() throws IOException {
+	public void appendToDirectory() throws IOException {
 		client.append("1", 0);
 	}
 
 	@Test
-	public void testAppendToEmptyDirectory() throws IOException {
+	public void appendToEmptyDirectory() throws IOException {
 		byte[] data = "data".getBytes();
 		Path empty = last(createEmptyDirectories(storagePath));
 		assertTrue(Files.isDirectory(empty));
@@ -157,17 +157,13 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testAppendOffsetExceedsSize() throws IOException {
+	public void appendOffsetExceedsSize() throws IOException {
 		String path = "1/a.txt";
 		long size = Files.size(storagePath.resolve(path));
 		assertTrue(size > 0);
 
-		try {
-			client.append(path, size * 2);
-			fail();
-		} catch (IOException e) {
-			assertEquals("Offset exceeds file size", e.getMessage());
-		}
+		IOException e = assertThrows(IOException.class, () -> client.append(path, size * 2));
+		assertEquals("Offset exceeds file size", e.getMessage());
 	}
 
 	@Test
@@ -176,14 +172,12 @@ public final class TestBlockingFileSystem {
 		Path path = storagePath.resolve(filename);
 		assertFalse(Files.exists(path));
 
-		try {
+		IOException e = assertThrows(IOException.class, () -> {
 			try (OutputStream outputStream = client.upload(filename, 10)) {
 				outputStream.write("Hello".getBytes());
 			}
-			fail();
-		} catch (IOException e) {
-			assertEquals("Size mismatch", e.getMessage());
-		}
+		});
+		assertEquals("Size mismatch", e.getMessage());
 	}
 
 	@Test
@@ -192,18 +186,16 @@ public final class TestBlockingFileSystem {
 		Path path = storagePath.resolve(filename);
 		assertFalse(Files.exists(path));
 
-		try {
+		IOException e = assertThrows(IOException.class, () -> {
 			try (OutputStream outputStream = client.upload(filename, 10)) {
 				outputStream.write("Hello Hello Hello".getBytes());
 			}
-			fail();
-		} catch (IOException e) {
-			assertEquals("Size mismatch", e.getMessage());
-		}
+		});
+		assertEquals("Size mismatch", e.getMessage());
 	}
 
 	@Test
-	public void testDownload() throws IOException {
+	public void download() throws IOException {
 		Path outputFile = clientPath.resolve("d.txt");
 
 		try (
@@ -217,7 +209,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testDownloadWithOffset() throws IOException {
+	public void downloadWithOffset() throws IOException {
 		String filename = "filename";
 		try (OutputStream outputStream = client.upload(filename)) {
 			outputStream.write("abcdefgh".getBytes());
@@ -229,7 +221,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testDownloadWithOffsetExceedingFileSize() throws IOException {
+	public void downloadWithOffsetExceedingFileSize() throws IOException {
 		String filename = "filename";
 		try (OutputStream outputStream = client.upload(filename)) {
 			outputStream.write("abcdefgh".getBytes());
@@ -243,7 +235,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testDownloadWithLimit() throws IOException {
+	public void downloadWithLimit() throws IOException {
 		String filename = "filename";
 		try (OutputStream outputStream = client.upload(filename)) {
 			outputStream.write("abcdefgh".getBytes());
@@ -255,12 +247,12 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test(expected = FileNotFoundException.class)
-	public void testDownloadNonExistingFile() throws IOException {
+	public void downloadNonExistingFile() throws IOException {
 		client.download("no_file.txt");
 	}
 
 	@Test
-	public void testDeleteFile() throws IOException {
+	public void deleteFile() throws IOException {
 		assertTrue(Files.exists(storagePath.resolve("2/3/a.txt")));
 
 		client.delete("2/3/a.txt");
@@ -269,12 +261,12 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testDeleteNonExistingFile() throws IOException {
+	public void deleteNonExistingFile() throws IOException {
 		client.delete("no_file.txt");
 	}
 
 	@Test
-	public void testListFiles() throws IOException {
+	public void listFiles() throws IOException {
 		Set<String> expected = Set.of("1/a.txt", "1/b.txt", "2/3/a.txt", "2/b/d.txt", "2/b/e.txt");
 
 		Map<String, FileMetadata> actual = client.list("**");
@@ -283,7 +275,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testGlobListFiles() throws IOException {
+	public void globListFiles() throws IOException {
 		Set<String> expected = Set.of("2/3/a.txt", "2/b/d.txt", "2/b/e.txt");
 
 		Map<String, FileMetadata> actual = client.list("2/*/*.txt");
@@ -292,7 +284,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testMove() throws IOException {
+	public void move() throws IOException {
 		byte[] expected = Files.readAllBytes(storagePath.resolve("1/a.txt"));
 		client.move("1/a.txt", "3/new_folder/z.txt");
 
@@ -301,7 +293,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testMoveIntoExisting() throws IOException {
+	public void moveIntoExisting() throws IOException {
 		byte[] expected = Files.readAllBytes(storagePath.resolve("1/b.txt"));
 		client.move("1/b.txt", "1/a.txt");
 
@@ -310,12 +302,12 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test(expected = FileNotFoundException.class)
-	public void testMoveNothingIntoNothing() throws IOException {
+	public void moveNothingIntoNothing() throws IOException {
 		client.move("i_do_not_exist.txt", "neither_am_i.txt");
 	}
 
 	@Test
-	public void testOverwritingDirAsFile() throws IOException {
+	public void overwritingDirAsFile() throws IOException {
 		try (OutputStream outputStream = client.upload("newdir/a.txt")) {
 			outputStream.write("test".getBytes());
 		}
@@ -332,12 +324,12 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testDeleteEmpty() throws IOException {
+	public void deleteEmpty() throws IOException {
 		client.delete("");
 	}
 
 	@Test(expected = GlobException.class)
-	public void testListMalformedGlob() throws IOException {
+	public void listMalformedGlob() throws IOException {
 		client.list("[");
 	}
 
@@ -429,7 +421,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testAppendInTheMiddle() throws IOException {
+	public void appendInTheMiddle() throws IOException {
 		String filename = "test";
 
 		// Creating file
@@ -447,7 +439,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testEmptyDirectoryCleanupOnUpload() throws IOException {
+	public void emptyDirectoryCleanupOnUpload() throws IOException {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
 
@@ -465,7 +457,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testEmptyDirectoryCleanupOnAppend() throws IOException {
+	public void emptyDirectoryCleanupOnAppend() throws IOException {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
 
@@ -483,7 +475,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testEmptyDirectoryCleanupOnMove() throws IOException {
+	public void emptyDirectoryCleanupOnMove() throws IOException {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
 
@@ -503,7 +495,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testEmptyDirectoryCleanupOnCopy() throws IOException {
+	public void emptyDirectoryCleanupOnCopy() throws IOException {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
 
@@ -523,7 +515,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test(expected = DirectoryNotEmptyException.class)
-	public void testEmptyDirectoryCleanupWithOneFile() throws IOException {
+	public void tesemptyDirectoryCleanupWithOneFile() throws IOException {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		Path randomPath = emptyDirs.get(ThreadLocalRandom.current().nextInt(emptyDirs.size()));
 		Files.createFile(randomPath.resolve("file"));
@@ -532,7 +524,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testUploadToSameNewDir() throws IOException {
+	public void uploadToSameNewDir() throws IOException {
 		String dir = "newDir";
 		Set<String> filenames = IntStream.range(0, 5)
 			.mapToObj(i -> dir + IBlockingFileSystem.SEPARATOR + i + ".txt")
@@ -550,14 +542,14 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testUploadCloseIdempotence() throws IOException {
+	public void uploadCloseIdempotence() throws IOException {
 		OutputStream outputStream = client.upload("somefile");
 		outputStream.close();
 		outputStream.close();
 	}
 
 	@Test
-	public void testUploadWithSizeCloseIdempotence() throws IOException {
+	public void uploadWithSizeCloseIdempotence() throws IOException {
 		OutputStream outputStream = client.upload("somefile", 5);
 		outputStream.write(new byte[]{1, 2, 3, 4, 5});
 		outputStream.close();
@@ -565,14 +557,14 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testAppendCloseIdempotence() throws IOException {
+	public void appendCloseIdempotence() throws IOException {
 		OutputStream outputStream = client.append("somefile", 0);
 		outputStream.close();
 		outputStream.close();
 	}
 
 	@Test
-	public void testCopyWithDeletedTempDir() throws IOException {
+	public void copyWithDeletedTempDir() throws IOException {
 		try (
 			InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
 			OutputStream outputStream = client.upload("test.txt")
@@ -583,16 +575,12 @@ public final class TestBlockingFileSystem {
 		Path tempDir = storagePath.resolve(FileSystem.DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
 
-		try {
-			client.copy("test.txt", "test.txt.copy");
-			fail();
-		} catch (FileSystemStructureException e) {
-			assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
-		}
+		FileSystemStructureException e = assertThrows(FileSystemStructureException.class, () -> client.copy("test.txt", "test.txt.copy"));
+		assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
 	}
 
 	@Test
-	public void testUploadWithDeletedTempDir() throws IOException {
+	public void uploadWithDeletedTempDir() throws IOException {
 		Path tempDir = storagePath.resolve(FileSystem.DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
 
@@ -608,7 +596,7 @@ public final class TestBlockingFileSystem {
 	}
 
 	@Test
-	public void testRelativePaths() throws IOException {
+	public void relativePaths() throws IOException {
 		Path current = Paths.get(".").toAbsolutePath();
 		assumeTrue("This test is located on a different drive than temporary directory", current.getRoot().equals(storagePath.getRoot()));
 

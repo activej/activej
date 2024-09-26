@@ -123,14 +123,10 @@ public final class DynamicMBeanFactoryOperationsTest {
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
 		List<MBeanWithNonPublicOperation> beans = List.of(instance);
 		JmxBeanSettings settings = JmxBeanSettings.create();
-		try {
-			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
-			fail();
-		} catch (IllegalStateException e) {
-			assertThat(e.getMessage(), containsString(
-				"A method \"action\" in class '" + MBeanWithNonPublicOperation.class.getName() +
-				"' annotated with @JmxOperation should be declared public"));
-		}
+		IllegalStateException e = assertThrows(IllegalStateException.class, () -> dynamicMBeanFactory.createDynamicMBean(beans, settings, false));
+		assertThat(e.getMessage(), containsString(
+			"A method \"action\" in class '" + MBeanWithNonPublicOperation.class.getName() +
+			"' annotated with @JmxOperation should be declared public"));
 	}
 
 	@Ignore("does not work concurrently yet")

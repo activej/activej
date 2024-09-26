@@ -39,10 +39,6 @@ import static java.util.stream.Collectors.toSet;
 public class Utils {
 	public static final int TO_STRING_LIMIT = ApplicationSettings.getInt(Utils.class, "toStringLimit", 10);
 
-	private static final BinaryOperator<?> NO_MERGE_FUNCTION = (v, v2) -> {
-		throw new AssertionError();
-	};
-
 	private static final Iterator<Object> EMPTY_ITERATOR = new Iterator<>() {
 		@Override
 		public boolean hasNext() {
@@ -399,8 +395,9 @@ public class Utils {
 	}
 
 	public static <T> BinaryOperator<T> noMergeFunction() {
-		//noinspection unchecked
-		return (BinaryOperator<T>) NO_MERGE_FUNCTION;
+		return (v, v2) -> {
+			throw new AssertionError();
+		};
 	}
 
 	public static <K, V, M extends Map<K, V>>

@@ -45,8 +45,8 @@ public class EtcdMigrationServiceTest extends CubeTestBase {
 	private CubeStructure cubeStructure;
 	private ByteSequence migrationRoot;
 
-	@Override
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		Assume.assumeTrue("No need to test etcd -> etcd migration", !testName.contains("etcd"));
 
@@ -104,12 +104,8 @@ public class EtcdMigrationServiceTest extends CubeTestBase {
 
 		ETCD_CLIENT.getKVClient().put(migrationRoot.concat(byteSequenceFrom(".inner")), ByteSequence.EMPTY).get();
 
-		try {
-			migrationService.migrate().get();
-			fail();
-		} catch (ExecutionException e) {
-			assertThat(e.getMessage(), containsString("namespace is not empty"));
-		}
+		ExecutionException e = assertThrows(ExecutionException.class, () -> migrationService.migrate().get());
+		assertThat(e.getMessage(), containsString("namespace is not empty"));
 	}
 
 	private long currentChunkId;

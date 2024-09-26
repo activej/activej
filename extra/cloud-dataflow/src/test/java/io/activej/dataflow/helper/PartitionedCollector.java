@@ -33,6 +33,7 @@ public final class PartitionedCollector<T> implements ICollector<T> {
 		return result;
 	}
 
+	@Override
 	public StreamSupplier<T> compile(DataflowGraph graph) {
 		List<Promise<Void>> streamingPromises = new ArrayList<>();
 		for (StreamId streamId : input.channels(DataflowContext.of(graph))) {

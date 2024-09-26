@@ -14,7 +14,7 @@ import static org.apache.calcite.sql.type.OperandTypes.family;
 
 public final class ListGetFunction extends ProjectionFunction {
 	public ListGetFunction() {
-		super("LIST_GET", SqlKind.OTHER_FUNCTION, ((SqlReturnTypeInference) (opBinding -> opBinding.getOperandType(0).getComponentType()))
+		super("LIST_GET", SqlKind.OTHER_FUNCTION, ((SqlReturnTypeInference) opBinding -> opBinding.getOperandType(0).getComponentType())
 				.andThen(SqlTypeTransforms.FORCE_NULLABLE),
 			InferTypes.ANY_NULLABLE,
 			OperandTypes.or(OperandTypes.ANY,

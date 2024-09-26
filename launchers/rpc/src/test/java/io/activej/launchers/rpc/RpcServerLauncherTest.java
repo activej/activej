@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 public class RpcServerLauncherTest {
 
@@ -47,11 +47,7 @@ public class RpcServerLauncherTest {
 			}
 		};
 
-		try {
-			launcher.launch(new String[0]);
-			fail();
-		} catch (Exception e) {
-			assertThat(e, instanceOf(BindException.class));
-		}
+		Exception e = assertThrows(Exception.class, () -> launcher.launch(new String[0]));
+		assertThat(e, instanceOf(BindException.class));
 	}
 }

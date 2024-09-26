@@ -823,11 +823,7 @@ public class BinarySerializerTest {
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(0, testData2.c);
 
-		try {
-			doTest(testData1, serializer0, serializer11);
-			fail();
-		} catch (Exception ignored) {
-		}
+		assertThrows(Exception.class, () -> doTest(testData1, serializer0, serializer11));
 
 		testData2 = doTest(testData1, serializer2, serializer22);
 		assertEquals(testData1.a, testData2.a);
@@ -2164,12 +2160,8 @@ public class BinarySerializerTest {
 		byte unsupportedVersion = 123;
 		array[0] = unsupportedVersion; // overriding version
 
-		try {
-			serializer.decode(array, 0);
-			fail();
-		} catch (CorruptedDataException e) {
-			assertEquals("Unsupported version: " + unsupportedVersion + ", supported versions: [3, 4, 5]", e.getMessage());
-		}
+		CorruptedDataException e = assertThrows(CorruptedDataException.class, () -> serializer.decode(array, 0));
+		assertEquals("Unsupported version: " + unsupportedVersion + ", supported versions: [3, 4, 5]", e.getMessage());
 	}
 
 	@SerializeClass(subclasses = {TestNullableInterfaceImpl.class})
@@ -2748,12 +2740,8 @@ public class BinarySerializerTest {
 			.withSubclasses(Object.class, List.of(AbstractClass.class))
 			.build();
 
-		try {
-			serializerFactory.create(Object.class);
-			fail();
-		} catch (IllegalArgumentException e) {
-			assertEquals("A subclass should not be an abstract class: " + AbstractClass.class, e.getMessage());
-		}
+		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> serializerFactory.create(Object.class));
+		assertEquals("A subclass should not be an abstract class: " + AbstractClass.class, e.getMessage());
 	}
 
 	@Test
@@ -2762,12 +2750,8 @@ public class BinarySerializerTest {
 			.withSubclasses(Object.class, List.of(Interface.class))
 			.build();
 
-		try {
-			serializerFactory.create(Object.class);
-			fail();
-		} catch (IllegalArgumentException e) {
-			assertEquals("Cannot serialize an interface " + Interface.class.getName(), e.getMessage());
-		}
+		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> serializerFactory.create(Object.class));
+		assertEquals("Cannot serialize an interface " + Interface.class.getName(), e.getMessage());
 	}
 
 	@Test
@@ -2776,12 +2760,8 @@ public class BinarySerializerTest {
 			.withSubclasses(Object.class, List.of(Annotation.class))
 			.build();
 
-		try {
-			serializerFactory.create(Object.class);
-			fail();
-		} catch (IllegalArgumentException e) {
-			assertEquals("Cannot serialize an interface " + Annotation.class.getName(), e.getMessage());
-		}
+		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> serializerFactory.create(Object.class));
+		assertEquals("Cannot serialize an interface " + Annotation.class.getName(), e.getMessage());
 	}
 
 	public static final class StringHolderSerializerDef extends SimpleSerializerDef<StringHolder> {
@@ -3132,6 +3112,5 @@ public class BinarySerializerTest {
 			assertEquals(pojo2.s, decoded.get(2).s);
 		}
 	}
-
 
 }

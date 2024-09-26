@@ -63,13 +63,10 @@ public class OptionalDependencyTest {
 			.bind(String.class).to(Object::toString, Integer.class)
 			.bindOptionalDependency(String.class)
 			.build();
-		try {
-			Injector.of(module);
-			fail();
-		} catch (DIException e) {
-			assertTrue(e.getMessage().startsWith("Unsatisfied dependencies detected"));
-			assertTrue(e.getMessage().contains("key Integer required to make"));
-		}
+
+		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
+		assertTrue(e.getMessage().startsWith("Unsatisfied dependencies detected"));
+		assertTrue(e.getMessage().contains("key Integer required to make"));
 	}
 
 	@Test

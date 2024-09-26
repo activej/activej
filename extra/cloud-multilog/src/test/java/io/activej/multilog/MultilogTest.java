@@ -35,8 +35,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
 public class MultilogTest {
@@ -181,7 +180,7 @@ public class MultilogTest {
 		await(fs.list("*" + partition + "*")
 			.then(map -> {
 				PartitionAndFile partitionAndFile = NAME_PARTITION_REMAINDER_SEQ.parse(first(map.keySet()));
-				assert partitionAndFile != null;
+				assertNotNull(partitionAndFile);
 				LogFile logFile = partitionAndFile.logFile();
 				return StreamSupplierWithResult.ofPromise(
 						multilog.read(partition, logFile, first(map.values()).getSize() * 2, null))

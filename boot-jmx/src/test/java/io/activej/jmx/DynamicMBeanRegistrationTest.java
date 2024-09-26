@@ -19,7 +19,7 @@ import static io.activej.jmx.helper.CustomMatchers.objectname;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 public class DynamicMBeanRegistrationTest {
 
@@ -61,14 +61,10 @@ public class DynamicMBeanRegistrationTest {
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
 		List<NonPublicMBean> beans = List.of(instance);
 		JmxBeanSettings settings = JmxBeanSettings.create();
-		try {
-			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
-			fail();
-		} catch (IllegalStateException e) {
-			assertThat(e.getMessage(), containsString(
-				"A class '" + NonPublicMBean.class.getName() +
-				"' containing methods annotated with @JmxAttribute should be declared public"));
-		}
+		IllegalStateException e = assertThrows(IllegalStateException.class, () -> dynamicMBeanFactory.createDynamicMBean(beans, settings, false));
+		assertThat(e.getMessage(), containsString(
+			"A class '" + NonPublicMBean.class.getName() +
+			"' containing methods annotated with @JmxAttribute should be declared public"));
 	}
 
 	@Test

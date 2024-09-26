@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.function.Function;
 
 public interface JsonCodec<T> extends JsonEncoder<T>, JsonDecoder<T> {
+	@Override
 	void write(JsonWriter writer, T value);
 
 	@Override

@@ -83,13 +83,9 @@ public class ChannelSuppliersIOTest {
 			ChannelSupplier<ByteBuf> supplier = ofInputStream(executor, is);
 
 			IOException exception = awaitException(supplier.get());
-			try {
-				//noinspection ResultOfMethodCallIgnored
-				is.read();
-				fail();
-			} catch (IOException e) {
-				assertEquals(e.getMessage(), exception.getMessage());
-			}
+			IOException e = assertThrows(IOException.class, is::read);
+
+			assertEquals(e.getMessage(), exception.getMessage());
 		}
 	}
 
@@ -153,21 +149,8 @@ public class ChannelSuppliersIOTest {
 			inputStream.close();
 			channelSupplierAsInputStream.close();
 
-			IOException exception1 = null;
-			try {
-				inputStream.read();
-				fail();
-			} catch (IOException e) {
-				exception1 = e;
-			}
-
-			IOException exception2 = null;
-			try {
-				channelSupplierAsInputStream.read();
-				fail();
-			} catch (IOException e) {
-				exception2 = e;
-			}
+			IOException exception1 = assertThrows(IOException.class, inputStream::read);
+			IOException exception2 = assertThrows(IOException.class, channelSupplierAsInputStream::read);
 
 			assertEquals(exception1.getMessage(), exception2.getMessage());
 		}

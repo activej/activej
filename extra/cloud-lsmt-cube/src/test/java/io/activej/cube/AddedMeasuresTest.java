@@ -53,6 +53,7 @@ public class AddedMeasuresTest extends CubeTestBase {
 	private List<CubeDiff> initialDiffs;
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 

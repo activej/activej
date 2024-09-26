@@ -105,7 +105,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
 			closeEx(new MalformedDataException("Data is corrupted", e));
 			return;
 		} catch (Exception e) {
-			closeEx(new UnknownFormatException(format("Parse exception, %s : %s", this, bufs), e));
+			closeEx(new UnknownFormatException(format("Parse exception: %s", bufs), e));
 			return;
 		}
 
@@ -114,12 +114,12 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
 			bufs.skip(1);
 
 			if (!explicitEndOfStream) {
-				closeEx(new TruncatedDataException(format("Unexpected end-of-stream, %s : %s", this, bufs)));
+				closeEx(new TruncatedDataException(format("Unexpected end-of-stream: %s", bufs)));
 				return;
 			}
 
 			if (bufs.hasRemaining()) {
-				closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, bufs)));
+				closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream: %s", bufs)));
 				return;
 			}
 		}
@@ -130,21 +130,21 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
 					if (buf != null) {
 						if (endOfStream) {
 							buf.recycle();
-							closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, bufs)));
+							closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream: %s", bufs)));
 							return;
 						}
 						bufs.add(buf);
 						asyncResume();
 					} else {
 						if (explicitEndOfStream && !endOfStream) {
-							closeEx(new UnknownFormatException(format("Explicit end-of-stream is missing, %s : %s", this, bufs)));
+							closeEx(new UnknownFormatException(format("Explicit end-of-stream is missing: %s", bufs)));
 							return;
 						}
 
 						if (bufs.isEmpty()) {
 							sendEndOfStream();
 						} else {
-							closeEx(new TruncatedDataException(format("Truncated serialized data stream, %s : %s", this, bufs)));
+							closeEx(new TruncatedDataException(format("Truncated serialized data stream: %s", bufs)));
 						}
 					}
 				})

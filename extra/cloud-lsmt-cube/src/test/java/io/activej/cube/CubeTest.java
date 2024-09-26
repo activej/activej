@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
-import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
@@ -72,7 +71,7 @@ public final class CubeTest {
 
 	private static final FrameFormat FRAME_FORMAT = FrameFormats.lz4();
 
-	private final DefiningClassLoader classLoader = create();
+	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
 	private final Executor executor = newSingleThreadExecutor();
 
 	private IAggregationChunkStorage chunkStorage;

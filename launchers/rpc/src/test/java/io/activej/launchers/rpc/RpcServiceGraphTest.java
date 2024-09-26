@@ -30,8 +30,7 @@ import java.util.concurrent.ExecutionException;
 
 import static io.activej.rpc.client.sender.strategy.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class RpcServiceGraphTest {
 
@@ -94,13 +93,10 @@ public class RpcServiceGraphTest {
 		injector.createEagerInstances();
 		ServiceGraph serviceGraph = injector.getInstance(ServiceGraph.class);
 
-		try {
-			serviceGraph.startFuture().get();
-		} catch (ExecutionException e) {
-			Throwable cause = e.getCause();
-			assertTrue(cause instanceof RpcException);
-			assertEquals("Could not establish connection to " + Set.of(failingServerAddress), cause.getMessage());
-		}
+		ExecutionException startError = assertThrows(ExecutionException.class, () -> serviceGraph.startFuture().get());
+		Throwable cause = startError.getCause();
+		assertTrue(cause instanceof RpcException);
+		assertEquals("Could not establish connection to " + Set.of(failingServerAddress), cause.getMessage());
 
 		try {
 			serviceGraph.stopFuture().get();

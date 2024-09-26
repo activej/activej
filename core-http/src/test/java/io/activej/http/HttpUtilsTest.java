@@ -17,7 +17,6 @@ import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class HttpUtilsTest {
@@ -177,14 +176,8 @@ public class HttpUtilsTest {
 	}
 
 	private void assertNegativeSizeException(ThrowingRunnable runnable) {
-		try {
-			runnable.run();
-			fail();
-		} catch (Throwable e) {
-			assertThat(e, instanceOf(MalformedHttpException.class));
-			assertThat(e.getMessage(), containsString("Not a decimal value"));
-		}
-
+		MalformedHttpException e = assertThrows(MalformedHttpException.class, runnable);
+		assertThat(e.getMessage(), containsString("Not a decimal value"));
 	}
 	// endregion
 }

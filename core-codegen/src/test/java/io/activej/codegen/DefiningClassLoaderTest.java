@@ -97,14 +97,10 @@ public class DefiningClassLoaderTest {
 		String testString = "test string";
 		String className = "";
 
-		try {
-			classLoader.ensureClass(className,
-				() -> ClassGenerator.builder(Supplier.class)
-					.withMethod("get", value(testString))
-					.build());
-			fail();
-		} catch (ClassFormatError ignored) {
-		}
+		assertThrows(ClassFormatError.class, () -> classLoader.ensureClass(className,
+			() -> ClassGenerator.builder(Supplier.class)
+				.withMethod("get", value(testString))
+				.build()));
 	}
 
 	@Test
@@ -112,15 +108,11 @@ public class DefiningClassLoaderTest {
 		String testString = "test string";
 		String className = "/";
 
-		try {
-			classLoader.ensureClass(className,
-				() -> ClassGenerator.builder(Supplier.class)
-					.withMethod("get", value(testString))
-					.build());
-			fail();
-		} catch (NoClassDefFoundError e) {
-			assertTrue(e.getMessage().startsWith("IllegalName"));
-		}
+		NoClassDefFoundError e = assertThrows(NoClassDefFoundError.class, () -> classLoader.ensureClass(className,
+			() -> ClassGenerator.builder(Supplier.class)
+				.withMethod("get", value(testString))
+				.build()));
+		assertTrue(e.getMessage().startsWith("IllegalName"));
 	}
 
 	@Test

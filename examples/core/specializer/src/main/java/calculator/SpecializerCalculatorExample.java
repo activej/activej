@@ -56,7 +56,7 @@ public final class SpecializerCalculatorExample {
 		double x = -1;
 
 		// manual code, superfast
-		System.out.println(((2.0 + 2.0 * 2.0) * -x) + 5.0 + 1024.0 / (100.0 + 58.0) * 50.0 * 37.0 - 100.0 + 2.0 * (Math.pow(x, 2.0)) % 3.0);
+		System.out.println(((2.0 + 2.0 * 2.0) * -x) + 5.0 + 1024.0 / (100.0 + 58.0) * 50.0 * 37.0 - 100.0 + 2.0 * Math.pow(x, 2.0) % 3.0);
 
 		CalculatorExpression expression = PARSER.parse("((2 + 2 * 2) * -x) + 5 + 1024 / (100 + 58) * 50 * 37 - 100 + 2 * x ^ 2 % 3");
 

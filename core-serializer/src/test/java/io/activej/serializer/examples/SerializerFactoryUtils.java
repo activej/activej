@@ -5,7 +5,6 @@ import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.def.SerializerDef;
 import io.activej.types.scanner.TypeScannerRegistry;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,10 +16,10 @@ public class SerializerFactoryUtils {
 		byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
 	);
 
-	private static final Map<String, String> COLLECTION_IMPL_SUFFIX = new HashMap<>() {{
-		put("Set", "HashSet");
-		put("IndexedContainer", "ArrayList");
-	}};
+	private static final Map<String, String> COLLECTION_IMPL_SUFFIX = Map.of(
+		"Set", "HashSet",
+		"IndexedContainer", "ArrayList"
+	);
 
 	// region creators
 	public static SerializerFactory createWithHppc7Support(String profile, DefiningClassLoader definingClassLoader) {

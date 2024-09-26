@@ -1343,13 +1343,9 @@ public final class TestDI {
 			.bind(new Key<MultipleInjectConstructors>() {})
 			.build();
 
-		try {
-			Injector.of(module);
-			fail();
-		} catch (DIException e) {
-			assertEquals("Failed to generate implicit binding for MultipleInjectConstructors, more than one inject constructor",
-				e.getMessage());
-		}
+		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
+		assertEquals("Failed to generate implicit binding for MultipleInjectConstructors, more than one inject constructor",
+			e.getMessage());
 	}
 
 	@Test
@@ -1372,15 +1368,11 @@ public final class TestDI {
 			.bind(MultipleConstructorsInject.class)
 			.build();
 
-		try {
-			Injector.of(module);
-			fail();
-		} catch (DIException e) {
-			assertEquals(
-				"Failed to generate implicit binding for MultipleConstructorsInject, " +
-				"inject annotation on class with multiple constructors",
-				e.getMessage());
-		}
+		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
+		assertEquals(
+			"Failed to generate implicit binding for MultipleConstructorsInject, " +
+			"inject annotation on class with multiple constructors",
+			e.getMessage());
 	}
 
 	@Test
@@ -1389,15 +1381,11 @@ public final class TestDI {
 			.bind(new Key<InjectInterface>() {})
 			.build();
 
-		try {
-			Injector.of(module);
-			fail();
-		} catch (DIException e) {
-			assertEquals(
-				"Failed to generate implicit binding for InjectInterface, " +
-				"inject annotation on interface",
-				e.getMessage());
-		}
+		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
+		assertEquals(
+			"Failed to generate implicit binding for InjectInterface, " +
+			"inject annotation on interface",
+			e.getMessage());
 	}
 
 	@Test
@@ -1407,15 +1395,11 @@ public final class TestDI {
 			.bind(ConstructorAndFactoryInject.class)
 			.build();
 
-		try {
-			Injector.of(module);
-			fail();
-		} catch (DIException e) {
-			assertEquals(
-				"Failed to generate implicit binding for ConstructorAndFactoryInject, " +
-				"inject annotation on class with factory method",
-				e.getMessage());
-		}
+		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
+		assertEquals(
+			"Failed to generate implicit binding for ConstructorAndFactoryInject, " +
+			"inject annotation on class with factory method",
+			e.getMessage());
 	}
 
 	@Test
@@ -1439,12 +1423,8 @@ public final class TestDI {
 			.bind(StringInterface2.class).to(() -> new StringInterface2("test2"))
 			.build();
 
-		try {
-			Injector.of(module);
-			fail();
-		} catch (DIException e) {
-			assertTrue(e.getMessage().startsWith("Could not synthesize a binding for TestInterface<String> in scope (). Ambiguous bindings in scope ()"));
-		}
+		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
+		assertTrue(e.getMessage().startsWith("Could not synthesize a binding for TestInterface<String> in scope (). Ambiguous bindings in scope ()"));
 	}
 
 	@Test
@@ -1495,12 +1475,8 @@ public final class TestDI {
 			.bind(new Key<List<Object>>() {}).to(() -> List.of("test"))
 			.build();
 
-		try {
-			Injector.of(module);
-			fail();
-		} catch (DIException e) {
-			assertEquals("Could not synthesize explicit binding for Iterable<String> in scope ()", e.getMessage());
-		}
+		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
+		assertEquals("Could not synthesize explicit binding for Iterable<String> in scope ()", e.getMessage());
 	}
 
 	@Test
@@ -1511,15 +1487,11 @@ public final class TestDI {
 			.bind(new Key<List<Integer>>() {}).to(() -> List.of(1))
 			.build();
 
-		try {
-			Injector.of(module);
-			fail();
-		} catch (DIException e) {
-			assertThat(e.getMessage(), matchesPattern(
-				"Could not synthesize a binding for Iterable in scope \\(\\)\\. " +
-				"Ambiguous bindings in scope \\(\\): \\[List<(String|Integer)>, List<(String|Integer)>]")
-			);
-		}
+		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
+		assertThat(e.getMessage(), matchesPattern(
+			"Could not synthesize a binding for Iterable in scope \\(\\)\\. " +
+			"Ambiguous bindings in scope \\(\\): \\[List<(String|Integer)>, List<(String|Integer)>]")
+		);
 	}
 
 	@Test

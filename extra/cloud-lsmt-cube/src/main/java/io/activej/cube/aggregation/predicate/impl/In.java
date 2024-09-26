@@ -40,7 +40,7 @@ public final class In implements AggregationPredicate {
 
 	@Override
 	public AggregationPredicate simplify() {
-		return (values.iterator().hasNext()) ? this : AggregationPredicates.alwaysFalse();
+		return values.iterator().hasNext() ? this : AggregationPredicates.alwaysFalse();
 	}
 
 	@Override

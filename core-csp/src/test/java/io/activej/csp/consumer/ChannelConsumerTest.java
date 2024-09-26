@@ -26,8 +26,6 @@ import static io.activej.reactor.Reactor.executeWithReactor;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class ChannelConsumerTest {
@@ -141,14 +139,11 @@ public class ChannelConsumerTest {
 
 		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
-			try {
+			assertThrows(RuntimeException.class, () -> {
 				try (OutputStream outputStream = channelConsumerAsOutputStream(reactor, channelConsumer)) {
 					outputStream.write(0);
 				}
-				fail();
-			} catch (Exception e) {
-				assertThat(e, instanceOf(RuntimeException.class));
-			}
+			});
 		}));
 	}
 

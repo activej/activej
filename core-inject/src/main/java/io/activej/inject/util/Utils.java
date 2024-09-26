@@ -131,7 +131,7 @@ public final class Utils {
 	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedKey> known, String indent, int[] scopeCount, StringBuilder sb) {
 		if (scope != UNSCOPED) {
 			sb.append("\n" + indent)
-				.append("subgraph cluster_" + (scopeCount[0]++) + " {\n")
+				.append("subgraph cluster_" + scopeCount[0]++ + " {\n")
 				.append(
 					indent + "\tlabel=\"" +
 					scope[scope.length - 1].getDisplayString()

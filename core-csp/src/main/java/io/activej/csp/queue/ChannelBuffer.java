@@ -164,7 +164,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	}
 
 	private void doAdd(@Nullable T value) {
-		elements[(tail++) & (elements.length - 1)] = value;
+		elements[tail++ & (elements.length - 1)] = value;
 	}
 
 	/**
@@ -200,7 +200,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 
 	private T doPoll() {
 		assert head != tail;
-		int pos = (head++) & (elements.length - 1);
+		int pos = head++ & (elements.length - 1);
 		@SuppressWarnings("unchecked")
 		T result = (T) elements[pos];
 		elements[pos] = null;     // Must null out slot

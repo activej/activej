@@ -41,6 +41,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 	}
 
 	@Before
+	@Override
 	public void setUp() {
 		client = RedisClient.create(getCurrentReactor(), ADDRESS);
 		await(connection -> connection.cmd(RedisRequest.of("FLUSHALL"), OK));

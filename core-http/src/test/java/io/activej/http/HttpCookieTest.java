@@ -185,11 +185,7 @@ public class HttpCookieTest {
 		List<HttpCookie> httpCookies = new ArrayList<>();
 		byte[] bytes = encodeAscii(cookieString);
 
-		try {
-			HttpCookie.decodeFull(bytes, 0, bytes.length, httpCookies);
-			fail();
-		} catch (MalformedHttpException e) {
-			assertEquals("Unknown SameSite value: Invalid", e.getMessage());
-		}
+		MalformedHttpException e = assertThrows(MalformedHttpException.class, () -> HttpCookie.decodeFull(bytes, 0, bytes.length, httpCookies));
+		assertEquals("Unknown SameSite value: Invalid", e.getMessage());
 	}
 }

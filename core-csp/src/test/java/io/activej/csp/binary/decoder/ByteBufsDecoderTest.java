@@ -75,12 +75,8 @@ public final class ByteBufsDecoderTest {
 		assertArrayEquals(new byte[]{4}, afterCrlf.asArray());
 
 		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4, CR, LF}));
-		try {
-			doDecode(decoder);
-			fail();
-		} catch (MalformedDataException e) {
-			assertEquals("No CRLF is found in 5 bytes", e.getMessage());
-		}
+		MalformedDataException e = assertThrows(MalformedDataException.class, () -> doDecode(decoder));
+		assertEquals("No CRLF is found in 5 bytes", e.getMessage());
 	}
 
 	@Test
@@ -125,15 +121,12 @@ public final class ByteBufsDecoderTest {
 		assertArrayEquals(otherBytes, bufs.takeRemaining().asArray());
 
 		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4, 6, 7, 8, 9, 10, 11}));
-		try {
-			doDecode(decoder);
-			fail();
-		} catch (MalformedDataException e) {
-			assertEquals(
-				"Array of bytes differs at index " + 4 +
-				"[Expected: " + 5 + ", actual: " + 6 + ']',
-				e.getMessage());
-		}
+
+		MalformedDataException e = assertThrows(MalformedDataException.class, () -> doDecode(decoder));
+		assertEquals(
+			"Array of bytes differs at index " + 4 +
+			"[Expected: " + 5 + ", actual: " + 6 + ']',
+			e.getMessage());
 	}
 
 	private <T> T doDecode(ByteBufsDecoder<T> decoder) throws MalformedDataException {

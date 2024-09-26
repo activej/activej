@@ -59,7 +59,7 @@ public class RpcStrategyServerTest {
 		int timeout = 50;
 		RpcMessageDataStub data = new RpcMessageDataStub();
 
-		assert sender != null;
+		assertNotNull(sender);
 		for (int i = 0; i < calls; i++) {
 			sender.sendRequest(data, timeout, assertNoCalls());
 		}

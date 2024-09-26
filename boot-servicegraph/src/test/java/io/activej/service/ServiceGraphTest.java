@@ -14,7 +14,7 @@ import io.activej.test.ExpectedException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 public class ServiceGraphTest {
 	@Test
@@ -23,12 +23,8 @@ public class ServiceGraphTest {
 		injector.getInstance(Key.of(BlockingService.class, "TopService1"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
 
-		try {
-			graph.startFuture().get();
-			fail();
-		} catch (Exception e) {
-			assertSame(FailingModule.INTERRUPTED, e.getCause());
-		}
+		Exception e = assertThrows(Exception.class, () -> graph.startFuture().get());
+		assertSame(FailingModule.INTERRUPTED, e.getCause());
 	}
 
 	@Test
@@ -38,12 +34,8 @@ public class ServiceGraphTest {
 		injector.getInstance(Key.of(BlockingService.class, "TopService2"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
 
-		try {
-			graph.startFuture().get();
-			fail();
-		} catch (Exception e) {
-			assertSame(FailingModule.INTERRUPTED, e.getCause());
-		}
+		Exception e = assertThrows(Exception.class, () -> graph.startFuture().get());
+		assertSame(FailingModule.INTERRUPTED, e.getCause());
 	}
 
 	@Test
@@ -53,20 +45,11 @@ public class ServiceGraphTest {
 		injector.getInstance(Key.of(ReactiveService.class, "stop"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
 
-		try {
-			graph.startFuture().get();
-			fail();
-		} catch (Exception e) {
-			assertSame(FailingEventloopModule.ERROR, e.getCause());
-		}
+		Exception startException = assertThrows(Exception.class, () -> graph.startFuture().get());
+		assertSame(FailingEventloopModule.ERROR, startException.getCause());
 
-		try {
-			graph.stopFuture().get();
-			fail();
-		} catch (Exception e) {
-			assertSame(FailingEventloopModule.ERROR, e.getCause());
-		}
-
+		Exception stopException = assertThrows(Exception.class, () -> graph.stopFuture().get());
+		assertSame(FailingEventloopModule.ERROR, stopException.getCause());
 	}
 
 	// region modules

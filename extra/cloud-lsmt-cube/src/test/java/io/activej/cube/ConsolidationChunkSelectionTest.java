@@ -12,8 +12,7 @@ import static io.activej.cube.TestUtils.aggregationStructureBuilder;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class ConsolidationChunkSelectionTest {
 
@@ -125,7 +124,7 @@ public class ConsolidationChunkSelectionTest {
 
 		Map<PrimaryKey, RangeTree<PrimaryKey, AggregationChunk>> partitioningKeyToTree = state.groupByPartition(2);
 
-		assert partitioningKeyToTree != null;
+		assertNotNull(partitioningKeyToTree);
 		assertEquals(chunks1, partitioningKeyToTree.get(PrimaryKey.ofArray(1, 1)).getAll());
 		assertEquals(chunks2, partitioningKeyToTree.get(PrimaryKey.ofArray(2, 1)).getAll());
 		assertEquals(chunks3, partitioningKeyToTree.get(PrimaryKey.ofArray(2, 2)).getAll());

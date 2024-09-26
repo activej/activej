@@ -421,12 +421,8 @@ public final class RoutingServletTest {
 		RoutingServlet router = RoutingServlet.builder(getCurrentReactor())
 			.with(GET, "/a%2fb", servlet)
 			.initialize(builder -> {
-				try {
-					builder.with(GET, "/a%2Fb", servlet);
-					fail();
-				} catch (IllegalArgumentException e) {
-					assertEquals("Already mapped", e.getMessage());
-				}
+				IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> builder.with(GET, "/a%2Fb", servlet));
+				assertEquals("Already mapped", e.getMessage());
 			})
 			.build();
 
@@ -442,12 +438,8 @@ public final class RoutingServletTest {
 		RoutingServlet router = RoutingServlet.builder(getCurrentReactor())
 			.with(GET, "/абв", servlet)
 			.initialize(builder -> {
-				try {
-					builder.with(GET, "/%D0%B0%D0%B1%D0%B2", servlet);
-					fail();
-				} catch (IllegalArgumentException e) {
-					assertEquals("Already mapped", e.getMessage());
-				}
+				IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> builder.with(GET, "/%D0%B0%D0%B1%D0%B2", servlet));
+				assertEquals("Already mapped", e.getMessage());
 			})
 			.build();
 
@@ -500,20 +492,12 @@ public final class RoutingServletTest {
 		RoutingServlet router = RoutingServlet.builder(getCurrentReactor())
 			.with(GET, "/a", servlet)
 			.initialize(builder -> {
-				try {
-					builder.with(GET, "/a%2", servlet);
-					fail();
-				} catch (IllegalArgumentException e) {
-					assertEquals("Pattern contains bad percent encoding", e.getMessage());
-				}
+				IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> builder.with(GET, "/a%2", servlet));
+				assertEquals("Pattern contains bad percent encoding", e.getMessage());
 			})
 			.build();
 
-		try {
-			router.serve(HttpRequest.get("http://example.com/a%2").build());
-			fail();
-		} catch (HttpError e) {
-			assertEquals("HTTP code 400: Path contains bad percent encoding", e.getMessage());
-		}
+		HttpError e = assertThrows(HttpError.class, () -> router.serve(HttpRequest.get("http://example.com/a%2").build()));
+		assertEquals("HTTP code 400: Path contains bad percent encoding", e.getMessage());
 	}
 }

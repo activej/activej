@@ -18,8 +18,6 @@ import java.util.*;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
 import static io.activej.codegen.expression.Expressions.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class ExpressionTest {
@@ -1007,12 +1005,9 @@ public class ExpressionTest {
 			.withMethod("getValue1", staticCall(TestCallStaticSelfAmbiguous.class, "method", self()))
 			.withMethod("getValue2", staticCall(TestCallStaticSelfAmbiguous.class, "method", self()))
 			.build();
-		try {
-			classGenerator.generateClassAndCreateInstance(CLASS_LOADER);
-			fail();
-		} catch (IllegalArgumentException e) {
-			assertTrue(e.getMessage().startsWith("Ambiguous method: "));
-		}
+
+		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> classGenerator.generateClassAndCreateInstance(CLASS_LOADER));
+		assertTrue(e.getMessage().startsWith("Ambiguous method: "));
 	}
 
 	@org.junit.Test
@@ -1149,32 +1144,19 @@ public class ExpressionTest {
 			.build()
 			.generateClassAndCreateInstance(CLASS_LOADER);
 
-		try {
-			errorThrower.throwChecked("Fail");
-			fail();
-		} catch (Exception e) {
-			assertThat(e, instanceOf(IOException.class));
-			assertEquals("Fail", e.getMessage());
-		}
+		IOException ioException = assertThrows(IOException.class, () -> errorThrower.throwChecked("Fail"));
+		assertEquals("Fail", ioException.getMessage());
 
-		try {
-			errorThrower.throwUnchecked();
-			fail();
-		} catch (RuntimeException ignored) {
-		}
+		assertThrows(RuntimeException.class, errorThrower::throwUnchecked);
 
-		try {
-			errorThrower.throwCheckedWithSuppressed();
-			fail();
-		} catch (Exception e) {
-			assertEquals("main", e.getMessage());
+		Exception e = assertThrows(Exception.class, errorThrower::throwCheckedWithSuppressed);
+		assertEquals("main", e.getMessage());
 
-			Throwable[] suppressed = e.getSuppressed();
-			assertEquals(3, suppressed.length);
-			assertEquals("first", suppressed[0].getMessage());
-			assertEquals("second", suppressed[1].getMessage());
-			assertEquals("third", suppressed[2].getMessage());
-		}
+		Throwable[] suppressed = e.getSuppressed();
+		assertEquals(3, suppressed.length);
+		assertEquals("first", suppressed[0].getMessage());
+		assertEquals("second", suppressed[1].getMessage());
+		assertEquals("third", suppressed[2].getMessage());
 	}
 
 	@org.junit.Test

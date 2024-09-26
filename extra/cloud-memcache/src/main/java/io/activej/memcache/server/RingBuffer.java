@@ -80,7 +80,7 @@ public final class RingBuffer implements RingBufferMBean {
 
 		static int intValueOf(byte[] bytes) {
 			return
-				((bytes[0] << 24)) |
+				(bytes[0] << 24) |
 				(bytes[1] & 0xff) << 16 |
 				(bytes[2] & 0xff) << 8 |
 				(bytes[3] & 0xff);
@@ -109,7 +109,7 @@ public final class RingBuffer implements RingBufferMBean {
 			}
 			if (segment < 0)
 				return null;
-			int offset = (int) (segment);
+			int offset = (int) segment;
 			int size = (int) (segment >>> 32);
 			return new Slice(array, offset, size);
 		}

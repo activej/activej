@@ -153,24 +153,15 @@ public class FileStateManagerTest {
 		manager.save(75);
 		assertEquals(2, fileSystem.list("**").size());
 
-		try {
-			manager.save(125);
-			fail();
-		} catch (IOException e) {
-			assertSame(expectedException, e);
-			assertEquals(2, fileSystem.list("**").size()); // no new files are created
-		}
+		IOException e = assertThrows(IOException.class, () -> manager.save(125));
+		assertSame(expectedException, e);
+		assertEquals(2, fileSystem.list("**").size()); // no new files are created
 	}
 
 	@Test
 	public void tryLoadSnapshotNone() throws IOException {
 		long revision = ThreadLocalRandom.current().nextLong();
-		try {
-			manager.loadSnapshot(revision);
-			fail();
-		} catch (IOException ignored) {
-		}
-
+		assertThrows(IOException.class, () -> manager.loadSnapshot(revision));
 		assertNull(manager.tryLoadSnapshot(revision));
 	}
 
@@ -178,12 +169,8 @@ public class FileStateManagerTest {
 	public void tryLoadDiffNone() throws IOException {
 		long revisionFrom = ThreadLocalRandom.current().nextLong();
 		long revisionTo = revisionFrom + 1;
-		try {
-			manager.loadDiff(0, revisionFrom, revisionTo);
-			fail();
-		} catch (IOException ignored) {
-		}
 
+		assertThrows(IOException.class, () -> manager.loadDiff(0, revisionFrom, revisionTo));
 		assertNull(manager.tryLoadDiff(0, revisionFrom, revisionTo));
 	}
 
@@ -193,11 +180,7 @@ public class FileStateManagerTest {
 		manager.save(200, 20L);
 		manager.save(150, 30L);
 
-		try {
-			manager.save(500, 25L);
-			fail();
-		} catch (IllegalArgumentException ignored) {
-		}
+		assertThrows(IllegalArgumentException.class, () -> manager.save(500, 25L));
 
 		FileState<Integer> load1 = manager.load();
 		assertEquals(150, load1.state().intValue());

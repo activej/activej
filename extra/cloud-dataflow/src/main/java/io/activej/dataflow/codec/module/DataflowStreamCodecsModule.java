@@ -66,7 +66,7 @@ public final class DataflowStreamCodecsModule extends AbstractModule {
 				}
 				Class<?> subtype = k.getTypeParameter(0).getRawType();
 
-				if (!(type.isAssignableFrom(subtype))) {
+				if (!type.isAssignableFrom(subtype)) {
 					continue;
 				}
 

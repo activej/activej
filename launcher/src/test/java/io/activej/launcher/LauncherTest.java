@@ -34,15 +34,10 @@ public class LauncherTest {
 		ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 		listAppender.start();
 
-		try {
-			logger.addAppender(listAppender);
-			launcher.launch(new String[0]);
-			fail();
-		} catch (DIException e) {
-			assertSame(testException, e.getCause());
-		} finally {
-			logger.detachAppender(listAppender);
-		}
+		logger.addAppender(listAppender);
+		DIException e = assertThrows(DIException.class, () -> launcher.launch(new String[0]));
+		assertSame(testException, e.getCause());
+		logger.detachAppender(listAppender);
 
 		ILoggingEvent lastEvent = listAppender.list.get(listAppender.list.size() - 1);
 

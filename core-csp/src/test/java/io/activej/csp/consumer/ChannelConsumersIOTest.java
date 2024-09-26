@@ -87,12 +87,8 @@ public class ChannelConsumersIOTest {
 			ChannelConsumer<ByteBuf> consumer = ofOutputStream(executor, os);
 
 			IOException exception = awaitException(consumer.accept(ByteBuf.wrapForReading(new byte[]{1})));
-			try {
-				os.write(1);
-				fail();
-			} catch (IOException e) {
-				assertEquals(e.getMessage(), exception.getMessage());
-			}
+			IOException e = assertThrows(IOException.class, () -> os.write(1));
+			assertEquals(e.getMessage(), exception.getMessage());
 		}
 	}
 
@@ -145,21 +141,8 @@ public class ChannelConsumersIOTest {
 			outputStream.close();
 			channelConsumerAsOutputStream.close();
 
-			IOException exception1 = null;
-			try {
-				outputStream.write(1);
-				fail();
-			} catch (IOException e) {
-				exception1 = e;
-			}
-
-			IOException exception2 = null;
-			try {
-				channelConsumerAsOutputStream.write(1);
-				fail();
-			} catch (IOException e) {
-				exception2 = e;
-			}
+			IOException exception1 = assertThrows(IOException.class, () -> outputStream.write(1));
+			IOException exception2 = assertThrows(IOException.class, () -> channelConsumerAsOutputStream.write(1));
 
 			assertEquals(exception1.getMessage(), exception2.getMessage());
 		}

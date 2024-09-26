@@ -96,7 +96,6 @@ public final class TestRpcClientShutdown {
 	@Test
 	public void testClientForcedShutdown() throws IOException {
 		NioReactor reactor = Reactor.getCurrentReactor();
-		Executor executor = Executors.newSingleThreadExecutor();
 		List<Class<?>> messageTypes = List.of(Request.class, Response.class);
 
 		RpcServer rpcServer = RpcServer.builder(reactor)

@@ -86,7 +86,7 @@ public final class Buffer<T> extends ImplicitlyReactive implements StreamTransfo
 	}
 
 	private void doAdd(T value) {
-		elements[(tail++) & (elements.length - 1)] = value;
+		elements[tail++ & (elements.length - 1)] = value;
 	}
 
 	@Override
@@ -125,7 +125,7 @@ public final class Buffer<T> extends ImplicitlyReactive implements StreamTransfo
 				acceptor = getDataAcceptor();
 				if (acceptor == null) break;
 				if (head == tail) break;
-				int pos = (head++) & (elements.length - 1);
+				int pos = head++ & (elements.length - 1);
 				//noinspection unchecked
 				T item = (T) elements[pos];
 				if (NULLIFY_ON_TAKE_OUT) {

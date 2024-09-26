@@ -248,7 +248,7 @@ public final class ReportingTest extends CubeTestBase {
 						item.campaign != EXCLUDE_CAMPAIGN &&
 						item.banner != EXCLUDE_BANNER
 					) {
-						assert dateAggregator != null;
+						assertNotNull(dateAggregator);
 						dateAggregator.accept(item);
 					} else if (item.affiliate != 0 && !EXCLUDE_SITE.equals(item.site)) {
 						assert dateAggregator2 != null;
@@ -260,6 +260,7 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 		serverPort = getFreePort();

@@ -16,7 +16,7 @@ import static io.activej.rpc.client.sender.strategy.RpcStrategies.servers;
 import static io.activej.rpc.client.sender.strategy.RpcStrategies.sharding;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 @SuppressWarnings("ConstantConditions")
 public class RpcStrategyShardingTest {
@@ -91,12 +91,8 @@ public class RpcStrategyShardingTest {
 		assertEquals(1, connection2.getRequests());
 		assertEquals(1, connection3.getRequests());
 
-		try {
-			future1.get();
-			fail();
-		} catch (ExecutionException e) {
-			assertEquals("No senders available", e.getCause().getMessage());
-		}
+		ExecutionException e = assertThrows(ExecutionException.class, future1::get);
+		assertEquals("No senders available", e.getCause().getMessage());
 	}
 
 }

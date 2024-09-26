@@ -575,6 +575,7 @@ public final class ClassGenerator<T> {
 				}
 			}
 
+			@Override
 			public void close() {
 				for (Map.Entry<String, Constant> entry : fieldConstants.entrySet()) {
 					STATIC_CONSTANTS.remove(entry.getValue().id);

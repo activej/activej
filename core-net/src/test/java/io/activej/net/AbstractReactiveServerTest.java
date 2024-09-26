@@ -38,8 +38,8 @@ public final class AbstractReactiveServerTest {
 		String message = "Hello!";
 		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
 		SocketSettings settings = SocketSettings.builder()
-			.withImplReadTimeout(Duration.ofMillis(100000L))
-			.withImplWriteTimeout(Duration.ofMillis(100000L))
+			.withImplReadTimeout(Duration.ofSeconds(100))
+			.withImplWriteTimeout(Duration.ofSeconds(100))
 			.build();
 
 		RefLong delay = new RefLong(5);

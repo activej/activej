@@ -264,15 +264,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.createUninitialized(cubeStructure2, description);
 
-		Throwable exception = null;
-		try {
-			stateManagerFactory.start(stateManager);
-			fail();
-		} catch (Throwable t) {
-			exception = t;
-		}
-
-		exception = exception.getCause();
+		Throwable exception = assertThrows(Throwable.class, () -> stateManagerFactory.start(stateManager)).getCause();
 
 		String expectedMessage;
 		if (testName.equals("OT graph")) {
@@ -338,11 +330,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.createUninitialized(cubeStructure2, description);
 
-		try {
-			stateManagerFactory.start(stateManager);
-			fail();
-		} catch (Throwable t) {
-			assertThat(t.getMessage(), containsString("impressionsAggregation"));
-		}
+		Throwable t = assertThrows(Throwable.class, () -> stateManagerFactory.start(stateManager));
+		assertThat(t.getMessage(), containsString("impressionsAggregation"));
 	}
 }

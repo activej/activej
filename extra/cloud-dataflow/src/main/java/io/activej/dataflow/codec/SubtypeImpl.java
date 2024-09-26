@@ -17,7 +17,6 @@
 package io.activej.dataflow.codec;
 
 import java.lang.annotation.Annotation;
-import java.util.Objects;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
 public final class SubtypeImpl implements Subtype {
@@ -46,7 +45,7 @@ public final class SubtypeImpl implements Subtype {
 	public boolean equals(Object o) {
 		if (!(o instanceof Subtype other)) return false;
 
-		return Objects.equals(value, other.value());
+		return value == other.value();
 	}
 
 	@Override

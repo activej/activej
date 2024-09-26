@@ -2034,30 +2034,24 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 
 	@Test
 	public void testFailing() {
-		try {
-			query("""
-				SELECT *
-				FROM failing
-				""");
-			fail();
-		} catch (AssertionError e) {
-			Throwable cause = e.getCause();
-			assertThat(cause.getMessage(), containsString(FAILING_TABLE_EXCEPTION.getMessage()));
-		}
+		AssertionError e = assertThrows(AssertionError.class, () -> query("""
+			SELECT *
+			FROM failing
+			"""));
+
+		Throwable cause = e.getCause();
+		assertThat(cause.getMessage(), containsString(FAILING_TABLE_EXCEPTION.getMessage()));
 	}
 
 	@Test
 	public void testFailingFiltered() {
-		try {
-			query("""
-				SELECT *
-				FROM failing_filtered
-				""");
-			fail();
-		} catch (AssertionError e) {
-			Throwable cause = e.getCause();
-			assertThat(cause.getMessage(), containsString(FAILING_TABLE_EXCEPTION.getMessage()));
-		}
+		AssertionError e = assertThrows(AssertionError.class, () -> query("""
+			SELECT *
+			FROM failing_filtered
+			"""));
+
+		Throwable cause = e.getCause();
+		assertThat(cause.getMessage(), containsString(FAILING_TABLE_EXCEPTION.getMessage()));
 	}
 
 	@Test

@@ -29,12 +29,8 @@ public class TriggersModuleTest {
 		TriggersModule.Builder triggersModuleBuilder = TriggersModule.builder()
 			.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
 
-		try {
-			triggersModuleBuilder.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
-			fail();
-		} catch (IllegalArgumentException e) {
-			assertEquals("Cannot assign duplicate trigger", e.getMessage());
-		}
+		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> triggersModuleBuilder.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create()));
+		assertEquals("Cannot assign duplicate trigger", e.getMessage());
 	}
 
 	@Test

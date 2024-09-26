@@ -877,7 +877,7 @@ public final class SerializerFactory {
 		Set<Integer> orders = new HashSet<>();
 		for (MemberSerializer memberSerializer : memberSerializers) {
 			if (!orders.add(memberSerializer.order))
-				throw new IllegalArgumentException(format("Duplicate order %s for %s in %s", memberSerializer.order, memberSerializer, classSerializerBuilder));
+				throw new IllegalArgumentException(format("Duplicate order %s for %s", memberSerializer.order, memberSerializer));
 		}
 
 		Collections.sort(memberSerializers);

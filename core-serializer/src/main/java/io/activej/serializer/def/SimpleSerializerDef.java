@@ -42,6 +42,7 @@ public abstract class SimpleSerializerDef<T> extends AbstractSerializerDef {
 
 	protected abstract BinarySerializer<T> createSerializer(int version, CompatibilityLevel compatibilityLevel);
 
+	@Override
 	public final Class<T> getEncodeType() {
 		return encodeType;
 	}

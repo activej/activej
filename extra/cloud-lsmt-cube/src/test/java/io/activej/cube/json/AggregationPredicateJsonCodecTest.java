@@ -16,7 +16,7 @@ import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 public class AggregationPredicateJsonCodecTest {
 	private static final JsonCodec<AggregationPredicate> CODEC = JsonCodecs.createAggregationPredicateCodec(
@@ -121,13 +121,8 @@ public class AggregationPredicateJsonCodecTest {
 
 	@Test
 	public void testInvalidDate() {
-		try {
-			fromJson(CODEC, "[\"between\",\"date\",\"INVALID DATE\",\"INVALID DATE\"]");
-			fail();
-		} catch (MalformedDataException e) {
-			Throwable cause = e.getCause();
-			assertThat(cause, instanceOf(ParsingException.class));
-		}
+		MalformedDataException e = assertThrows(MalformedDataException.class, () -> fromJson(CODEC, "[\"between\",\"date\",\"INVALID DATE\",\"INVALID DATE\"]"));
+		assertThat(e.getCause(), instanceOf(ParsingException.class));
 	}
 
 	private static void doTest(AggregationPredicate predicate) {

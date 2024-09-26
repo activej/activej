@@ -359,11 +359,8 @@ public class DynamicMBeanFactoryAttributesTest {
 		Date date = new Date();
 		MBeanWithJmxAttributesOfArbitraryTypes obj =
 			new MBeanWithJmxAttributesOfArbitraryTypes(arbitraryType, date);
-		try {
-			createDynamicMBeanFor(obj);
-			fail();
-		} catch (Exception ignored) {
-		}
+
+		assertThrows(Exception.class, () -> createDynamicMBeanFor(obj));
 	}
 
 	@Test
@@ -383,14 +380,11 @@ public class DynamicMBeanFactoryAttributesTest {
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
 		List<MBeanWithNonPublicAttributes> beans = List.of(instance);
 		JmxBeanSettings settings = JmxBeanSettings.create();
-		try {
-			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
-			fail();
-		} catch (IllegalStateException e) {
-			assertThat(e.getMessage(), containsString(
-				"A method \"getValue\" in class '" + MBeanWithNonPublicAttributes.class.getName() +
-				"' annotated with @JmxAttribute should be declared public"));
-		}
+
+		IllegalStateException e = assertThrows(IllegalStateException.class, () -> dynamicMBeanFactory.createDynamicMBean(beans, settings, false));
+		assertThat(e.getMessage(), containsString(
+			"A method \"getValue\" in class '" + MBeanWithNonPublicAttributes.class.getName() +
+			"' annotated with @JmxAttribute should be declared public"));
 	}
 
 	// region helper methods

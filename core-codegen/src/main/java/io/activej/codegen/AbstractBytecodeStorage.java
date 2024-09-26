@@ -31,8 +31,6 @@ import java.util.Optional;
 public abstract class AbstractBytecodeStorage implements IBytecodeStorage {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private static final int DEFAULT_BUFFER_SIZE = 8192;
-
 	/**
 	 * Returns an {@link Optional} of a {@link InputStream}
 	 * that will be used to load a bytecode for a given class name.

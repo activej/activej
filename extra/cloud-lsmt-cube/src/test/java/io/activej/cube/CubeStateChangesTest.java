@@ -42,6 +42,7 @@ public class CubeStateChangesTest extends CubeTestBase {
 	private StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager;
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 		stateManager = stateManagerFactory.create(structure, description);

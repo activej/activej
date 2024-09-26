@@ -86,6 +86,7 @@ public final class BlockingStreamConsumer<T> extends AbstractStreamConsumer<T> {
 			resume(this);
 		}
 
+		@Override
 		public final void accept(T item) {
 			if (put(item)) {
 				suspend();

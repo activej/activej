@@ -246,7 +246,7 @@ public final class DynamicMBeanFactory {
 				} else {
 					throw new RuntimeException(format(
 						"Method \"%s\" of class \"%s\" is annotated with @JmxAnnotation but is neither getter nor setter",
-						method.getName(), method.getClass().getName())
+						method.getName(), method.getDeclaringClass().getName())
 					);
 				}
 			}

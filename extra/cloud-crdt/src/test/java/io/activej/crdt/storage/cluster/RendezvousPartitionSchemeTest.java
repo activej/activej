@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class RendezvousPartitionSchemeTest {
 
@@ -51,7 +52,7 @@ public class RendezvousPartitionSchemeTest {
 
 		Sharder<Integer> sharder = partitionings.createSharder(alive);
 
-		assert sharder != null;
+		assertNotNull(sharder);
 
 		for (int i = 0; i < 1_000_000; i++) {
 			int[] sharded = sharder.shard(i);

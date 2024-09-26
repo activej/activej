@@ -57,6 +57,7 @@ public final class VarLocal implements LocalVariable {
 		g.storeLocal(local);
 	}
 
+	@Override
 	public void store(Context ctx) {
 		if (local == VOID) return;
 		GeneratorAdapter g = ctx.getGeneratorAdapter();

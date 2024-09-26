@@ -12,7 +12,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import static io.activej.http.HttpHeaders.HOST;
-import static io.activej.http.HttpHeaders.of;
 import static io.activej.http.HttpMethod.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -193,8 +192,8 @@ public final class HttpMessageTest {
 
 	@Test
 	public void testMultiHeaders() {
-		HttpHeader header1 = of("header1");
-		HttpHeader HEADER1 = of("HEADER1");
+		HttpHeader header1 = HttpHeaders.of("header1");
+		HttpHeader HEADER1 = HttpHeaders.of("HEADER1");
 
 		assertHttpMessageEquals("""
 			HTTP/1.1 200 OK\r
