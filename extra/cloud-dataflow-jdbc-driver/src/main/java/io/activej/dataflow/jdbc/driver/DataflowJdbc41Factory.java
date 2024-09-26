@@ -187,8 +187,7 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 
 	private static void setSocketTimeout(PoolingHttpClientConnectionManager pool, Timeout timeout) {
 		if (timeout == null) return;
-		SocketConfig config = pool.getDefaultSocketConfig();
-		SocketConfig socketConfig = (config == null ? SocketConfig.custom() : SocketConfig.copy(config))
+		SocketConfig socketConfig = SocketConfig.custom()
 			.setSoTimeout(timeout)
 			.build();
 		pool.setDefaultSocketConfig(socketConfig);

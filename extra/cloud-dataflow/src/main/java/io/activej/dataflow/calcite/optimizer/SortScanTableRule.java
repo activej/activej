@@ -19,7 +19,7 @@ package io.activej.dataflow.calcite.optimizer;
 import io.activej.dataflow.calcite.rel.DataflowTableScan;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalSort;
@@ -27,20 +27,14 @@ import org.apache.calcite.rex.RexNode;
 
 import java.util.List;
 
-public class SortScanTableRule extends RelOptRule {
+public class SortScanTableRule extends RelRule<SortScanTableRule.Config> {
 
-	private SortScanTableRule(RelOptRuleOperand operand) {
-		super(operand);
+	private SortScanTableRule(SortScanTableRule.Config config) {
+		super(config);
 	}
 
 	public static SortScanTableRule create() {
-		return new SortScanTableRule(
-			operand(LogicalSort.class,
-				operand(LogicalProject.class,
-					operand(DataflowTableScan.class, none())
-				)
-			)
-		);
+		return new SortScanTableRule(Config.INSTANCE);
 	}
 
 	@Override
@@ -59,6 +53,22 @@ public class SortScanTableRule extends RelOptRule {
 		}
 		if (limit != null) {
 			scan.setLimit(limit);
+		}
+	}
+
+	public static final class Config extends LimitedConfig {
+		private static final SortScanTableRule.Config INSTANCE = new SortScanTableRule.Config();
+
+		@Override
+		public RelOptRule toRule() {
+			return new SortScanTableRule(this);
+		}
+
+		@Override
+		public RelRule.OperandTransform operandSupplier() {
+			return b -> b.operand(LogicalSort.class)
+				.oneInput(b0 -> b0.operand(LogicalProject.class)
+					.oneInput(b1 -> b1.operand(DataflowTableScan.class).noInputs()));
 		}
 	}
 }

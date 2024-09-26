@@ -19,6 +19,7 @@ package io.activej.dataflow.graph;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.core.util.Separators;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -50,7 +51,7 @@ public final class DataflowGraph extends AbstractReactive {
 	private static final ObjectWriter OBJECT_WRITER = new ObjectMapper()
 		.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
 		.writerFor(new TypeReference<List<Node>>() {})
-		.with(new DefaultPrettyPrinter("%n"));
+		.with(new DefaultPrettyPrinter().withSeparators(Separators.createDefaultInstance().withRootSeparator("%n")));
 
 	private final Map<Node, Partition> nodePartitions = new LinkedHashMap<>();
 	private final Map<StreamId, Node> streams = new LinkedHashMap<>();

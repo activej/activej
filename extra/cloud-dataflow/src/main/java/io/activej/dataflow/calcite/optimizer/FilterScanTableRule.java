@@ -19,19 +19,18 @@ package io.activej.dataflow.calcite.optimizer;
 import io.activej.dataflow.calcite.rel.DataflowTableScan;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rex.RexNode;
 
-public class FilterScanTableRule extends RelOptRule {
+public class FilterScanTableRule extends RelRule<FilterScanTableRule.Config> {
 
-	private FilterScanTableRule(RelOptRuleOperand operand) {
-		super(operand);
+	private FilterScanTableRule(FilterScanTableRule.Config config) {
+		super(config);
 	}
 
 	public static FilterScanTableRule create() {
-		return new FilterScanTableRule(operand(LogicalFilter.class,
-			operand(DataflowTableScan.class, none())));
+		return new FilterScanTableRule(Config.INSTANCE);
 	}
 
 	@Override
@@ -47,5 +46,20 @@ public class FilterScanTableRule extends RelOptRule {
 		scan.setCondition(condition);
 
 		call.transformTo(scan);
+	}
+
+	public static final class Config extends LimitedConfig {
+		private static final Config INSTANCE = new Config();
+
+		@Override
+		public RelOptRule toRule() {
+			return new FilterScanTableRule(this);
+		}
+
+		@Override
+		public OperandTransform operandSupplier() {
+			return b -> b.operand(LogicalFilter.class)
+				.oneInput(b1 -> b1.operand(DataflowTableScan.class).noInputs());
+		}
 	}
 }

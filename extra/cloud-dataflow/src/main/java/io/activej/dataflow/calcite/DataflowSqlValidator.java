@@ -34,7 +34,7 @@ public final class DataflowSqlValidator extends SqlValidatorImpl {
 
 	@Override
 	protected void addToSelectList(List<SqlNode> list, Set<String> aliases, List<Map.Entry<String, RelDataType>> fieldList, SqlNode exp, SelectScope scope, boolean includeSystemVars) {
-		String alias = SqlValidatorUtil.getAlias(exp, -1);
+		String alias = SqlValidatorUtil.alias(exp);
 		String uniqueAlias =
 			SqlValidatorUtil.uniquify(
 				alias, aliases, ALIAS_SUGGESTER);
