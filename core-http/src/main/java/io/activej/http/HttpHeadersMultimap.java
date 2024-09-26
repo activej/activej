@@ -18,6 +18,7 @@ package io.activej.http;
 
 import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -113,7 +114,7 @@ final class HttpHeadersMultimap {
 			}
 
 			@Override
-			public Iterator<Map.Entry<HttpHeader, HttpHeaderValue>> iterator() {
+			public @NotNull Iterator<Map.Entry<HttpHeader, HttpHeaderValue>> iterator() {
 				return new Iterator<>() {
 					int i = 0;
 					@Nullable HttpHeader k;

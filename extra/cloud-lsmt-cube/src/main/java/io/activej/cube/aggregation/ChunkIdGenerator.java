@@ -2,7 +2,6 @@ package io.activej.cube.aggregation;
 
 import io.activej.promise.Promise;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

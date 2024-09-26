@@ -103,10 +103,10 @@ public final class ReportingServiceServlet extends ServletWithStats {
 					return httpResponse;
 				});
 		} catch (QueryException e) {
-			logger.warn("Query exception: " + httpRequest, e);
+			logger.warn("Query exception: {}", httpRequest, e);
 			return createErrorResponse(e.getMessage());
 		} catch (MalformedDataException e) {
-			logger.warn("Parse exception: " + httpRequest, e);
+			logger.warn("Parse exception: {}", httpRequest, e);
 			return createErrorResponse(e.getMessage());
 		}
 	}

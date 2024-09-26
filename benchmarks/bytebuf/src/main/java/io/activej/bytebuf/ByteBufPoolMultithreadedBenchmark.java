@@ -82,16 +82,16 @@ public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 
 		System.out.println("Start benchmarking ByteBuf Benchmark");
 		for (int i = 0; i < measureRounds; i++) {
-			double roundTime = round();
+			long roundTime = round();
 
 			timeAllRounds += roundTime;
 
 			if (bestTime == -1 || roundTime < bestTime) {
-				bestTime = (long) roundTime;
+				bestTime = roundTime;
 			}
 
 			if (worstTime == -1 || roundTime > worstTime) {
-				worstTime = (long) roundTime;
+				worstTime = roundTime;
 			}
 			long rps = iterations * 1000L * threads / Math.round(roundTime);
 			System.out.println();

@@ -264,7 +264,7 @@ public final class MergedOTSystemTest {
 		}
 
 		public boolean isEmpty() {
-			return addVal == 0 && setVal == 0.0 && name.equals("");
+			return addVal == 0 && setVal == 0.0 && name.isEmpty();
 		}
 
 		@Override

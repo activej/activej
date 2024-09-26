@@ -40,22 +40,20 @@ public final class Utils {
 		StringBuilder sb = new StringBuilder();
 		Method[] methods = annotation.annotationType().getDeclaredMethods();
 		boolean first = true;
-		if (methods.length != 0) {
-			for (Method m : methods) {
-				try {
-					Object value = m.invoke(annotation);
-					if (value.equals(m.getDefaultValue()))
-						continue;
-					String valueStr = value instanceof String ? "\"" + value + "\"" : value.toString();
-					String methodName = m.getName();
-					if ("value".equals(methodName) && first) {
-						sb.append(valueStr);
-					} else {
-						sb.append((first ? "" : ",") + methodName + "=" + valueStr);
-					}
-					first = false;
-				} catch (ReflectiveOperationException ignored) {
+		for (Method m : methods) {
+			try {
+				Object value = m.invoke(annotation);
+				if (value.equals(m.getDefaultValue()))
+					continue;
+				String valueStr = value instanceof String ? "\"" + value + "\"" : value.toString();
+				String methodName = m.getName();
+				if ("value".equals(methodName) && first) {
+					sb.append(valueStr);
+				} else {
+					sb.append((first ? "" : ",") + methodName + "=" + valueStr);
 				}
+				first = false;
+			} catch (ReflectiveOperationException ignored) {
 			}
 		}
 		String simpleName = annotation.annotationType().getSimpleName();

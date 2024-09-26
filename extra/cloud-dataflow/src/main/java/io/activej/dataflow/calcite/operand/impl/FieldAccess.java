@@ -8,7 +8,6 @@ import io.activej.dataflow.calcite.Param;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import org.apache.calcite.rex.RexDynamicParam;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;

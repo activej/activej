@@ -267,14 +267,14 @@ public abstract class Launcher {
 			try {
 				stopFuture = service.stop();
 			} catch (RuntimeException e) {
-				logger.error("Stop error in " + service, e);
+				logger.error("Stop error in {}", service, e);
 				latch.countDown();
 				continue;
 			}
 
 			stopFuture.whenComplete(($, e) -> {
 				if (e != null) {
-					logger.error("Stop error in " + service,
+					logger.error("Stop error in {}", service,
 						(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ?
 							e.getCause() :
 							e);

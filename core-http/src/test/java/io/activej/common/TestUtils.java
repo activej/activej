@@ -106,7 +106,7 @@ public class TestUtils {
 	/**
 	 * The authority component is terminated by the next slash ("/"), question mark ("?"),
 	 * or number sign ("#") character, or by the end of the URI
-	 * https://tools.ietf.org/html/rfc3986#section-3.2
+	 * <a href="https://tools.ietf.org/html/rfc3986#section-3.2">...</a>
 	 */
 	@Test
 	public void test() {

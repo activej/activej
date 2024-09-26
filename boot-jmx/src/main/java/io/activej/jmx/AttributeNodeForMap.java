@@ -110,7 +110,7 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 	public @Nullable Object aggregateAttribute(String attrName, List<?> sources) {
 		Map<Object, List<Object>> groupedByKey = fetchMapsAndGroupEntriesByKey(sources);
 
-		if (groupedByKey.size() == 0) {
+		if (groupedByKey.isEmpty()) {
 			return null;
 		}
 
@@ -125,7 +125,7 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 				throw new RuntimeException(e);
 			}
 		}
-		return tdSupport.size() > 0 ? tdSupport : null;
+		return !tdSupport.isEmpty() ? tdSupport : null;
 	}
 
 	private CompositeData createTabularDataRow(String key, Map<String, Object> attributes) throws OpenDataException {
@@ -152,7 +152,7 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 		List<Map<?, ?>> listOfMaps = new ArrayList<>();
 		for (Object pojo : pojos) {
 			Map<?, ?> map = (Map<?, ?>) fetcher.fetchFrom(pojo);
-			if (map != null && map.size() > 0) {
+			if (map != null && !map.isEmpty()) {
 				listOfMaps.add(new HashMap<>(map));
 			}
 		}

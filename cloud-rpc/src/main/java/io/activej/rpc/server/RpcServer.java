@@ -253,7 +253,7 @@ public final class RpcServer extends AbstractReactiveServer {
 		 */
 		public <I, O> Builder withHandler(Class<I> requestClass, RpcRequestHandler<I, O> handler) {
 			checkNotBuilt(this);
-			checkArgument(!handlers.containsKey(requestClass), "Handler for {} has already been added", requestClass);
+			checkArgument(!handlers.containsKey(requestClass), "Handler for %s has already been added", requestClass);
 			handlers.put(requestClass, handler);
 			return this;
 		}

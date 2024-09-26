@@ -111,7 +111,7 @@ public final class BlockingSocketServer {
 			try {
 				acceptHandler.onAccept(socket);
 			} catch (Exception e) {
-				logger.error("Failed to serve socket " + socket, e);
+				logger.error("Failed to serve socket {}", socket, e);
 			}
 		});
 	}
@@ -128,7 +128,7 @@ public final class BlockingSocketServer {
 					} catch (Exception e) {
 						if (Thread.currentThread().isInterrupted())
 							break;
-						logger.error("Socket error for " + serverSocket, e);
+						logger.error("Socket error for {}", serverSocket, e);
 					}
 				}
 			};

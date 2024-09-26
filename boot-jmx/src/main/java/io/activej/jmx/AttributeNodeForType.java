@@ -125,7 +125,7 @@ public final class AttributeNodeForType<T> extends AbstractAttributeNodeForLeaf 
 			try {
 				setter.invoke(target, result);
 			} catch (Exception e) {
-				logger.warn("Can't set attribute " + attrName, e);
+				logger.warn("Can't set attribute {}", attrName, e);
 				throw new SetterException(e);
 			}
 		}

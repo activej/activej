@@ -17,7 +17,6 @@
 package io.activej.cube.aggregation.predicate;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.cube.aggregation.fieldtype.FieldType;
 
 import java.util.Map;
 import java.util.Set;

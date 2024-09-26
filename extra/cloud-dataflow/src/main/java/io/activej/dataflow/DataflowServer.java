@@ -289,7 +289,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 		}
 		messaging.send(taskDataResponse(task, err))
 			.mapException(IOException.class, DataflowStacklessException::new)
-			.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
+			.whenException(e -> logger.error("Failed to send answer for the task ({}) data request", taskId, e));
 	}
 
 	@Override

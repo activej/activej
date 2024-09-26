@@ -59,7 +59,7 @@ public class ClassPathStaticLoader extends AbstractReactive
 		if (root.startsWith(ROOT)) {
 			root = root.substring(ROOT_OFFSET);
 		}
-		if (!root.endsWith(ROOT) && root.length() > 0) {
+		if (!root.endsWith(ROOT) && !root.isEmpty()) {
 			root = root + ROOT;
 		}
 

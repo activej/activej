@@ -24,10 +24,12 @@ import io.activej.reactor.Reactor;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.KV;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 public final class EtcdChunkIdGenerator extends AbstractReactive

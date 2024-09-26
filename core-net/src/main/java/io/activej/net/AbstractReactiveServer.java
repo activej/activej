@@ -253,7 +253,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 			try {
 				channels.add(reactor.listen(address, serverSocketSettings, channel -> doAccept(channel, address, ssl)));
 			} catch (IOException e) {
-				logger.error("Can't listen on [" + address + "]: " + this, e);
+				logger.error("Can't listen on [{}]: {}", address, this, e);
 				closeServerSockets(channels);
 				close();
 				throw e;
@@ -270,7 +270,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 		closeServerSockets();
 		return Promise.ofCallback(this::onClose)
 			.whenResult($ -> logger.info("Server closed: {}", this))
-			.whenException(e -> logger.error("Server closed exceptionally: " + this, e));
+			.whenException(e -> logger.error("Server closed exceptionally: {}", this, e));
 	}
 
 	public final Future<?> closeFuture() {

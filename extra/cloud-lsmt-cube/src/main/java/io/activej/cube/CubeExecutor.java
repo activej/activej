@@ -473,7 +473,7 @@ public final class CubeExecutor extends AbstractReactive
 				queryLastError = e;
 
 				if (e instanceof FileNotFoundException) {
-					logger.warn("Query failed because of FileNotFoundException. " + cubeQuery, e);
+					logger.warn("Query failed because of FileNotFoundException. {}", cubeQuery, e);
 				}
 			});
 	}

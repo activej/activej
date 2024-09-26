@@ -23,6 +23,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclable;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -724,7 +725,7 @@ public final class ByteBufs implements Iterable<ByteBuf>, Supplier<ByteBuf>, Rec
 	}
 
 	@Override
-	public Iterator<ByteBuf> iterator() {
+	public @NotNull Iterator<ByteBuf> iterator() {
 		if (!hasRemaining()) return iteratorOf();
 		return new ByteBufIterator(this);
 	}

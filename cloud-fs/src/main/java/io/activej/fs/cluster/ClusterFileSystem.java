@@ -201,9 +201,8 @@ public final class ClusterFileSystem extends AbstractReactive
 				logger.trace("downloading file {} from {}", name, id);
 				return fs.download(name, offset, limit)
 					.whenException(e -> logger.warn(
-						"Failed to connect to a server with key " + id +
-						" to download file " + name,
-						e))
+						"Failed to connect to a server with key {} to download file {}",
+						id, name, e))
 					.map(supplier -> supplier
 						.withEndOfStream(eos -> eos
 							.whenException(partitions.wrapDeathFn(id))));

@@ -380,12 +380,11 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		}
 		if (pos == limit) throw new MalformedHttpException("Header name is absent");
 		HttpHeader header = HttpHeaders.of(hashCodeCI, array, off, pos - off);
-		pos++;
 
 		// RFC 2616, section 19.3 Tolerant Applications
-		while (pos < limit && (array[pos] == SP || array[pos] == HT)) {
+		do {
 			pos++;
-		}
+		} while (pos < limit && (array[pos] == SP || array[pos] == HT));
 
 		int len = limit - pos;
 		if (header == CONTENT_LENGTH) {

@@ -93,10 +93,9 @@ public class JsonCodecFactoryTest {
 				"s", TestRecord1::s, JsonCodecs.ofString()))
 			.build();
 
+		//noinspection Convert2Diamond
 		doTest(
-			factory1.resolve(
-				new TypeT<List<@JsonNullable TestRecord1>>() {}
-			),
+			factory1.resolve(new TypeT<List<@JsonNullable TestRecord1>>() {}),
 			Arrays.asList(new TestRecord1(123, "abc"), null, new TestRecord1(456, "def")));
 
 		JsonCodecFactory factory2 = factory1.rebuild()
@@ -106,9 +105,7 @@ public class JsonCodecFactoryTest {
 			.build();
 
 		doTest(
-			factory2.resolve(
-				new TypeT<TestRecord2<TestRecord1>>() {}
-			),
+			factory2.resolve(new TypeT<>() {}),
 			new TestRecord2<>(1, new TestRecord1(456, "def")));
 	}
 

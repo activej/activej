@@ -6,7 +6,6 @@ import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import org.apache.calcite.rex.RexDynamicParam;
 
 import java.lang.reflect.Type;
 import java.util.Collections;

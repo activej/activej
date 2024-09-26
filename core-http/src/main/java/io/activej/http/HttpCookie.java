@@ -406,7 +406,7 @@ public final class HttpCookie {
 			container[pos++] = EQUALS;
 			pos += encodeAscii(container, pos, domain);
 		}
-		if (!(path == null || path.equals(""))) {
+		if (!(path == null || path.isEmpty())) {
 			container[pos++] = SEMICOLON;
 			container[pos++] = SP;
 			for (byte pathByte : PATH) {

@@ -261,6 +261,8 @@ public class AnnotatedTypes {
 			return type;
 		}
 
+		@Override
+		@SuppressWarnings("RedundantMethodOverride")
 		public AnnotatedType getAnnotatedOwnerType() {
 			return null;
 		}

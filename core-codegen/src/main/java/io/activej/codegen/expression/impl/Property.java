@@ -147,7 +147,7 @@ public final class Property implements Variable {
 		} catch (NoSuchMethodException ignored) {
 		}
 
-		if (m == null && property.length() >= 1) {
+		if (m == null && !property.isEmpty()) {
 			try {
 				m = argumentClass.getDeclaredMethod("set" + toUpperCase(property.charAt(0)) + property.substring(1), valueClass);
 			} catch (NoSuchMethodException ignored) {
@@ -215,7 +215,7 @@ public final class Property implements Variable {
 		} catch (NoSuchMethodException ignored) {
 		}
 
-		if (m == null && property.length() >= 1) {
+		if (m == null && !property.isEmpty()) {
 			try {
 				m = argumentClass.getDeclaredMethod("get" + toUpperCase(property.charAt(0)) + property.substring(1));
 			} catch (NoSuchMethodException ignored) {

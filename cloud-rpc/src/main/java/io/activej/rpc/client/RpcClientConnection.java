@@ -154,7 +154,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 				cb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 			}
 
-			if (serverClosing && activeRequests.size() == 0) {
+			if (serverClosing && activeRequests.isEmpty()) {
 				RpcClientConnection.this.shutdown();
 			}
 		}
@@ -211,7 +211,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 			if (cb == null) return;
 
 			cb.accept(message.getMessage(), null);
-			if (serverClosing && activeRequests.size() == 0) {
+			if (serverClosing && activeRequests.isEmpty()) {
 				shutdown();
 			}
 		}
@@ -235,7 +235,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		if (controlMessage == RpcControlMessage.CLOSE) {
 			rpcClient.onClosedConnection(address);
 			serverClosing = true;
-			if (activeRequests.size() == 0) {
+			if (activeRequests.isEmpty()) {
 				shutdown();
 			}
 		} else if (controlMessage == RpcControlMessage.PONG) {

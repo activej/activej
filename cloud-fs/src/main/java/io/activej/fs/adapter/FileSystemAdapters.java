@@ -35,7 +35,7 @@ public class FileSystemAdapters {
 
 	// similar to 'chroot'
 	public static IFileSystem addPrefix(IFileSystem originalFS, String prefix) {
-		if (prefix.length() == 0) {
+		if (prefix.isEmpty()) {
 			return originalFS;
 		}
 		String escapedPrefix = escapeGlob(prefix);
@@ -48,14 +48,14 @@ public class FileSystemAdapters {
 
 	// similar to 'cd'
 	public static IFileSystem subdirectory(IFileSystem originalFS, String dir) {
-		if (dir.length() == 0) {
+		if (dir.isEmpty()) {
 			return originalFS;
 		}
 		return addPrefix(originalFS, dir.endsWith("/") ? dir : dir + '/');
 	}
 
 	public static IFileSystem removePrefix(IFileSystem originalFS, String prefix) {
-		if (prefix.length() == 0) {
+		if (prefix.isEmpty()) {
 			return originalFS;
 		}
 		String escapedPrefix = escapeGlob(prefix);

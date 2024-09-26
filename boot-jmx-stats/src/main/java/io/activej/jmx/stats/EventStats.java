@@ -203,7 +203,7 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 	}
 
 	public static String format(long count, double rate, String rateUnit, DecimalFormat decimalFormat) {
-		return count + " @ " + decimalFormat.format(rate) + (rateUnit == null || rateUnit.equals("") ? "" : " " + rateUnit) + "/second";
+		return count + " @ " + decimalFormat.format(rate) + (rateUnit == null || rateUnit.isEmpty() ? "" : " " + rateUnit) + "/second";
 	}
 
 	/**

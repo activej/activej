@@ -35,26 +35,28 @@ public final class ChannelFileReaderWriterTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
+	private static final Path IN_DAT_PATH = Paths.get("test_data/in.dat");
+
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Test
 	public void streamFileReader() throws IOException {
-		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat"))
+		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), IN_DAT_PATH)
 			.then(cfr -> cfr.toCollector(ByteBufs.collector())));
 
-		assertArrayEquals(Files.readAllBytes(Paths.get("test_data/in.dat")), byteBuf.asArray());
+		assertArrayEquals(Files.readAllBytes(IN_DAT_PATH), byteBuf.asArray());
 	}
 
 	@Test
 	public void streamFileReaderWithDelay() throws IOException {
-		ByteBuf byteBuf = await(ChannelFileReader.builderOpen(newCachedThreadPool(), Paths.get("test_data/in.dat"))
+		ByteBuf byteBuf = await(ChannelFileReader.builderOpen(newCachedThreadPool(), IN_DAT_PATH)
 			.then(builder -> builder.withBufferSize(MemSize.of(1))
 				.build()
 				.mapAsync(buf -> Promises.delay(10L, buf))
 				.toCollector(ByteBufs.collector())));
 
-		assertArrayEquals(Files.readAllBytes(Paths.get("test_data/in.dat")), byteBuf.asArray());
+		assertArrayEquals(Files.readAllBytes(IN_DAT_PATH), byteBuf.asArray());
 	}
 
 	@Test
@@ -120,9 +122,9 @@ public final class ChannelFileReaderWriterTest {
 
 	@Test
 	public void readOverFile() throws IOException {
-		ChannelFileReader.Builder builder = await(ChannelFileReader.builderOpen(newCachedThreadPool(), Paths.get("test_data/in.dat")));
+		ChannelFileReader.Builder builder = await(ChannelFileReader.builderOpen(newCachedThreadPool(), IN_DAT_PATH));
 
-		ByteBuf byteBuf = await(builder.withOffset(Files.size(Paths.get("test_data/in.dat")) + 100)
+		ByteBuf byteBuf = await(builder.withOffset(Files.size(IN_DAT_PATH) + 100)
 			.withBufferSize(MemSize.of(1))
 			.build()
 			.toCollector(ByteBufs.collector()));

@@ -28,11 +28,6 @@ public class ServerSetupExample extends SimpleTcpServerLauncher {
 			);
 	}
 
-	@Override
-	protected void run() throws Exception {
-		awaitShutdown();
-	}
-
 	public static void main(String[] args) throws Exception {
 		Launcher launcher = new ServerSetupExample();
 		launcher.launch(args);

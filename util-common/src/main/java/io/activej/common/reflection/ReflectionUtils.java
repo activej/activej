@@ -270,7 +270,7 @@ public final class ReflectionUtils {
 		for (Method method : annotation.annotationType().getDeclaredMethods()) {
 			Object elementValue = fetchAnnotationElementValue(annotation, method);
 			if (elementValue instanceof String stringValue) {
-				if (stringValue.length() == 0) {
+				if (stringValue.isEmpty()) {
 					// skip this element, because it is empty string
 					continue;
 				}

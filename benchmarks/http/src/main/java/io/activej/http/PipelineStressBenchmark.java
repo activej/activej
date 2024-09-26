@@ -67,7 +67,7 @@ public final class PipelineStressBenchmark extends Launcher {
 			System.out.println("Warmup, RPS: " + TOTAL_REQUESTS * 1000L / elapsed);
 		}
 
-		int sum = 0;
+		long sum = 0;
 		for (int i = 0; i < MEASUREMENT_ROUNDS; i++) {
 			long elapsed = round();
 			long rps = TOTAL_REQUESTS * 1000L / elapsed;

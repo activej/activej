@@ -154,7 +154,7 @@ public final class Utils {
 		try {
 			List<Path> subPaths;
 			try (Stream<Path> list = Files.list(directoryPath)) {
-				subPaths = list.sorted().collect(toList());
+				subPaths = list.sorted().toList();
 			}
 			for (Path path : subPaths) {
 				if (exceptPaths.contains(path)) continue;

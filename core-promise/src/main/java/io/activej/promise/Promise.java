@@ -445,6 +445,7 @@ public interface Promise<T> extends AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
+	@SuppressWarnings("unchecked")
 	default <E extends Exception> Promise<T> mapException(
 		Class<E> clazz, FunctionEx<? super E, ? extends Exception> exceptionFn
 	) {
@@ -694,6 +695,7 @@ public interface Promise<T> extends AsyncComputation<T> {
 	 *              only if an exception of {@code this} promise is an instance of the specified class
 	 * @param fn    consumer that consumes an exception of {@code this} promise
 	 */
+	@SuppressWarnings("unchecked")
 	default <E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<? super E> fn) {
 		return thenCallback((t, e, cb) -> {
 			if (e != null && clazz.isAssignableFrom(e.getClass())) fn.accept((E) e);

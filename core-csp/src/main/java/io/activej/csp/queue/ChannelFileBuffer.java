@@ -153,7 +153,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 			try {
 				Files.deleteIfExists(path);
 			} catch (IOException io) {
-				logger.error("failed to cleanup channel buffer file " + path, io);
+				logger.error("Failed to cleanup channel buffer file {}", path, io);
 			}
 		});
 	}

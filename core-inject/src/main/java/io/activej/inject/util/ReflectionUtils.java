@@ -202,7 +202,7 @@ public final class ReflectionUtils {
 			if (!factoryMethods.isEmpty()) {
 				throw failedImplicitBinding(key, "inject annotation on class with factory method");
 			}
-			if (constructors.size() == 0) {
+			if (constructors.isEmpty()) {
 				throw failedImplicitBinding(key, "inject annotation on interface");
 			}
 			if (constructors.size() > 1) {
