@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * Defines a node in a single server.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
+@JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
 public interface Node {
 	/**
 	 * Returns an index of this node in the task.
