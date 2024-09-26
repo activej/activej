@@ -79,7 +79,7 @@ public final class ReflectionExample {
 		protected void configure() {
 			bind(Logger.class).toInstance(Logger.getLogger("example"));
 
-			// it knows how to make instances of impls because they have inject annotations
+			// it knows how to make instances of impls because they have @Inject annotations
 			// allowing us to know how they can be created
 			// we never automagically create instances of unaware classes
 			bind(MessageSender.class, "first").to(ConsoleMessageSenderImpl.class);

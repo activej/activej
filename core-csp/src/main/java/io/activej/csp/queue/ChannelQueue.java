@@ -37,7 +37,7 @@ public interface ChannelQueue<T> extends ChannelTransformer<T, T>, AsyncCloseabl
 	 * Puts an item in the queue and returns a
 	 * {@code promise} of {@code null} as a marker of completion.
 	 *
-	 * @param item a item passed to the queue
+	 * @param item an item passed to the queue
 	 * @return {@code promise} of {@code null} as a marker of completion
 	 */
 	Promise<Void> put(@Nullable T item);

@@ -40,7 +40,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * <p>
  * It operates over some servlet that it restricts access to and the async predicate for the credentials.
  * <p>
- * Also the credentials are {@link HttpRequest#attach attached} to the request so that the private servlet
+ * Also, the credentials are {@link HttpRequest#attach attached} to the request so that the private servlet
  * could then receive and use it.
  */
 public final class BasicAuthServlet extends AbstractReactive

@@ -46,7 +46,7 @@ public class MXBeansRegistrationTest {
 
 	// region transitive implementations of MXBean interface through another interface
 	@Test
-	public void itShouldRegisterClassWhichImplementsMXBeanInterfaceTransivelyThroughAnotherInterface()
+	public void itShouldRegisterClassWhichImplementsMXBeanInterfaceTransitivelyThroughAnotherInterface()
 		throws NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
 
 		ServiceTransitiveInterface service = new ServiceTransitiveInterface();

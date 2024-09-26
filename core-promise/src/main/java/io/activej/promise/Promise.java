@@ -540,7 +540,7 @@ public interface Promise<T> extends AsyncComputation<T> {
 	 * the resulting promise is completed exceptionally with a
 	 * thrown exception.
 	 *
-	 * @param fn          a function to map a result of {@code this} promise to a dofferent promise
+	 * @param fn          a function to map a result of {@code this} promise to a different promise
 	 * @param exceptionFn a function to map an exception of {@code this} promise a different promise
 	 * @return new {@code Promise} which is a result of either first or second
 	 * function applied either to a result or an exception of {@code this} promise.

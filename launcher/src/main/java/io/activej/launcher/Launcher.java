@@ -59,18 +59,13 @@ import static org.slf4j.LoggerFactory.getLogger;
  * public class ApplicationLauncher extends Launcher {
  *
  *    &#64;Override
- *    protected Collection&#60;Module&#62; getModules() {
- *        return null;
- *    }
- *
- *    &#64;Override
  *    protected void run() {
  *        System.out.println("Hello world");
  *    }
  *
  *    public static void main(String[] args) throws Exception {
  *        ApplicationLauncher launcher = new ApplicationLauncher();
- *        launcher.launch(true, args);
+ *        launcher.launch(args);
  *    }
  * }
  * </pre>

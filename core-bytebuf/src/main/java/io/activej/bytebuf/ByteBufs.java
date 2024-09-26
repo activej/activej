@@ -187,7 +187,7 @@ public final class ByteBufs implements Iterable<ByteBuf>, Supplier<ByteBuf>, Rec
 	 * which contains {@code size} bytes from queue's first ByteBuf if the
 	 * latter contains too many bytes.
 	 * <p>
-	 * Otherwise creates and returns a ByteBuf which contains all
+	 * Otherwise, creates and returns a ByteBuf which contains all
 	 * bytes from the first ByteBuf in the queue. Then {@code first}
 	 * index is increased by 1 or set to the value 0 if it has run
 	 * a full circle of the queue.
@@ -214,7 +214,7 @@ public final class ByteBufs implements Iterable<ByteBuf>, Supplier<ByteBuf>, Rec
 	 * Then {@code first} index is increased by 1 or set to the value 0 if it
 	 * has run a full circle of the queue.
 	 * <p>
-	 * Otherwise a new ByteBuf is allocated from the {@link ByteBufPool} with
+	 * Otherwise, a new ByteBuf is allocated from the {@link ByteBufPool} with
 	 * {@code size} bytes which contains all data from the queue's first ByteBuf.
 	 *
 	 * @param size the minimum size of returned ByteBuf
@@ -245,7 +245,7 @@ public final class ByteBufs implements Iterable<ByteBuf>, Supplier<ByteBuf>, Rec
 	 * Then {@code first} index is increased by 1 or set to the value 0 if it
 	 * has run a full circle of the queue.
 	 * <p>
-	 * Otherwise creates and returns a ByteBuf of {@code exactSize} which
+	 * Otherwise, creates and returns a ByteBuf of {@code exactSize} which
 	 * contains all bytes from queue's first ByteBuf.
 	 *
 	 * @param exactSize the size of returned ByteBuf

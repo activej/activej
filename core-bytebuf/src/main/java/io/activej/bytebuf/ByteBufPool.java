@@ -321,7 +321,7 @@ public final class ByteBufPool {
 	 * <p>
 	 * Returns this ByteBuf, if it contains enough writable bytes.
 	 * <p>
-	 * Otherwise creates a new ByteBuf which contains data from the
+	 * Otherwise, creates a new ByteBuf which contains data from the
 	 * original ByteBuf and fits the parameters. Then recycles the
 	 * original ByteBuf.
 	 *

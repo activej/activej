@@ -119,7 +119,7 @@
             return; // no stats for this node
         }
         stats.$type = stats.$type.startsWith(".") ? stats.$type.substring(1) : stats.$type;
-        // there needs to be a component stats/statType.svelte or it will just show args (and type) as json
+        // there needs to be a component stats/statType.svelte, or it will just show args (and type) as json
         const component = await import(`./stats/${stats.$type}.svelte`).then(it => it.default, () => FallbackStat);
 
         const modal = {x: rx - x - mOffX, y: ry - y - mOffY, args: stats, component, nodeName, nodeIndex};
@@ -192,8 +192,8 @@
     }
 
     $: update(graphviz);
-    // ^ first update wont do anything as the container is still undefined and there is a check for that
-    // onMount will be called when container is bound so we also call update here
+    // ^ first update won't do anything as the container is still undefined and there is a check for that
+    // onMount will be called when container is bound, so we also call update here
     onMount(() => update(graphviz));
 
     function resetTransform() {

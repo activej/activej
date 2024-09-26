@@ -2102,7 +2102,7 @@ public class BinarySerializerTest {
 	}
 
 	@Test
-	public void testOverridenBridgeMethod() {
+	public void testOverriddenBridgeMethod() {
 		Imp object = new Imp();
 		object.setValue(100);
 		Imp deserialized = doTest(Imp.class, object);

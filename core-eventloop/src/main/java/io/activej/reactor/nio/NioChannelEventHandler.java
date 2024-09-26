@@ -18,7 +18,7 @@ package io.activej.reactor.nio;
 
 /**
  * An interface for channel attachments used in {@link NioReactor NIO reactor}.
- * It is a callback which executes code asynchronously (in reactor context) when a read or a write is ready.
+ * It is a callback that executes code asynchronously (in reactor context) when a read or write is ready.
  */
 public interface NioChannelEventHandler {
 	/**

@@ -24,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This is an util class, which provides a mean to render any exception into an {@link HttpResponse}
+ * This is a util class, which provides a mean to render any exception into an {@link HttpResponse}
  * with the stacktrace rendered nicely.
  * It also generates a link to the IntelliJ IDEA REST API (<a href="http://localhost:63342">...</a> + port_offset) from the stacktrace,
  * just like IDEA does in its log console.

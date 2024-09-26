@@ -40,7 +40,7 @@ public final class GzipCompressingBehaviourExample {
 
 		eventloop.run();
 
-		// this is how you should send an http request with gzipped body.
+		// this is how you should send an HTTP request with gzipped body.
 		// if the content of the response is gzipped - it would be decompressed automatically
 		DnsClient dnsClient = DnsClient.create(eventloop, inetAddress("8.8.8.8"));
 		IHttpClient client = HttpClient.create(eventloop, dnsClient);

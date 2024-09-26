@@ -42,7 +42,7 @@ import static java.util.stream.Collectors.toSet;
  * It boils down to "introspectable function", since it only describes function to create an instance of T from an array of objects and
  * an array of its {@link Key dependencies} in known terms.
  * <p>
- * Also it contains a set of {@link io.activej.inject.module.AbstractModule binding-DSL-like} static factory methods
+ * Also, it contains a set of {@link io.activej.inject.module.AbstractModule binding-DSL-like} static factory methods
  * as well as some functional transformations for the ease of creating immutable binding modifications.
  */
 @SuppressWarnings({"unused", "WeakerAccess", "Convert2Lambda", "rawtypes"})

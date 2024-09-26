@@ -42,7 +42,7 @@ public final class BlockingStreamSupplier<T> extends AbstractStreamSupplier<T> {
 	 * Blocks until queue is not full.
 	 *
 	 * @param item item to be put to this supplier.
-	 * @return {@code true} if all data is acknowledged and no more data shoud be sent to the supplier
+	 * @return {@code true} if all data is acknowledged and no more data should be sent to the supplier
 	 * @throws InterruptedException if thread is interrupted while blocked
 	 * @throws ExecutionException   if some error occurs asynchronously while putting an item
 	 */

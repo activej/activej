@@ -12,7 +12,7 @@ final class ThreadLocalReactor {
 //					Trying to start async operations prior eventloop.run(), or from outside of eventloop.run()\s
 //					Possible solutions: 1) Eventloop.create().withCurrentThread() ... {your code block} ... eventloop.run()\s
 //					2) try_with_resources Eventloop.useCurrentThread() ... {your code block}\s
-//					3) refactor application so it starts async operations within eventloop.run(),\s
+//					3) refactor application, so it starts async operations within eventloop.run(),\s
 //					   i.e. by implementing EventloopService::start() {your code block} and using ServiceGraphModule""";
 		"No reactor in current thread";
 
