@@ -1,0 +1,9 @@
+FROM openjdk:24-slim
+WORKDIR /app
+COPY target/${artifactId}-client.jar ./
+ENTRYPOINT java $SYS_PROPS -jar ${artifactId}-client.jar
+
+# Note :
+# - Package jar file with `mvn clean package`
+# - Build image with `docker build -t <your_image_name> -f src/docker/ClientDockerfile .`
+# - Run container with `docker run <your_image_name>`

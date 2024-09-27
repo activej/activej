@@ -30,7 +30,8 @@
         <fileSet filtered="true">
             <directory>src/docker</directory>
             <includes>
-                <include>**/Dockerfile</include>
+                <include>**/ServerDockerfile</include>
+                <include>**/ClientDockerfile</include>
             </includes>
         </fileSet>
     </fileSets>

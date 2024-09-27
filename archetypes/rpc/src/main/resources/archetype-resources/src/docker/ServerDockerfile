@@ -1,0 +1,10 @@
+FROM openjdk:24-slim
+WORKDIR /app
+COPY target/${artifactId}-server.jar ./
+EXPOSE 5353
+ENTRYPOINT java $SYS_PROPS -jar ${artifactId}-server.jar
+
+# Note :
+# - Package jar file with `mvn clean package`
+# - Build image with `docker build -t <your_image_name> -f src/docker/ServerDockerfile .`
+# - Run container with `docker run -p 5353:5353 <your_image_name>`
