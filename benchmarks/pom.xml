@@ -21,7 +21,6 @@
     <module>http</module>
     <module>net</module>
     <module>promise</module>
-    <module>redis</module>
     <module>rpc</module>
     <module>serializer</module>
     <module>specializer</module>

@@ -1,1 +1,0 @@
-This module forms ActiveJ CRDT library.
