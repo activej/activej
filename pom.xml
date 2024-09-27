@@ -51,18 +51,7 @@
     <module>util-types</module>
     <module>util-state</module>
     <module>util-json</module>
-    <module>util-etcd</module>
     <module>test</module>
-
-    <module>extra/cloud-dataflow</module>
-    <module>extra/cloud-dataflow-jdbc-driver</module>
-    <module>extra/cloud-crdt</module>
-    <module>extra/cloud-etl</module>
-    <module>extra/cloud-lsmt-cube</module>
-    <module>extra/cloud-memcache</module>
-    <module>extra/cloud-multilog</module>
-    <module>extra/cloud-ot</module>
-    <module>extra/cloud-redis</module>
   </modules>
 
   <scm>
@@ -149,86 +138,14 @@
         <version>0.10.0</version>
       </dependency>
       <dependency>
-        <groupId>ai.grakn</groupId>
-        <artifactId>redis-mock</artifactId>
-        <version>0.1.6</version>
-      </dependency>
-      <dependency>
         <groupId>org.jetbrains</groupId>
         <artifactId>annotations</artifactId>
         <version>24.1.0</version>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>2.17.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>2.17.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-core</artifactId>
-        <version>2.17.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.datatype</groupId>
-        <artifactId>jackson-datatype-jsr310</artifactId>
-        <version>2.17.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents.client5</groupId>
-        <artifactId>httpclient5</artifactId>
-        <version>5.3.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.calcite</groupId>
-        <artifactId>calcite-core</artifactId>
-        <version>1.37.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.calcite.avatica</groupId>
-        <artifactId>avatica-core</artifactId>
-        <version>1.25.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.etcd</groupId>
-        <artifactId>jetcd-core</artifactId>
-        <version>0.7.7</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>4.28.2</version>
-      </dependency>
-      <dependency>
-        <groupId>io.minio</groupId>
-        <artifactId>minio</artifactId>
-        <version>8.5.12</version>
-      </dependency>
-      <dependency>
         <groupId>com.github.spullara.mustache.java</groupId>
         <artifactId>compiler</artifactId>
         <version>0.9.14</version>
-      </dependency>
-
-      <!--Fixing transitive dependency vulnerability-->
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>33.3.1-jre</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>2.17.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-codec-http</artifactId>
-        <version>4.1.113.Final</version>
       </dependency>
 
     </dependencies>
@@ -393,6 +310,11 @@
       </distributionManagement>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.8.0</version>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>

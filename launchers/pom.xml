@@ -19,8 +19,6 @@
 
   <modules>
     <module>common</module>
-    <module>crdt</module>
-    <module>dataflow</module>
     <module>http</module>
     <module>fs</module>
     <module>rpc</module>

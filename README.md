@@ -436,13 +436,6 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       }
       ```
 
-    * Various extra services:
-      [ActiveJ CRDT](https://github.com/activej/activej/tree/master/extra/cloud-crdt),
-      [Redis client](https://github.com/activej/activej/tree/master/extra/cloud-redis),
-      [Memcache](https://github.com/activej/activej/tree/master/extra/cloud-memcache),
-      [OLAP Cube](https://github.com/activej/activej/tree/master/extra/cloud-lsmt-cube),
-      [Dataflow](https://github.com/activej/activej/tree/master/extra/cloud-dataflow)
-
 ## Quick start
 
 Paste this snippet into your terminal...
