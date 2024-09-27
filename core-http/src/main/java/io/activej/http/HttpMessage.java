@@ -242,21 +242,6 @@ public abstract class HttpMessage {
 	 * to the caller.
 	 * Thus, it can be called only once, and it is the caller's responsibility
 	 * to recycle the byte buffers received.
-	 *
-	 * @see #takeBodyStream()
-	 * @deprecated as the {@link #takeBodyStream()} method has a more semantically correct name.
-	 * Both methods are identical though
-	 */
-	@Deprecated
-	public ChannelSupplier<ByteBuf> getBodyStream() {
-		return takeBodyStream();
-	}
-
-	/**
-	 * This method transfers the "rust-like ownership" from this message object
-	 * to the caller.
-	 * Thus, it can be called only once, and it is the caller's responsibility
-	 * to recycle the byte buffers received.
 	 */
 	public ChannelSupplier<ByteBuf> takeBodyStream() {
 		if (CHECKS) checkState(!isRecycled());
