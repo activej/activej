@@ -1,9 +1,0 @@
-# Copy this file to 'mysql.properties' file in the 'resources/advanced' directory.
-# To set MySQL DataSource properties prefix those with "mysql." (e.g. "mysql.user=test")
-#
-# Available MySQL properties:
-#   mysql.server=<an address to a database server>
-#   mysql.db=<a name of a database>
-#   mysql.user=<a username>
-#   mysql.password=<a password>
-#   mysql.timeZone=<a server time zone>

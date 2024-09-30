@@ -1,7 +1,18 @@
-TRUNCATE TABLE user;
-TRUNCATE TABLE new_user;
+CREATE TABLE IF NOT EXISTS `users` (
+                                     `id`   INTEGER      NOT NULL AUTO_INCREMENT,
+                                     `first_name` VARCHAR(128) NOT NULL,
+                                     `last_name` VARCHAR(128) NOT NULL,
+                                     PRIMARY KEY (`id`)
+);
 
-INSERT INTO user (id, first_name, last_name)
+CREATE TABLE IF NOT EXISTS `new_users` (
+                                         `id`   INTEGER      NOT NULL AUTO_INCREMENT,
+                                         `first_name` VARCHAR(128) NOT NULL,
+                                         `last_name` VARCHAR(128) NOT NULL,
+                                         PRIMARY KEY (`id`)
+);
+
+INSERT INTO users (id, first_name, last_name)
 VALUES (1, 'Evie', 'Lim'),
        (2, 'Elana', 'Nielsen'),
        (3, 'Rebekah', 'Iles'),

@@ -4,8 +4,8 @@
 package advanced.jooq.model;
 
 
-import advanced.jooq.model.tables.NewUser;
-import advanced.jooq.model.tables.User;
+import advanced.jooq.model.tables.NewUsers;
+import advanced.jooq.model.tables.Users;
 
 
 /**
@@ -15,12 +15,12 @@ import advanced.jooq.model.tables.User;
 public class Tables {
 
     /**
-     * The table <code>new_user</code>.
+     * The table <code>new_users</code>.
      */
-    public static final NewUser NEW_USER = NewUser.NEW_USER;
+    public static final NewUsers NEW_USERS = NewUsers.NEW_USERS;
 
     /**
-     * The table <code>user</code>.
+     * The table <code>users</code>.
      */
-    public static final User USER = User.USER;
+    public static final Users USERS = Users.USERS;
 }
