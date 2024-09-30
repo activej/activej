@@ -22,8 +22,8 @@ public final class JdbcPooledSqlLauncher extends Launcher {
 	public static final String NEW_USER_TABLE_SCRIPT = "advanced/ddl/new_user.sql";
 	public static final String INIT_TABLES_SCRIPT = "advanced/init.sql";
 
-	public static final String TABLE_FROM = "user";
-	public static final String TABLE_TO = "new_user";
+	public static final String TABLE_FROM = "users";
+	public static final String TABLE_TO = "new_users";
 
 	@Inject
 	DataSource dataSource;

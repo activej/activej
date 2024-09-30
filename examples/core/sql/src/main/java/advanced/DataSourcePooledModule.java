@@ -1,8 +1,7 @@
 package advanced;
 
-import advanced.util.HikariConfigConverter;
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.activej.config.Config;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 
@@ -18,10 +17,9 @@ public final class DataSourcePooledModule extends AbstractModule {
 	}
 
 	@Provides
-	DataSource dataSource(Config config) {
-		HikariConfigConverter converter = HikariConfigConverter.builder()
-			.withAllowMultiQueries()
-			.build();
-		return new HikariDataSource(config.get(converter, "hikari"));
+	DataSource dataSource() {
+		HikariConfig hikariConfig = new HikariConfig();
+		hikariConfig.setJdbcUrl("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1");
+		return new HikariDataSource(hikariConfig);
 	}
 }

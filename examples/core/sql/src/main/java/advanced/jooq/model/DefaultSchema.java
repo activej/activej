@@ -3,16 +3,14 @@
  */
 package advanced.jooq.model;
 
-
-import advanced.jooq.model.tables.NewUser;
-import advanced.jooq.model.tables.User;
-
-import java.util.Arrays;
-import java.util.List;
-
+import advanced.jooq.model.tables.NewUsers;
+import advanced.jooq.model.tables.Users;
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
+
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -29,14 +27,14 @@ public class DefaultSchema extends SchemaImpl {
     public static final DefaultSchema DEFAULT_SCHEMA = new DefaultSchema();
 
     /**
-     * The table <code>new_user</code>.
+     * The table <code>new_users</code>.
      */
-    public final NewUser NEW_USER = NewUser.NEW_USER;
+    public final NewUsers NEW_USERS = NewUsers.NEW_USERS;
 
     /**
-     * The table <code>user</code>.
+     * The table <code>users</code>.
      */
-    public final User USER = User.USER;
+    public final Users USERS = Users.USERS;
 
     /**
      * No further instances allowed
@@ -54,8 +52,8 @@ public class DefaultSchema extends SchemaImpl {
     @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
-            NewUser.NEW_USER,
-            User.USER
+            NewUsers.NEW_USERS,
+            Users.USERS
         );
     }
 }

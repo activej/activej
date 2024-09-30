@@ -1,7 +1,6 @@
 package advanced;
 
 import advanced.util.Utils;
-import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -16,24 +15,16 @@ import org.jooq.impl.DSL;
 import javax.sql.DataSource;
 import java.io.IOException;
 
-import static advanced.jooq.model.tables.NewUser.NEW_USER;
-import static advanced.jooq.model.tables.User.USER;
+import static advanced.jooq.model.Tables.NEW_USERS;
+import static advanced.jooq.model.Tables.USERS;
 
 public final class JooqSqlLauncher extends Launcher {
-	public static final String DATASOURCE_PROPERTIES = "advanced/mysql.properties";
-
 	public static final String USER_TABLE_SCRIPT = "advanced/ddl/user.sql";
 	public static final String NEW_USER_TABLE_SCRIPT = "advanced/ddl/new_user.sql";
 	public static final String INIT_TABLES_SCRIPT = "advanced/init.sql";
 
 	@Inject
 	DSLContext context;
-
-	@Provides
-	Config config() {
-		return Config.ofClassPathProperties(DATASOURCE_PROPERTIES, true)
-			.overrideWith(Config.ofSystemProperties("config"));
-	}
 
 	@Provides
 	DSLContext dslContext(DataSource dataSource) {
@@ -45,22 +36,22 @@ public final class JooqSqlLauncher extends Launcher {
 		Utils.initialize(context, USER_TABLE_SCRIPT, NEW_USER_TABLE_SCRIPT, INIT_TABLES_SCRIPT);
 
 		System.out.println("TABLES BEFORE:");
-		Utils.printTables(context, USER, NEW_USER);
+		Utils.printTables(context, USERS, NEW_USERS);
 	}
 
 	@Override
 	protected void run() {
-		logger.info("Copying data from table {} to table {}...", USER, NEW_USER);
+		logger.info("Copying data from table {} to table {}...", USERS, NEW_USERS);
 
-		context.insertInto(NEW_USER)
-			.select(context.select().from(USER))
+		context.insertInto(NEW_USERS)
+			.select(context.select().from(USERS))
 			.execute();
 	}
 
 	@Override
 	protected void onStop() {
 		System.out.println("TABLES AFTER:");
-		Utils.printTables(context, USER, NEW_USER);
+		Utils.printTables(context, USERS, NEW_USERS);
 	}
 
 	@Override

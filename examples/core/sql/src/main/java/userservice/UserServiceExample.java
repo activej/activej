@@ -25,8 +25,6 @@ import java.util.concurrent.Executors;
  * Basic CRUD operations are performed on 'user' SQL table.
  * <p>
  * By default, in-memory H2 database is used for the example
- * <p>
- * If you wish, you can swap {@link H2Module} with {@link MySqlModule}
  */
 public class UserServiceExample extends Launcher {
 
