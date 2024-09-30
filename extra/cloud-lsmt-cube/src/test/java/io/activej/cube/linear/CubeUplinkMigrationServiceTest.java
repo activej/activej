@@ -35,13 +35,13 @@ import java.util.concurrent.Executors;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.TestUtils.dataSource;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.json.JsonCodecs.createCubeDiffCodec;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.dataSource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

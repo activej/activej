@@ -33,6 +33,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.TestUtils.dataSource;
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
@@ -40,7 +41,6 @@ import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.json.JsonCodecs.createCubeDiffCodec;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.dataSource;
 
 public class CubeCleanerControllerTest {
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());

@@ -90,6 +90,11 @@
         <artifactId>minio</artifactId>
         <version>8.5.12</version>
       </dependency>
+      <dependency>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
+        <version>9.0.0</version>
+      </dependency>
 
       <!--Fixing transitive dependency vulnerability-->
       <dependency>

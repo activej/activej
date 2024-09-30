@@ -1,5 +1,6 @@
 package io.activej.ot.utils;
 
+import com.mysql.cj.jdbc.MysqlDataSource;
 import io.activej.json.JsonCodec;
 import io.activej.json.JsonCodecs;
 import io.activej.json.SubclassJsonCodec;
@@ -8,6 +9,10 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
 
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -130,4 +135,18 @@ public class Utils {
 			.collect(toList());
 	}
 
+	public static DataSource dataSource(String databasePropertiesPath) throws IOException, SQLException {
+		Properties properties = new Properties();
+		try (FileInputStream fis = new FileInputStream(databasePropertiesPath)) {
+			properties.load(fis);
+		}
+
+		MysqlDataSource dataSource = new MysqlDataSource();
+		dataSource.setUrl("jdbc:mysql://" + properties.getProperty("dataSource.serverName") + '/' + properties.getProperty("dataSource.databaseName"));
+		dataSource.setUser(properties.getProperty("dataSource.user"));
+		dataSource.setPassword(properties.getProperty("dataSource.password"));
+		dataSource.setServerTimezone(properties.getProperty("dataSource.timeZone"));
+		dataSource.setAllowMultiQueries(true);
+		return dataSource;
+	}
 }

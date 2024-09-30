@@ -27,9 +27,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
+import static io.activej.cube.TestUtils.dataSource;
 import static io.activej.cube.json.JsonCodecs.createCubeDiffCodec;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public final class CubeUplinkMigrationService {

@@ -1,5 +1,6 @@
 package io.activej.cube;
 
+import com.mysql.cj.jdbc.MysqlDataSource;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.aggregation.ChunkIdGenerator;
@@ -20,10 +21,11 @@ import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.junit.function.ThrowingRunnable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -166,4 +168,20 @@ public final class TestUtils {
 			}
 		};
 	}
+
+	public static DataSource dataSource(String databasePropertiesPath) throws IOException, SQLException {
+		Properties properties = new Properties();
+		try (FileInputStream fis = new FileInputStream(databasePropertiesPath)) {
+			properties.load(fis);
+		}
+
+		MysqlDataSource dataSource = new MysqlDataSource();
+		dataSource.setUrl("jdbc:mysql://" + properties.getProperty("dataSource.serverName") + '/' + properties.getProperty("dataSource.databaseName"));
+		dataSource.setUser(properties.getProperty("dataSource.user"));
+		dataSource.setPassword(properties.getProperty("dataSource.password"));
+		dataSource.setServerTimezone(properties.getProperty("dataSource.timeZone"));
+		dataSource.setAllowMultiQueries(true);
+		return dataSource;
+	}
+
 }

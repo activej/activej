@@ -16,17 +16,12 @@
 
 package io.activej.test;
 
-import com.mysql.cj.jdbc.MysqlDataSource;
 import io.activej.common.function.*;
 
-import javax.sql.DataSource;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.sql.SQLException;
-import java.util.Properties;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,21 +52,6 @@ public final class TestUtils {
 			throw new RuntimeException(e);
 		}
 		return true;
-	}
-
-	public static DataSource dataSource(String databasePropertiesPath) throws IOException, SQLException {
-		Properties properties = new Properties();
-		try (FileInputStream fis = new FileInputStream(databasePropertiesPath)) {
-			properties.load(fis);
-		}
-
-		MysqlDataSource dataSource = new MysqlDataSource();
-		dataSource.setUrl("jdbc:mysql://" + properties.getProperty("dataSource.serverName") + '/' + properties.getProperty("dataSource.databaseName"));
-		dataSource.setUser(properties.getProperty("dataSource.user"));
-		dataSource.setPassword(properties.getProperty("dataSource.password"));
-		dataSource.setServerTimezone(properties.getProperty("dataSource.timeZone"));
-		dataSource.setAllowMultiQueries(true);
-		return dataSource;
 	}
 
 	public static <T> BiConsumerEx<T, Exception> assertCompleteFn(ConsumerEx<T> consumer) {

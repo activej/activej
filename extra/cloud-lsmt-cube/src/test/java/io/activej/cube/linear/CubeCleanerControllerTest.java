@@ -23,12 +23,10 @@ import java.util.concurrent.Executors;
 
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
-import static io.activej.cube.TestUtils.initializeUplink;
-import static io.activej.cube.TestUtils.stubChunkIdGenerator;
+import static io.activej.cube.TestUtils.*;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
-import static io.activej.test.TestUtils.dataSource;
 
 public class CubeCleanerControllerTest {
 

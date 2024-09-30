@@ -30,7 +30,6 @@ import static io.activej.ot.OTCommit.ofCommit;
 import static io.activej.ot.OTCommit.ofRoot;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 

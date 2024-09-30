@@ -18,11 +18,11 @@ import java.util.concurrent.Executors;
 import java.util.stream.LongStream;
 
 import static io.activej.common.Utils.union;
+import static io.activej.cube.TestUtils.dataSource;
 import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
 import static io.activej.cube.service.MySqlChunkLocker.DEFAULT_LOCK_TTL;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;

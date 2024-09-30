@@ -7,7 +7,6 @@ import io.activej.cube.ot.sql.SqlChunkIdGenerator;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
-import io.activej.test.TestUtils;
 import io.activej.test.rules.DescriptionRule;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
@@ -34,6 +33,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import static io.activej.common.sql.SqlUtils.executeScript;
+import static io.activej.cube.TestUtils.dataSource;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static org.junit.Assert.assertEquals;
 
@@ -68,7 +68,7 @@ public class ChunkIdGeneratorTest {
 
 				@Override
 				public void initialize(Description description) throws SQLException, IOException {
-					dataSource = TestUtils.dataSource("test.properties");
+					dataSource = dataSource("test.properties");
 					Class<SqlAtomicSequenceTest> sqlAtomicSequenceTestClass = SqlAtomicSequenceTest.class;
 					executeScript(dataSource, sqlAtomicSequenceTestClass.getPackage().getName() + "/" + sqlAtomicSequenceTestClass.getSimpleName() + ".sql");
 					sequence = SqlAtomicSequence.ofLastInsertID("sequence", "next");

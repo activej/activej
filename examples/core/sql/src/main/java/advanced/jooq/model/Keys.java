@@ -3,12 +3,10 @@
  */
 package advanced.jooq.model;
 
-
-import advanced.jooq.model.tables.NewUser;
-import advanced.jooq.model.tables.User;
-import advanced.jooq.model.tables.records.NewUserRecord;
-import advanced.jooq.model.tables.records.UserRecord;
-
+import advanced.jooq.model.tables.NewUsers;
+import advanced.jooq.model.tables.Users;
+import advanced.jooq.model.tables.records.NewUsersRecord;
+import advanced.jooq.model.tables.records.UsersRecord;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
@@ -26,6 +24,6 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<NewUserRecord> CONSTRAINT_5 = Internal.createUniqueKey(NewUser.NEW_USER, DSL.name("CONSTRAINT_5"), new TableField[] { NewUser.NEW_USER.ID }, true);
-    public static final UniqueKey<UserRecord> CONSTRAINT_3 = Internal.createUniqueKey(User.USER, DSL.name("CONSTRAINT_3"), new TableField[] { User.USER.ID }, true);
+    public static final UniqueKey<NewUsersRecord> CONSTRAINT_F = Internal.createUniqueKey(NewUsers.NEW_USERS, DSL.name("CONSTRAINT_F"), new TableField[] { NewUsers.NEW_USERS.ID }, true);
+    public static final UniqueKey<UsersRecord> CONSTRAINT_6 = Internal.createUniqueKey(Users.USERS, DSL.name("CONSTRAINT_6"), new TableField[] { Users.USERS.ID }, true);
 }

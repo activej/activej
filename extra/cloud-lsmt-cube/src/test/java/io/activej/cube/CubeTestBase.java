@@ -48,7 +48,6 @@ import static io.activej.cube.json.JsonCodecs.createCubeDiffCodec;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.dataSource;
 
 @RunWith(Parameterized.class)
 public abstract class CubeTestBase {

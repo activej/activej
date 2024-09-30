@@ -37,13 +37,13 @@ import java.util.concurrent.Executors;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.TestUtils.dataSource;
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.AggregationChunkStorage.LOG;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 

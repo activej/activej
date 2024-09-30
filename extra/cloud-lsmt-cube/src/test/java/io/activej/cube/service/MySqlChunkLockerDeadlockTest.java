@@ -24,8 +24,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.LongStream;
 
 import static io.activej.common.exception.FatalErrorHandlers.haltOnError;
+import static io.activej.cube.TestUtils.dataSource;
 import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 
 public class MySqlChunkLockerDeadlockTest {
