@@ -11,7 +11,7 @@
 
   <artifactId>examples-dataflow</artifactId>
 
-  <name>Examples : Core : Dataflow</name>
+  <name>Examples : Cloud : Dataflow</name>
 
   <dependencies>
     <dependency>
