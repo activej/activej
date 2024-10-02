@@ -47,18 +47,15 @@ public final class ByteBufConcurrentQueue {
 				return null;
 			}
 			tail++;
-			if (ByteBufPool.USE_WATCHDOG) {
-				int size = head - tail;
-				realMin.updateAndGet(prevMin -> Math.min(prevMin, size));
-			}
 			pos2 = ((long) head << 32) + (tail & 0xFFFFFFFFL);
 		} while (!pos.compareAndSet(pos1, pos2));
 
 		Integer boxedTail = null;
 
+		ByteBuf buf;
 		while (true) {
 			AtomicReferenceArray<ByteBuf> bufs = array.get();
-			ByteBuf buf = bufs.getAndSet(tail & (bufs.length() - 1), null);
+			buf = bufs.getAndSet(tail & (bufs.length() - 1), null);
 			if (buf == null) {
 				if (boxedTail == null) {
 					boxedTail = tail;
@@ -70,10 +67,17 @@ public final class ByteBufConcurrentQueue {
 				}
 			}
 			if (buf.pos == tail) {
-				return buf;
+				break;
 			}
 			map.put(buf.pos, buf);
 		}
+
+		if (ByteBufPool.USE_WATCHDOG) {
+			int size = head - tail;
+			realMin.updateAndGet(prevMin -> Math.min(prevMin, size));
+		}
+
+		return buf;
 	}
 
 	public void offer(ByteBuf buf) {
