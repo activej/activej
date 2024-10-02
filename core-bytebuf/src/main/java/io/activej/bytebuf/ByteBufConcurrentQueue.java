@@ -38,6 +38,10 @@ public final class ByteBufConcurrentQueue {
 	private final ConcurrentHashMap<Integer, ByteBuf> map = new ConcurrentHashMap<>();
 
 	final AtomicInteger realMin = new AtomicInteger(0);
+	volatile long offerLongPath;
+	volatile long pollLongPath = 0;
+	volatile long pollLongPathOps = 0;
+	volatile long threadYielded = 0;
 
 	public @Nullable ByteBuf poll() {
 		long pos1, pos2;
@@ -60,12 +64,17 @@ public final class ByteBufConcurrentQueue {
 			AtomicReferenceArray<ByteBuf> bufs = array.get();
 			buf = bufs.getAndSet(tail & (bufs.length() - 1), null);
 			if (buf == null) {
+				pollLongPathOps++;
 				if (boxedTail == null) {
+					pollLongPath++;
 					boxedTail = tail;
 				}
 				buf = map.remove(boxedTail);
 				if (buf == null) {
-					if (YIELD) Thread.yield();
+					if (YIELD) {
+						Thread.yield();
+						threadYielded++;
+					}
 					continue;
 				}
 			}
@@ -99,6 +108,7 @@ public final class ByteBufConcurrentQueue {
 		if (buf2 == null && bufs == array.get()) {
 			return; // fast path, everything is fine
 		}
+		offerLongPath++;
 		// otherwise, evict bufs into map to make it retrievable by corresponding pop()
 		pushToMap(bufs, idx, buf2);
 	}
@@ -151,6 +161,10 @@ public final class ByteBufConcurrentQueue {
 			"size=" + size() +
 			", array=" + array.get().length() +
 			", map=" + map.size() +
+			", offerLongPath=" + offerLongPath +
+			", pollLongPath=" + pollLongPath +
+			", pollLongPathCycles=" + pollLongPathOps +
+			", threadYielded=" + threadYielded +
 			'}';
 	}
 }
