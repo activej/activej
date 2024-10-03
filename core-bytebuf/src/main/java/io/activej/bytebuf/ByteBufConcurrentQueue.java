@@ -16,6 +16,7 @@
 
 package io.activej.bytebuf;
 
+import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +31,8 @@ import static java.lang.Integer.numberOfLeadingZeros;
  * Optimized lock-free concurrent queue implementation for the {@link ByteBuf ByteBufs} that is used in {@link ByteBufPool}
  */
 public final class ByteBufConcurrentQueue {
+	private static final boolean YIELD = ApplicationSettings.getBoolean(ByteBufConcurrentQueue.class, "yield", true);
+
 	private final AtomicLong pos = new AtomicLong(0);
 	private final AtomicReference<AtomicReferenceArray<ByteBuf>> array = new AtomicReference<>(new AtomicReferenceArray<>(1));
 	private final ConcurrentHashMap<Integer, ByteBuf> map = new ConcurrentHashMap<>();
@@ -62,7 +65,7 @@ public final class ByteBufConcurrentQueue {
 				}
 				buf = map.remove(boxedTail);
 				if (buf == null) {
-					Thread.yield();
+					if (YIELD) Thread.yield();
 					continue;
 				}
 			}
