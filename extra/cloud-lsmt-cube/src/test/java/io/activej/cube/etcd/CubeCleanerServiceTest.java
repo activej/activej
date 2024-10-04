@@ -14,7 +14,6 @@ import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.supplier.StreamSuppliers;
-import io.activej.etcd.codec.value.EtcdValueCodecs;
 import io.activej.etl.LogDiff;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
@@ -32,7 +31,10 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -43,7 +45,6 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.etcd.CubeCleanerService.DEFAULT_CLEANUP_OLDER_THAN;
-import static io.activej.cube.etcd.EtcdUtils.CLEANUP_REVISION;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.time.TestCurrentTimeProvider.*;
@@ -122,13 +123,10 @@ public class CubeCleanerServiceTest {
 		stateManager.delete();
 
 		stateManager.start();
-		long stateManagerRevision = stateManager.getRevision();
 
 		cleanerService = CubeCleanerService.builder(ETCD_CLIENT, aggregationChunkStorage, root)
 			.withCurrentTimeProvider(now)
 			.build();
-
-		ETCD_CLIENT.getKVClient().put(root.concat(CLEANUP_REVISION), EtcdValueCodecs.ofLongString().encodeValue(stateManagerRevision)).get();
 
 		await(cleanerService.start());
 

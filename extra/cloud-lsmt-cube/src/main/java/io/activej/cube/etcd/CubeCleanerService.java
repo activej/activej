@@ -61,10 +61,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static io.activej.async.function.AsyncRunnables.coalesce;
 import static io.activej.cube.etcd.EtcdUtils.*;
-import static io.activej.etcd.EtcdUtils.convertStatusException;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.Collections.newSetFromMap;
-import static java.util.concurrent.CompletableFuture.failedFuture;
 
 public final class CubeCleanerService extends AbstractReactive
 	implements ReactiveService, ReactiveJmxBeanWithStats {
@@ -91,7 +89,6 @@ public final class CubeCleanerService extends AbstractReactive
 
 	private ByteSequence prefixChunk = CHUNK;
 	private ByteSequence timestampKey = TIMESTAMP;
-	private ByteSequence cleanupRevisionKey = CLEANUP_REVISION;
 
 	private Watch.Watcher watcher;
 
@@ -109,7 +106,6 @@ public final class CubeCleanerService extends AbstractReactive
 	// region JMX
 	private final PromiseStats promiseCleanup = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseDeleteChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final PromiseStats promiseUpdateLastCleanupRevision = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	private final ExceptionStats watchEtcdExceptionStats = ExceptionStats.create();
 	private final ExceptionStats malformedDataExceptionStats = ExceptionStats.create();
@@ -155,12 +151,6 @@ public final class CubeCleanerService extends AbstractReactive
 			return this;
 		}
 
-		public Builder withCleanupRevisionKey(ByteSequence cleanupRevisionKey) {
-			checkNotBuilt(this);
-			CubeCleanerService.this.cleanupRevisionKey = cleanupRevisionKey;
-			return this;
-		}
-
 		public Builder withCleanupOlderThen(Duration cleanupOlderThan) {
 			checkNotBuilt(this);
 			CubeCleanerService.this.cleanupOlderThanMillis = cleanupOlderThan.toMillis();
@@ -199,33 +189,30 @@ public final class CubeCleanerService extends AbstractReactive
 
 	@Override
 	public Promise<Void> start() {
-		ByteSequence revisionKey = root.concat(cleanupRevisionKey);
-		return Promise.ofCompletionStage(client.getKVClient().get(revisionKey)
-				.exceptionallyCompose(e -> failedFuture(new CubeException("Could not get revision key", convertStatusException(e.getCause()))))
-			)
-			.then(response -> {
-				List<KeyValue> kvs = response.getKvs();
-				if (kvs.isEmpty()) {
-					throw new IllegalStateException("No cleanup revision is found on key '" +
-													revisionKey + '\'');
-				}
-				assert kvs.size() == 1;
-				KeyValue keyValue = kvs.get(0);
+		ByteSequence prefix = root.concat(prefixChunk);
+		return Promise.ofCompletionStage(client.getKVClient().get(
+					prefix,
+					GetOption.builder().isPrefix(true).build())
+				.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))
+			.then((getResponse, e) -> {
+				if (e != null) return Promise.ofException(e);
 
-				try {
-					this.lastCleanupRevision = REVISION_CODEC.decodeValue(keyValue.getValue());
-				} catch (MalformedEtcdDataException e) {
-					throw new CubeException("Could not decode last cleanup revision on key '" + revisionKey + "'", e);
-				}
-
-				return collectStalledChunks(this.lastCleanupRevision)
+				this.watchRevision = getResponse.getHeader().getRevision();
+				return storage.listChunks()
 					.whenResult(chunks -> {
+						List<KeyValue> kvs = getResponse.getKvs();
+						stalledChunkIds.addAll(chunks);
+						for (KeyValue kv : kvs) {
+							ByteSequence chunkKey = kv.getKey().substring(prefix.size());
+							ByteSequence suffix = aggregationIdCodec.decodePrefix(chunkKey).suffix();
+							stalledChunkIds.remove(chunkIdCodec.decodeKey(suffix));
+						}
+
 						if (chunks.isEmpty()) {
 							logger.info("No stalled chunks found");
 							return;
 						}
 
-						stalledChunkIds.addAll(chunks);
 						reactor.delayBackground(cleanupOlderThanMillis, this::deleteStalledChunks);
 					});
 			})
@@ -297,7 +284,7 @@ public final class CubeCleanerService extends AbstractReactive
 		logger.trace("Chunks to be cleaned up: {}", entry.chunkIds());
 
 		return deleteChunksFromStorage(entry.chunkIds())
-			.then(() -> updateLastCleanupRevision(entry.deleteRevision()))
+			.whenResult(() -> this.lastCleanupRevision = entry.deleteRevision())
 			.whenResult(() -> logger.trace("Chunks successfully cleaned up"))
 			.whenComplete(promiseCleanup.recordStats());
 	}
@@ -308,17 +295,8 @@ public final class CubeCleanerService extends AbstractReactive
 			.whenComplete(promiseDeleteChunks.recordStats());
 	}
 
-	private Promise<Void> updateLastCleanupRevision(long lastCleanupRevision) {
-		ByteSequence value = REVISION_CODEC.encodeValue(lastCleanupRevision);
-		return Promise.ofCompletionStage(client.getKVClient().put(root.concat(cleanupRevisionKey), value)
-				.exceptionallyCompose(e -> failedFuture(new CubeException("Failed to update last cleanup revision", convertStatusException(e.getCause())))))
-			.whenResult(() -> this.lastCleanupRevision = lastCleanupRevision)
-			.whenComplete(promiseUpdateLastCleanupRevision.recordStats())
-			.toVoid();
-	}
-
 	private Watch.Watcher createWatcher() {
-		long revision = watchRevision == 0 ? lastCleanupRevision : (watchRevision + 1);
+		long revision = watchRevision + 1;
 		return EtcdUtils.watch(client.getWatchClient(), revision,
 			new EtcdUtils.WatchRequest[]{
 				new EtcdUtils.WatchRequest<>(
@@ -443,43 +421,6 @@ public final class CubeCleanerService extends AbstractReactive
 			});
 	}
 
-	private Promise<Set<Long>> collectStalledChunks(long revision) {
-		ByteSequence prefix = root.concat(prefixChunk);
-		return Promise.ofCompletionStage(client.getKVClient().get(
-					prefix,
-					GetOption.builder().isPrefix(true).withRevision(revision).build())
-				.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))
-			.then((getResponse, e) -> {
-				if (e == null) {
-					return storage.listChunks()
-						.map(chunks -> {
-							List<KeyValue> kvs = getResponse.getKvs();
-							Set<Long> stalledChunkIds = new HashSet<>(chunks);
-							for (KeyValue kv : kvs) {
-								ByteSequence chunkKey = kv.getKey().substring(prefix.size());
-								ByteSequence suffix = aggregationIdCodec.decodePrefix(chunkKey).suffix();
-								stalledChunkIds.remove(chunkIdCodec.decodeKey(suffix));
-							}
-							return stalledChunkIds;
-						});
-				} else if (e instanceof CompactedException compactedException) {
-					long compactedRevision = compactedException.getCompactedRevision();
-					logger.warn("Revision {} was compacted, compacted revision is {}",
-						revision, compactedRevision, compactedException);
-
-					if (!retryFromCompactedRevision) {
-						return Promise.ofException(e);
-					}
-
-					logger.trace("Retrying from the compacted revision {}", compactedRevision);
-					watchRevision = compactedRevision - 1;
-					return collectStalledChunks(compactedRevision);
-				} else {
-					return Promise.ofException(e);
-				}
-			});
-	}
-
 	private void deleteStalledChunks() {
 		if (stalledChunkIds.isEmpty()) {
 			logger.info("No stalled chunks to delete");
@@ -507,11 +448,6 @@ public final class CubeCleanerService extends AbstractReactive
 	@JmxAttribute
 	public String getCubeEtcdPrefix() {
 		return prefixChunk.toString();
-	}
-
-	@JmxAttribute
-	public String getCleanupRevisionEtcdKey() {
-		return cleanupRevisionKey.toString();
 	}
 
 	@JmxAttribute
@@ -571,11 +507,6 @@ public final class CubeCleanerService extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public PromiseStats getPromiseUpdateLastCleanupRevision() {
-		return promiseUpdateLastCleanupRevision;
-	}
-
-	@JmxAttribute
 	public ExceptionStats getWatchEtcdExceptionStats() {
 		return watchEtcdExceptionStats;
 	}
@@ -599,5 +530,5 @@ public final class CubeCleanerService extends AbstractReactive
 	public String getEtcdRoot() {
 		return root.toString();
 	}
-	// endregion
+// endregion
 }

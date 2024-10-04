@@ -11,8 +11,6 @@ import io.activej.etcd.codec.kv.EtcdKVCodecs;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
 import io.activej.etcd.codec.prefix.Prefix;
-import io.activej.etcd.codec.value.EtcdValueCodec;
-import io.activej.etcd.codec.value.EtcdValueCodecs;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
@@ -29,9 +27,7 @@ public final class EtcdUtils {
 	public static final ByteSequence POS = byteSequenceFrom("pos.");
 	public static final ByteSequence CHUNK = byteSequenceFrom("chunk.");
 	public static final ByteSequence TIMESTAMP = byteSequenceFrom("timestamp");
-	public static final ByteSequence CLEANUP_REVISION = byteSequenceFrom("cleanup-revision");
 	public static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
-	public static final EtcdValueCodec<Long> REVISION_CODEC = EtcdValueCodecs.ofLongString();
 
 	static void saveCubeLogDiff(ByteSequence prefixPos, ByteSequence prefixChunk, EtcdPrefixCodec<String> aggregationIdCodec, Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory, TxnOps txn, LogDiff<CubeDiff> logDiff) {
 		savePositions(txn.child(prefixPos), logDiff.getPositions());
