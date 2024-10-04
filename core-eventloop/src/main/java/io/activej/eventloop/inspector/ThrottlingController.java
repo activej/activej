@@ -21,6 +21,7 @@ import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.jmx.api.attribute.JmxReducers.JmxReducerAvg;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.reactor.jmx.ReactiveJmxBean;
 import org.jetbrains.annotations.Nullable;
@@ -286,12 +287,12 @@ public final class ThrottlingController
 		return smoothedTimePerKeyMillis;
 	}
 
-	@JmxAttribute
+	@JmxAttribute(reducer = JmxReducerAvg.class)
 	public double getAvgKeysPerSecond() {
 		return 1000.0 / smoothedTimePerKeyMillis;
 	}
 
-	@JmxAttribute
+	@JmxAttribute(reducer = JmxReducerAvg.class)
 	public double getAvgThrottling() {
 		return smoothedThrottling;
 	}
@@ -385,7 +386,7 @@ public final class ThrottlingController
 		return infoGcExceeds;
 	}
 
-	@JmxAttribute
+	@JmxAttribute(reducer = JmxReducerAvg.class)
 	public double getThrottling() {
 		return throttling;
 	}
