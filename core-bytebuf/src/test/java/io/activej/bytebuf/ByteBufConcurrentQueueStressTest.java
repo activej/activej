@@ -8,7 +8,7 @@ import java.util.List;
 public class ByteBufConcurrentQueueStressTest {
 	private static final byte[] bytes = new byte[1];
 	public static final int ROUNDS = 100;
-	public static final int THREADS = 20;
+	public static final int THREADS = 100;
 	public static final int ITERATIONS = 100_000;
 
 	public static void main(String[] args) throws InterruptedException {
@@ -45,6 +45,7 @@ public class ByteBufConcurrentQueueStressTest {
 			System.out.println("Operations: " + operations);
 			System.out.println("Allocations: " + allocations.get());
 			System.out.println("Size: " + queue.size());
+			System.out.println("Capacity: " + queue.capacity());
 			System.out.println("Ops/ms: " + operations / (System.currentTimeMillis() - start));
 		}
 	}

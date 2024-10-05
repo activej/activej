@@ -43,14 +43,15 @@ public final class ByteBufConcurrentQueue {
 		grow(item, ring);
 	}
 
-	private void grow(ByteBuf item, Ring ring) {
-		Ring ringNew = new Ring(ring.length * 2);
-		this.ring = ringNew;
-		ringNew.offer(item);
+	private synchronized void grow(ByteBuf item, Ring ring) {
+		if (ring == this.ring) {
+			this.ring = new Ring(ring.length * 2);
+		}
+		this.ring.offer(item);
 		while (true) {
 			item = ring.poll();
 			if (item == null) break;
-			ringNew.offer(item);
+			this.ring.offer(item);
 		}
 	}
 
@@ -146,6 +147,10 @@ public final class ByteBufConcurrentQueue {
 		int head = (int) (pos1 >>> 32);
 		int tail = (int) pos1;
 		return head - tail;
+	}
+
+	public int capacity() {
+		return ring.length;
 	}
 
 	@Override
