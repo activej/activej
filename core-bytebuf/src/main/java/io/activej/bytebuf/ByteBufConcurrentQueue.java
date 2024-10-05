@@ -17,15 +17,10 @@
 package io.activej.bytebuf;
 
 import io.activej.common.ApplicationSettings;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-
-import static java.lang.Integer.numberOfLeadingZeros;
 
 /**
  * Optimized lock-free concurrent queue implementation for the {@link ByteBuf ByteBufs} that is used in {@link ByteBufPool}
@@ -33,107 +28,106 @@ import static java.lang.Integer.numberOfLeadingZeros;
 public final class ByteBufConcurrentQueue {
 	private static final boolean YIELD = ApplicationSettings.getBoolean(ByteBufConcurrentQueue.class, "yield", true);
 
-	private final AtomicLong pos = new AtomicLong(0);
-	private final AtomicReference<AtomicReferenceArray<ByteBuf>> array = new AtomicReference<>(new AtomicReferenceArray<>(1));
-	private final ConcurrentHashMap<Integer, ByteBuf> map = new ConcurrentHashMap<>();
-
 	final AtomicInteger realMin = new AtomicInteger(0);
-	volatile long offerLongPath;
-	volatile long pollLongPath = 0;
-	volatile long pollLongPathOps = 0;
-	volatile long threadYielded = 0;
 
-	public @Nullable ByteBuf poll() {
-		long pos1, pos2;
-		int head, tail;
-		do {
-			pos1 = pos.get();
-			head = (int) (pos1 >>> 32);
-			tail = (int) pos1;
-			if (head == tail) {
-				return null;
-			}
-			tail++;
-			pos2 = ((long) head << 32) + (tail & 0xFFFFFFFFL);
-		} while (!pos.compareAndSet(pos1, pos2));
+	private volatile Ring ring = new Ring(1);
 
-		Integer boxedTail = null;
+	public ByteBuf poll() {
+		Ring ring = this.ring;
+		return ring.poll();
+	}
 
-		ByteBuf buf;
+	public void offer(ByteBuf item) {
+		Ring ring = this.ring;
+		if (ring.offer(item)) return;
+		grow(item, ring);
+	}
+
+	private void grow(ByteBuf item, Ring ring) {
+		Ring ringNew = new Ring(ring.length * 2);
+		this.ring = ringNew;
+		ringNew.offer(item);
 		while (true) {
-			AtomicReferenceArray<ByteBuf> bufs = array.get();
-			buf = bufs.getAndSet(tail & (bufs.length() - 1), null);
-			if (buf == null) {
-				pollLongPathOps++;
-				if (boxedTail == null) {
-					pollLongPath++;
-					boxedTail = tail;
+			item = ring.poll();
+			if (item == null) break;
+			ringNew.offer(item);
+		}
+	}
+
+	final class Ring {
+		private final AtomicLong pos = new AtomicLong(0);
+		private final AtomicReferenceArray<ByteBuf> items;
+		private final int length;
+		private final int mask;
+
+		Ring(int items) {
+			this.items = new AtomicReferenceArray<>(items);
+			this.length = this.items.length();
+			this.mask = this.length - 1;
+		}
+
+		public ByteBuf poll() {
+			long pos1, pos2;
+			int head, tail;
+			do {
+				pos1 = pos.get();
+				head = (int) (pos1 >>> 32);
+				tail = (int) pos1;
+				if (head == tail) {
+					return null;
 				}
-				buf = map.remove(boxedTail);
-				if (buf == null) {
-					if (YIELD) {
-						Thread.yield();
-						threadYielded++;
-					}
+				pos2 = ((long) head << 32) + ((tail + 1) & 0xFFFFFFFFL);
+				if (!pos.compareAndSet(pos1, pos2)) {
+					if (YIELD) Thread.yield();
 					continue;
 				}
-			}
-			if (buf.pos == tail) {
 				break;
+			} while (true);
+
+			ByteBuf item;
+			do {
+				item = items.getAndSet(tail & mask, null);
+				if (item == null) {
+					continue;
+				}
+				break;
+			} while (true);
+
+			return item;
+		}
+
+		public boolean offer(ByteBuf item) {
+			long pos1, pos2;
+			int head, tail;
+			do {
+				pos1 = pos.get();
+				head = (int) (pos1 >>> 32);
+				tail = (int) pos1;
+				if (head == tail + length) {
+					return false;
+				}
+				pos2 = pos1 + 0x100000000L;
+				if (!pos.compareAndSet(pos1, pos2)) {
+					if (YIELD) Thread.yield();
+					continue;
+				}
+				break;
+			} while (true);
+
+			do {
+				item = items.getAndSet(head & mask, item);
+				if (item != null) {
+					continue;
+				}
+				break;
+			} while (true);
+
+			if (ByteBufPool.USE_WATCHDOG) {
+				int size = head - tail;
+				ByteBufConcurrentQueue.this.realMin.updateAndGet(prevMin -> Math.min(prevMin, size));
 			}
-			map.put(buf.pos, buf);
-		}
 
-		if (ByteBufPool.USE_WATCHDOG) {
-			int size = head - tail;
-			realMin.updateAndGet(prevMin -> Math.min(prevMin, size));
-		}
-
-		return buf;
-	}
-
-	public void offer(ByteBuf buf) {
-		long pos1, pos2;
-		do {
-			pos1 = pos.get();
-			pos2 = pos1 + 0x100000000L;
-		} while (!pos.compareAndSet(pos1, pos2));
-
-		int head = (int) (pos2 >>> 32);
-		buf.pos = head;
-
-		AtomicReferenceArray<ByteBuf> bufs = array.get();
-		int idx = head & (bufs.length() - 1);
-		ByteBuf buf2 = bufs.getAndSet(idx, buf);
-		if (buf2 == null && bufs == array.get()) {
-			return; // fast path, everything is fine
-		}
-		offerLongPath++;
-		// otherwise, evict bufs into map to make it retrievable by corresponding pop()
-		pushToMap(bufs, idx, buf2);
-	}
-
-	private void pushToMap(AtomicReferenceArray<ByteBuf> bufs, int idx, @Nullable ByteBuf buf2) {
-		ByteBuf buf3 = bufs.getAndSet(idx, null); // bufs may be stale at this moment, evict the data from this cell
-		if (buf2 == null && buf3 == null) return;
-		if (buf2 != null) map.put(buf2.pos, buf2);
-		if (buf3 != null) map.put(buf3.pos, buf3);
-		ensureCapacity(); // resize if needed
-	}
-
-	private void ensureCapacity() {
-		int capacityNew = 1 << 32 - numberOfLeadingZeros(size() * 4 - 1);
-		if (array.get().length() >= capacityNew) return;
-		resize(capacityNew);
-	}
-
-	private void resize(int capacityNew) {
-		AtomicReferenceArray<ByteBuf> bufsNew = new AtomicReferenceArray<>(capacityNew);
-		AtomicReferenceArray<ByteBuf> bufsOld = array.getAndSet(bufsNew);
-		// evict everything from old bufs array
-		for (int i = 0; i < bufsOld.length(); i++) {
-			ByteBuf buf = bufsOld.getAndSet(i, null);
-			if (buf != null) map.put(buf.pos, buf);
+			return true;
 		}
 	}
 
@@ -148,7 +142,7 @@ public final class ByteBufConcurrentQueue {
 	}
 
 	public int size() {
-		long pos1 = pos.get();
+		long pos1 = ring.pos.get();
 		int head = (int) (pos1 >>> 32);
 		int tail = (int) pos1;
 		return head - tail;
@@ -159,12 +153,6 @@ public final class ByteBufConcurrentQueue {
 		return
 			"ByteBufConcurrentQueue{" +
 			"size=" + size() +
-			", array=" + array.get().length() +
-			", map=" + map.size() +
-			", offerLongPath=" + offerLongPath +
-			", pollLongPath=" + pollLongPath +
-			", pollLongPathCycles=" + pollLongPathOps +
-			", threadYielded=" + threadYielded +
 			'}';
 	}
 }

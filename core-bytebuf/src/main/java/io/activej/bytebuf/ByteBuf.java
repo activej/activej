@@ -116,8 +116,6 @@ public class ByteBuf implements Recyclable {
 	 */
 	int refs;
 
-	volatile int pos;
-
 	/**
 	 * Represents an empty ByteBuf with {@link #head} and
 	 * {@link #tail} set at value 0.
