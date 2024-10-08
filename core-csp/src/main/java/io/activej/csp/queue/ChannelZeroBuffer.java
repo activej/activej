@@ -16,6 +16,7 @@
 
 package io.activej.csp.queue;
 
+import io.activej.async.process.AsyncCloseable;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
@@ -44,6 +45,12 @@ public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements Ch
 
 	private @Nullable SettablePromise<Void> put;
 	private @Nullable SettablePromise<T> take;
+
+	private @Nullable AsyncCloseable closeable;
+
+	public void setCloseable(@Nullable AsyncCloseable closeable) {
+		this.closeable = closeable;
+	}
 
 	@Override
 	public boolean isSaturated() {
@@ -159,6 +166,10 @@ public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements Ch
 		}
 		Recyclers.recycle(value);
 		value = null;
+		if (closeable != null) {
+			closeable.closeEx(e);
+			closeable = null;
+		}
 	}
 
 	public @Nullable Exception getException() {

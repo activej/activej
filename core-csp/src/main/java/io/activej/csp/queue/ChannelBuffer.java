@@ -16,6 +16,7 @@
 
 package io.activej.csp.queue;
 
+import io.activej.async.process.AsyncCloseable;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
@@ -50,6 +51,8 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	private @Nullable SettablePromise<Void> put;
 	private @Nullable SettablePromise<T> take;
 
+	private @Nullable AsyncCloseable closeable;
+
 	/**
 	 * @see #ChannelBuffer(int, int)
 	 */
@@ -69,6 +72,10 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 		this.bufferMinSize = bufferMinSize + 1;
 		this.bufferMaxSize = bufferMaxSize;
 		this.elements = new Object[1 << (32 - numberOfLeadingZeros(max(16, this.bufferMinSize) - 1))];
+	}
+
+	public void setCloseable(@Nullable AsyncCloseable closeable) {
+		this.closeable = closeable;
 	}
 
 	/**
@@ -319,6 +326,10 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 		}
 		//noinspection AssignmentToNull - resource release
 		elements = null;
+		if (closeable != null) {
+			closeable.closeEx(e);
+			closeable = null;
+		}
 	}
 
 	public @Nullable Exception getException() {

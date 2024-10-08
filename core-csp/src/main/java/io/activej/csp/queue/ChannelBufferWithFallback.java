@@ -17,6 +17,7 @@
 package io.activej.csp.queue;
 
 import io.activej.async.exception.AsyncCloseException;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
@@ -41,9 +42,15 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 	private SettablePromise<Void> waitingForBuffer;
 	private boolean finished = false;
 
+	private @Nullable AsyncCloseable closeable;
+
 	public ChannelBufferWithFallback(ChannelQueue<T> queue, Supplier<Promise<? extends ChannelQueue<T>>> bufferFactory) {
 		this.queue = queue;
 		this.bufferFactory = bufferFactory;
+	}
+
+	public void setCloseable(@Nullable AsyncCloseable closeable) {
+		this.closeable = closeable;
 	}
 
 	@Override
@@ -165,10 +172,16 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 			waitingForBuffer.whenResult(() -> {
 				assert buffer != null;
 				buffer.closeEx(e);
+				buffer = null;
 			});
 		}
 		if (buffer != null) {
 			buffer.closeEx(e);
+			buffer = null;
+		}
+		if (closeable != null) {
+			closeable.closeEx(e);
+			closeable = null;
 		}
 	}
 

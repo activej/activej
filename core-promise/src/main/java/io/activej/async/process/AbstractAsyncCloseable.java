@@ -55,6 +55,7 @@ public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implemen
 		onClosed(e);
 		if (closeable != null) {
 			closeable.closeEx(e);
+			closeable = null;
 		}
 	}
 
