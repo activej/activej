@@ -23,7 +23,6 @@ import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.HttpClient.Inspector;
-import io.activej.http.stream.BufsConsumerGzipInflater;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -210,7 +209,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		//noinspection ConstantConditions
 		response.flags |= MUST_LOAD_BODY;
 		response.body = body;
-		response.bodyStream = bodySupplier == null ? null : sanitize(bodySupplier);
+		if (bodySupplier != null) {
+			response.bodyStream = sanitize(bodySupplier);
+			response.flags |= ((flags & GZIPPED) != 0) ? HttpMessage.BODY_STREAM_GZIPPED : 0;
+		}
 		if (IWebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
 		}
@@ -254,22 +256,17 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void onNoContentLength() {
+		ChannelSupplier<ByteBuf> socketSupplier = ChannelSuppliers.ofAsyncSupplier(socket::read, socket);
 		ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
+		buffer.setCloseable(socketSupplier);
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(ChannelSuppliers.ofValue(detachReadBuf()), buffer.getSupplier());
-		Promise<Void> inflaterFinished = Promise.complete();
-		if ((flags & GZIPPED) != 0) {
-			BufsConsumerGzipInflater gzipInflater = BufsConsumerGzipInflater.create();
-			supplier = supplier.transformWith(gzipInflater);
-			inflaterFinished = gzipInflater.getProcessCompletion();
-		}
 		onHeadersReceived(null, supplier);
-		ChannelSuppliers.ofAsyncSupplier(socket::read, socket)
-			.streamTo(buffer.getConsumer())
-			.both(inflaterFinished)
+
+		socketSupplier.streamTo(buffer.getConsumer())
 			.subscribe(($, e) -> {
 				if (isClosed()) return;
 				if (e == null) {
-					onBodyReceived();
+					reactor.post(this::onBodyReceived);
 				} else {
 					closeEx(translateToHttpException(e));
 				}

@@ -24,6 +24,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.session.SessionServlet;
+import io.activej.http.stream.BufsConsumerGzipInflater;
 import io.activej.promise.Promise;
 import io.activej.promise.ToPromise;
 import io.activej.types.TypeT;
@@ -53,11 +54,18 @@ public abstract class HttpMessage {
 	 * This flag is removed when body is taken away or recycled.
 	 */
 	static final byte MUST_LOAD_BODY = 1 << 0;
+
 	/**
 	 * This flag means that the DEFLATE compression algorithm will be used
 	 * to compress/decompress the body of this message.
 	 */
 	static final byte USE_GZIP = 1 << 1;
+
+	/**
+	 * This flag means that message's body stream is compressed with
+	 * the DEFLATE compression algorithm.
+	 */
+	static final byte BODY_STREAM_GZIPPED = 1 << 2;
 
 	/**
 	 * This flag means that the body was already recycled and is not accessible.
@@ -67,7 +75,7 @@ public abstract class HttpMessage {
 
 	private final HttpVersion version;
 
-	@MagicConstant(flags = {MUST_LOAD_BODY, USE_GZIP, RECYCLED})
+	@MagicConstant(flags = {MUST_LOAD_BODY, USE_GZIP, BODY_STREAM_GZIPPED, RECYCLED})
 	byte flags;
 
 	final HttpHeadersMultimap headers = new HttpHeadersMultimap();
@@ -247,7 +255,9 @@ public abstract class HttpMessage {
 		if (CHECKS) checkState(!isRecycled());
 		ChannelSupplier<ByteBuf> bodyStream = this.bodyStream;
 		this.bodyStream = null;
-		if (bodyStream != null) return bodyStream;
+		if (bodyStream != null) {
+			return (flags & BODY_STREAM_GZIPPED) == 0 ? bodyStream : decodeGzip(bodyStream);
+		}
 		if (body != null) {
 			ByteBuf body = this.body;
 			this.body = null;
@@ -316,6 +326,9 @@ public abstract class HttpMessage {
 		ChannelSupplier<ByteBuf> bodyStream = this.bodyStream;
 		if (bodyStream == null) throw new IllegalStateException("Body stream is missing or already consumed");
 		this.bodyStream = null;
+		if ((flags & BODY_STREAM_GZIPPED) != 0) {
+			bodyStream = decodeGzip(bodyStream);
+		}
 		return ChannelSupplier.collect(bodyStream,
 				new ByteBufs(),
 				(bufs, buf) -> {
@@ -508,6 +521,12 @@ public abstract class HttpMessage {
 	protected abstract int estimateSize();
 
 	protected abstract void writeTo(ByteBuf buf);
+
+	private static ChannelSupplier<ByteBuf> decodeGzip(ChannelSupplier<ByteBuf> bodyStream) {
+		BufsConsumerGzipInflater decoder = BufsConsumerGzipInflater.create();
+		bodyStream.bindTo(decoder.getInput());
+		return decoder.getOutput().getSupplier();
+	}
 
 	public interface HttpDecoderFunction<T> {
 		T decode(ByteBuf value) throws MalformedHttpException;

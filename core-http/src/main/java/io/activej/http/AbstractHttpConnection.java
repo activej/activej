@@ -28,10 +28,14 @@ import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.csp.supplier.AbstractChannelSupplier;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.http.stream.*;
+import io.activej.http.stream.BufsConsumerChunkedDecoder;
+import io.activej.http.stream.BufsConsumerChunkedEncoder;
+import io.activej.http.stream.BufsConsumerDelimiter;
+import io.activej.http.stream.BufsConsumerGzipDeflater;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -484,14 +488,9 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 			bodyStream = decoder.getOutput();
 		}
 
-		if ((flags & GZIPPED) != 0) {
-			BufsConsumerGzipInflater decoder = BufsConsumerGzipInflater.create();
-			process = decoder;
-			bodyStream.bindTo(decoder.getInput());
-			bodyStream = decoder.getOutput();
-		}
-
-		ChannelSupplier<ByteBuf> supplier = bodyStream.getSupplier()
+		ChannelZeroBuffer<ByteBuf> queue = new ChannelZeroBuffer<>();
+		queue.setCloseable(process);
+		ChannelSupplier<ByteBuf> supplier = bodyStream.getSupplier(queue)
 			.withEndOfStream(eos -> eos
 				.mapException(HttpUtils::translateToHttpException)); // process gets started here and can cause connection closing
 
@@ -505,7 +504,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 				if (e == null) {
 					assert this.readBuf == null;
 					this.readBuf = readBufs.hasRemaining() ? readBufs.takeRemaining() : null;
-					onBodyReceived();
+					reactor.post(this::onBodyReceived);
 				} else {
 					closeEx(translateToHttpException(e));
 				}

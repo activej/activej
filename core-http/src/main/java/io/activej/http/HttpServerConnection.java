@@ -393,7 +393,10 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		//noinspection ConstantConditions
 		request.flags |= MUST_LOAD_BODY;
 		request.body = body;
-		request.bodyStream = bodySupplier == null ? null : sanitize(bodySupplier);
+		if (bodySupplier != null) {
+			request.bodyStream = sanitize(bodySupplier);
+			request.flags |= ((flags & GZIPPED) != 0) ? HttpMessage.BODY_STREAM_GZIPPED : 0;
+		}
 		if (IWebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketRequest(body)) return;
 		} else {
