@@ -22,13 +22,21 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.locks.LockSupport;
 
+import static java.lang.Integer.numberOfLeadingZeros;
+
 /**
  * Optimized lock-free concurrent object pool implementation
  */
 public final class ObjectPool<T> {
 	private static final int PARK_NANOS = ApplicationSettings.getInt(ObjectPool.class, "parkNanos", 1);
+	private static final int INITIAL_RING_SIZE;
 
-	private volatile Ring<T> ring = new Ring<>(1);
+	static {
+		Integer initialRingSize = ApplicationSettings.getInt(ObjectPool.class, "initialRingSize", 1);
+		INITIAL_RING_SIZE = 1 << ((32 - numberOfLeadingZeros(initialRingSize - 1)));
+	}
+
+	private volatile Ring<T> ring = new Ring<>(INITIAL_RING_SIZE);
 
 	public T poll() {
 		Ring<T> ring = this.ring;
