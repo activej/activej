@@ -225,7 +225,8 @@ public final class ByteBufPool {
 		if (buf != null) {
 			if (USE_WATCHDOG) {
 				int slabSize = slab.size();
-				slabStats[index].min.updateAndGet(prevMin -> Math.min(prevMin, slabSize));
+				//noinspection NonAtomicOperationOnVolatileField
+				slabStats[index].min = Math.min(slabStats[index].min, slabSize);
 			}
 			if (ByteBuf.CHECK_RECYCLE && buf.refs != -1) throw onByteBufRecycled(buf);
 			buf.tail = 0;
@@ -233,7 +234,7 @@ public final class ByteBufPool {
 			buf.refs = 1;
 			if (STATS) recordReuse(index);
 		} else {
-			if (USE_WATCHDOG) slabStats[index].min.set(0);
+			if (USE_WATCHDOG) slabStats[index].min = 0;
 			buf = ByteBuf.wrapForWriting(new byte[index == 32 ? 0 : 1 << index]);
 			buf.refs = 1;
 			if (STATS) recordNew(index);
@@ -510,7 +511,7 @@ public final class ByteBufPool {
 			if (!USE_WATCHDOG) return -1;
 			long totalSlabMins = 0;
 			for (SlabStats slabStat : slabStats) {
-				totalSlabMins += slabStat.min.get();
+				totalSlabMins += slabStat.min;
 			}
 			return totalSlabMins;
 		}
@@ -556,7 +557,7 @@ public final class ByteBufPool {
 				if (USE_WATCHDOG) {
 					SlabStats slabStat = slabStats[idx];
 					slabInfo +=
-						"," + slabStat.min.get() + "," +
+						"," + slabStat.min + "," +
 						String.format("%.1f", slabStat.estimatedMin) + "," +
 						String.format("%.1f", slabStat.estimatedError) + "," +
 						slabStat.evictedTotal;
@@ -581,7 +582,7 @@ public final class ByteBufPool {
 
 	// region watchdog
 	public static final class SlabStats {
-		AtomicInteger min = new AtomicInteger(0);
+		volatile int min = 0;
 
 		double estimatedMin;
 		int evictedTotal;
@@ -591,7 +592,7 @@ public final class ByteBufPool {
 
 		void clear() {
 			estimatedMin = estimatedError = evictedTotal = evictedLast = evictedMax = 0;
-			min.set(0);
+			min = 0;
 		}
 
 		@Override
@@ -611,7 +612,8 @@ public final class ByteBufPool {
 		for (int i = 0; i < slabs.length; i++) {
 			SlabStats stats = slabStats[i];
 			ObjectPool<ByteBuf> slab = slabs[i];
-			int min = stats.min.getAndSet(slab.size());
+			int min = stats.min;
+			stats.min = slab.size();
 
 			double error = Math.abs(stats.estimatedMin - min);
 			stats.estimatedError += (error - stats.estimatedError) * SMOOTHING_COEFF;
@@ -633,12 +635,13 @@ public final class ByteBufPool {
 			for (int j = 0; j < evictCount; j++) {
 				ByteBuf buf = slab.poll();
 				if (buf == null) {
-					if (USE_WATCHDOG) stats.min.set(0);
+					if (USE_WATCHDOG) stats.min = 0;
 					break;
 				}
 				if (USE_WATCHDOG) {
 					int slabSize = slab.size();
-					stats.min.updateAndGet(prevMin -> Math.min(prevMin, slabSize));
+					//noinspection NonAtomicOperationOnVolatileField
+					stats.min = Math.min(stats.min, slabSize);
 				}
 				stats.estimatedMin--;
 				stats.evictedLast++;
