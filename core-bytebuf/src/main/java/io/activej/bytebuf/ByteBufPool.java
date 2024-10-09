@@ -19,6 +19,7 @@ package io.activej.bytebuf;
 import io.activej.bytebuf.ByteBuf.ByteBufSlice;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
+import io.activej.common.collection.ObjectPool;
 
 import java.lang.StackWalker.StackFrame;
 import java.time.Duration;
@@ -100,7 +101,7 @@ public final class ByteBufPool {
 	 * due to utilizing {@link java.util.concurrent.atomic.AtomicReference}.
 	 * Moreover, such approach allows working with slabs concurrently safely.
 	 */
-	static final ByteBufConcurrentQueue[] slabs;
+	static final ObjectPool<ByteBuf>[] slabs;
 	static final SlabStats[] slabStats;
 	static final AtomicInteger[] created;
 	static final AtomicInteger[] reused;
@@ -163,12 +164,12 @@ public final class ByteBufPool {
 	private static final Map<ByteBuf, Entry> recycleRegistry = Collections.synchronizedMap(new WeakHashMap<>());
 
 	static {
-		slabs = new ByteBufConcurrentQueue[NUMBER_OF_SLABS];
+		slabs = new ObjectPool[NUMBER_OF_SLABS];
 		slabStats = new SlabStats[NUMBER_OF_SLABS];
 		created = new AtomicInteger[NUMBER_OF_SLABS];
 		reused = new AtomicInteger[NUMBER_OF_SLABS];
 		for (int i = 0; i < NUMBER_OF_SLABS; i++) {
-			slabs[i] = new ByteBufConcurrentQueue();
+			slabs[i] = new ObjectPool<>();
 			created[i] = new AtomicInteger();
 			reused[i] = new AtomicInteger();
 		}
@@ -219,15 +220,20 @@ public final class ByteBufPool {
 			}
 		}
 		int index = 32 - numberOfLeadingZeros(size - 1); // index==32 for size==0
-		ByteBufConcurrentQueue queue = slabs[index];
-		ByteBuf buf = queue.poll();
+		ObjectPool<ByteBuf> slab = slabs[index];
+		ByteBuf buf = slab.poll();
 		if (buf != null) {
+			if (USE_WATCHDOG) {
+				int slabSize = slab.size();
+				slabStats[index].min.updateAndGet(prevMin -> Math.min(prevMin, slabSize));
+			}
 			if (ByteBuf.CHECK_RECYCLE && buf.refs != -1) throw onByteBufRecycled(buf);
 			buf.tail = 0;
 			buf.head = 0;
 			buf.refs = 1;
 			if (STATS) recordReuse(index);
 		} else {
+			if (USE_WATCHDOG) slabStats[index].min.set(0);
 			buf = ByteBuf.wrapForWriting(new byte[index == 32 ? 0 : 1 << index]);
 			buf.refs = 1;
 			if (STATS) recordNew(index);
@@ -251,8 +257,9 @@ public final class ByteBufPool {
 
 	static AssertionError onByteBufRecycled(ByteBuf buf) {
 		int slab = 32 - numberOfLeadingZeros(buf.array.length - 1);
-		ByteBufConcurrentQueue queue = slabs[slab];
-		queue.clear();
+		ObjectPool<ByteBuf> pool = slabs[slab];
+		pool.clear();
+		if (USE_WATCHDOG) slabStats[slab].clear();
 		return new AssertionError(
 			"Attempt to use recycled ByteBuf" +
 			(REGISTRY ? ByteBufPool.getByteBufTrace(buf) : ""));
@@ -302,13 +309,13 @@ public final class ByteBufPool {
 	 */
 	static void recycle(ByteBuf buf) {
 		int slab = 32 - numberOfLeadingZeros(buf.array.length - 1);
-		ByteBufConcurrentQueue queue = slabs[slab];
+		ObjectPool<ByteBuf> pool = slabs[slab];
 		if (CLEAR_ON_RECYCLE) Arrays.fill(buf.array(), (byte) 0);
 		if (REGISTRY) {
 			recycleRegistry.put(buf, buildRegistryEntry(buf));
 			allocateRegistry.remove(buf);
 		}
-		queue.offer(buf);
+		pool.offer(buf);
 	}
 
 	public static ByteBuf ensureWriteRemaining(ByteBuf buf, int newWriteRemaining) {
@@ -465,7 +472,7 @@ public final class ByteBufPool {
 
 		@Override
 		public int getPoolItems() {
-			return stream(slabs).mapToInt(ByteBufConcurrentQueue::size).sum();
+			return stream(slabs).mapToInt(ObjectPool::size).sum();
 		}
 
 		@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -502,8 +509,8 @@ public final class ByteBufPool {
 		public long getTotalSlabMins() {
 			if (!USE_WATCHDOG) return -1;
 			long totalSlabMins = 0;
-			for (ByteBufConcurrentQueue slab : slabs) {
-				totalSlabMins += slab.realMin.get();
+			for (SlabStats slabStat : slabStats) {
+				totalSlabMins += slabStat.min.get();
 			}
 			return totalSlabMins;
 		}
@@ -533,12 +540,12 @@ public final class ByteBufPool {
 		public List<String> getPoolSlabs() {
 			List<String> result = new ArrayList<>(slabs.length + 1);
 			String header = "SlotSize,Created,Reused,InPool,Total(Kb)";
-			if (USE_WATCHDOG) header += ",RealMin,EstMean,Error,Evicted";
+			if (USE_WATCHDOG) header += ",Min,EstMin,Error,Evicted";
 			result.add(header);
 			for (int i = 0; i < slabs.length; i++) {
 				int idx = (i + 32) % slabs.length;
 				long slabSize = idx == 32 ? 0 : 1L << idx;
-				ByteBufConcurrentQueue slab = slabs[idx];
+				ObjectPool<ByteBuf> slab = slabs[idx];
 				int count = slab.size();
 				String slabInfo =
 					slabSize + "," +
@@ -549,7 +556,7 @@ public final class ByteBufPool {
 				if (USE_WATCHDOG) {
 					SlabStats slabStat = slabStats[idx];
 					slabInfo +=
-						"," + slab.realMin.get() + "," +
+						"," + slabStat.min.get() + "," +
 						String.format("%.1f", slabStat.estimatedMin) + "," +
 						String.format("%.1f", slabStat.estimatedError) + "," +
 						slabStat.evictedTotal;
@@ -574,6 +581,8 @@ public final class ByteBufPool {
 
 	// region watchdog
 	public static final class SlabStats {
+		AtomicInteger min = new AtomicInteger(0);
+
 		double estimatedMin;
 		int evictedTotal;
 		int evictedLast;
@@ -582,6 +591,7 @@ public final class ByteBufPool {
 
 		void clear() {
 			estimatedMin = estimatedError = evictedTotal = evictedLast = evictedMax = 0;
+			min.set(0);
 		}
 
 		@Override
@@ -600,29 +610,36 @@ public final class ByteBufPool {
 	private static void updateStats() {
 		for (int i = 0; i < slabs.length; i++) {
 			SlabStats stats = slabStats[i];
-			ByteBufConcurrentQueue slab = slabs[i];
-			int realMin = slab.realMin.getAndSet(slab.size());
+			ObjectPool<ByteBuf> slab = slabs[i];
+			int min = stats.min.getAndSet(slab.size());
 
-			double realError = Math.abs(stats.estimatedMin - realMin);
-			stats.estimatedError += (realError - stats.estimatedError) * SMOOTHING_COEFF;
+			double error = Math.abs(stats.estimatedMin - min);
+			stats.estimatedError += (error - stats.estimatedError) * SMOOTHING_COEFF;
 
-			if (realMin < stats.estimatedMin) {
-				stats.estimatedMin = realMin;
+			if (min < stats.estimatedMin) {
+				stats.estimatedMin = min;
 			} else {
-				stats.estimatedMin += (realMin - stats.estimatedMin) * SMOOTHING_COEFF;
+				stats.estimatedMin += (min - stats.estimatedMin) * SMOOTHING_COEFF;
 			}
 		}
 	}
 
 	private static void evict() {
 		for (int i = 0; i < slabs.length; i++) {
-			ByteBufConcurrentQueue slab = slabs[i];
+			ObjectPool<ByteBuf> slab = slabs[i];
 			SlabStats stats = slabStats[i];
 			int evictCount = (int) Math.round(stats.estimatedMin - stats.estimatedError * WATCHDOG_ERROR_MARGIN);
 			stats.evictedLast = 0;
 			for (int j = 0; j < evictCount; j++) {
 				ByteBuf buf = slab.poll();
-				if (buf == null) break;
+				if (buf == null) {
+					if (USE_WATCHDOG) stats.min.set(0);
+					break;
+				}
+				if (USE_WATCHDOG) {
+					int slabSize = slab.size();
+					stats.min.updateAndGet(prevMin -> Math.min(prevMin, slabSize));
+				}
 				stats.estimatedMin--;
 				stats.evictedLast++;
 				if (REGISTRY) recycleRegistry.remove(buf);

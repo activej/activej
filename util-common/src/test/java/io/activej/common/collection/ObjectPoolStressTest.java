@@ -1,11 +1,11 @@
-package io.activej.bytebuf;
+package io.activej.common.collection;
 
 import io.activej.common.ref.RefInt;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ByteBufConcurrentQueueStressTest {
+public class ObjectPoolStressTest {
 	private static final byte[] bytes = new byte[1];
 	public static final int ROUNDS = 100;
 	public static final int THREADS = 100;
@@ -18,18 +18,18 @@ public class ByteBufConcurrentQueueStressTest {
 	private static void round() throws InterruptedException {
 		long start = System.currentTimeMillis();
 		RefInt allocations = new RefInt(0);
-		ByteBufConcurrentQueue queue = new ByteBufConcurrentQueue();
+		ObjectPool<byte[]> queue = new ObjectPool<>();
 		for (int round = 0; round < ROUNDS; round++) {
 			List<Thread> threads = new ArrayList<>();
 			for (int t = 0; t < THREADS; t++) {
 				Thread thread = new Thread(() -> {
 					for (int i = 0; i < ITERATIONS; i++) {
-						ByteBuf buf = queue.poll();
-						if (buf == null) {
-							buf = ByteBuf.wrapForReading(bytes);
+						byte[] array = queue.poll();
+						if (array == null) {
+							array = bytes;
 							allocations.inc();
 						}
-						queue.offer(buf);
+						queue.offer(array);
 					}
 				});
 				threads.add(thread);

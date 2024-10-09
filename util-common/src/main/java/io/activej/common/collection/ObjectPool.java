@@ -14,39 +14,36 @@
  * limitations under the License.
  */
 
-package io.activej.bytebuf;
+package io.activej.common.collection;
 
 import io.activej.common.ApplicationSettings;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * Optimized lock-free concurrent queue implementation for the {@link ByteBuf ByteBufs} that is used in {@link ByteBufPool}
+ * Optimized lock-free concurrent object pool implementation
  */
-public final class ByteBufConcurrentQueue {
-	private static final int PARK_NANOS = ApplicationSettings.getInt(ByteBufConcurrentQueue.class, "parkNanos", 1);
+public final class ObjectPool<T> {
+	private static final int PARK_NANOS = ApplicationSettings.getInt(ObjectPool.class, "parkNanos", 1);
 
-	final AtomicInteger realMin = new AtomicInteger(0);
+	private volatile Ring<T> ring = new Ring<>(1);
 
-	private volatile Ring ring = new Ring(1);
-
-	public ByteBuf poll() {
-		Ring ring = this.ring;
+	public T poll() {
+		Ring<T> ring = this.ring;
 		return ring.poll();
 	}
 
-	public void offer(ByteBuf item) {
-		Ring ring = this.ring;
+	public void offer(T item) {
+		Ring<T> ring = this.ring;
 		if (ring.offer(item)) return;
 		grow(item, ring);
 	}
 
-	private synchronized void grow(ByteBuf item, Ring ring) {
+	private synchronized void grow(T item, Ring<T> ring) {
 		if (ring == this.ring) {
-			this.ring = new Ring(ring.length * 2);
+			this.ring = new Ring<>(ring.length * 2);
 		}
 		this.ring.offer(item);
 		while (true) {
@@ -56,9 +53,9 @@ public final class ByteBufConcurrentQueue {
 		}
 	}
 
-	final class Ring {
+	private static final class Ring<T> {
 		private final AtomicLong pos = new AtomicLong(0);
-		private final AtomicReferenceArray<ByteBuf> items;
+		private final AtomicReferenceArray<T> items;
 		private final int length;
 		private final int mask;
 
@@ -68,7 +65,7 @@ public final class ByteBufConcurrentQueue {
 			this.mask = this.length - 1;
 		}
 
-		public ByteBuf poll() {
+		public T poll() {
 			long pos1, pos2;
 			int head, tail;
 			do {
@@ -86,7 +83,7 @@ public final class ByteBufConcurrentQueue {
 				break;
 			} while (true);
 
-			ByteBuf item;
+			T item;
 			do {
 				item = items.getAndSet(tail & mask, null);
 				if (item == null) {
@@ -98,7 +95,7 @@ public final class ByteBufConcurrentQueue {
 			return item;
 		}
 
-		public boolean offer(ByteBuf item) {
+		public boolean offer(T item) {
 			long pos1, pos2;
 			int head, tail;
 			do {
@@ -123,11 +120,6 @@ public final class ByteBufConcurrentQueue {
 				}
 				break;
 			} while (true);
-
-			if (ByteBufPool.USE_WATCHDOG) {
-				int size = head - tail;
-				ByteBufConcurrentQueue.this.realMin.updateAndGet(prevMin -> Math.min(prevMin, size));
-			}
 
 			return true;
 		}

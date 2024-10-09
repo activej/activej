@@ -1,5 +1,6 @@
 package io.activej.bytebuf;
 
+import io.activej.common.collection.ObjectPool;
 import org.junit.Test;
 
 import static io.activej.bytebuf.ByteBufTest.initByteBufPool;
@@ -21,7 +22,7 @@ public class ByteArraySlabPoolTest {
 		bytes.recycle();
 
 		for (int i = 0; i < poolSizes.length; i++) {
-			ByteBufConcurrentQueue slab = ByteBufPool.slabs[i];
+			ObjectPool<ByteBuf> slab = ByteBufPool.slabs[i];
 			assertEquals(poolSizes[i] == 0 ? 0 : 1, slab.size());
 			ByteBuf polled = slab.poll();
 			if (polled != null) {
