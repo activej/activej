@@ -157,7 +157,7 @@ public final class ObjectPool<T> {
 	@Override
 	public String toString() {
 		return
-			"ByteBufConcurrentQueue{" +
+			"ObjectPool{" +
 			"size=" + size() +
 			'}';
 	}
