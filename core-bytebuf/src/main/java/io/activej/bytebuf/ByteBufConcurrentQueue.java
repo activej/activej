@@ -21,12 +21,13 @@ import io.activej.common.ApplicationSettings;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * Optimized lock-free concurrent queue implementation for the {@link ByteBuf ByteBufs} that is used in {@link ByteBufPool}
  */
 public final class ByteBufConcurrentQueue {
-	private static final boolean YIELD = ApplicationSettings.getBoolean(ByteBufConcurrentQueue.class, "yield", true);
+	private static final int PARK_NANOS = ApplicationSettings.getInt(ByteBufConcurrentQueue.class, "parkNanos", 1);
 
 	final AtomicInteger realMin = new AtomicInteger(0);
 
@@ -79,7 +80,7 @@ public final class ByteBufConcurrentQueue {
 				}
 				pos2 = ((long) head << 32) + ((tail + 1) & 0xFFFFFFFFL);
 				if (!pos.compareAndSet(pos1, pos2)) {
-					if (YIELD) Thread.yield();
+					LockSupport.parkNanos(PARK_NANOS);
 					continue;
 				}
 				break;
@@ -109,7 +110,7 @@ public final class ByteBufConcurrentQueue {
 				}
 				pos2 = pos1 + 0x100000000L;
 				if (!pos.compareAndSet(pos1, pos2)) {
-					if (YIELD) Thread.yield();
+					LockSupport.parkNanos(PARK_NANOS);
 					continue;
 				}
 				break;
