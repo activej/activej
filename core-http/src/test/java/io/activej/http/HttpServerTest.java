@@ -4,6 +4,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import io.activej.common.ref.Ref;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
@@ -26,10 +27,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.Selector;
 import java.time.Duration;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
@@ -86,13 +84,17 @@ public final class HttpServerTest {
 	}
 
 	public static void writeByRandomParts(Socket socket, String string) throws IOException {
-		ByteBuf buf = ByteBuf.wrapForReading(encodeAscii(string));
+		writeByRandomParts(socket, ByteBuf.wrapForReading(encodeAscii(string)));
+	}
+
+	public static void writeByRandomParts(Socket socket, ByteBuf buf) throws IOException {
 		Random random = new Random();
 		while (buf.canRead()) {
 			int count = min(1 + random.nextInt(5), buf.readRemaining());
 			socket.getOutputStream().write(buf.array(), buf.head(), count);
 			buf.moveHead(count);
 		}
+		buf.recycle();
 	}
 
 	public static void readAndAssert(InputStream is, String expected) {
@@ -956,6 +958,51 @@ public final class HttpServerTest {
 		assertThat(lastException.getCause(), instanceOf(TruncatedDataException.class));
 
 		thread.join();
+	}
+
+	@Test
+	public void testMalformedGzipHeader() throws IOException, InterruptedException, ExecutionException {
+		Ref<Exception> exceptionRef = new Ref<>();
+		HttpServer server = HttpServer.builder(eventloop, request -> request.loadBody()
+				.map($ -> HttpResponse.ok200().build())
+				.whenException(exceptionRef::set))
+			.withAcceptOnce()
+			.withListenPort(port)
+			.build();
+		server.listen();
+
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		ByteBuf buf = wrapUtf8("""
+			POST / HTTP/1.1\r
+			Host: localhost\r
+			Connection: close\r
+			Content-Length: 10\r
+			Content-Encoding: gzip\r
+			\r
+			""");
+
+		byte[] bytes = new byte[10];
+		Arrays.fill(bytes, (byte) 0x1f);
+
+		buf = ByteBufPool.append(buf, bytes);
+		buf = ByteBufPool.append(buf, new byte[]{CR, LF});
+
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, buf);
+
+			skipResponse(socket);
+		}
+
+		thread.join();
+
+		Exception exception = exceptionRef.get();
+
+		assertNotNull(exception);
+		assertThat(exception, instanceOf(HttpException.class));
+		assertThat(exception.getCause(), instanceOf(UnknownFormatException.class));
 	}
 
 	@Test

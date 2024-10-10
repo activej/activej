@@ -525,7 +525,8 @@ public abstract class HttpMessage {
 	private static ChannelSupplier<ByteBuf> decodeGzip(ChannelSupplier<ByteBuf> bodyStream) {
 		BufsConsumerGzipInflater decoder = BufsConsumerGzipInflater.create();
 		bodyStream.bindTo(decoder.getInput());
-		return decoder.getOutput().getSupplier();
+		return decoder.getOutput().getSupplier()
+			.withEndOfStream(eos -> eos.mapException(HttpUtils::translateToHttpException));
 	}
 
 	public interface HttpDecoderFunction<T> {
