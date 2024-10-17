@@ -17,11 +17,14 @@
 package io.activej.common.concurrent;
 
 import io.activej.common.ApplicationSettings;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.Supplier;
 
+import static io.activej.common.Checks.checkArgument;
 import static java.lang.Integer.numberOfLeadingZeros;
 
 /**
@@ -29,18 +32,45 @@ import static java.lang.Integer.numberOfLeadingZeros;
  */
 public final class ObjectPool<T> {
 	private static final int PARK_NANOS = ApplicationSettings.getInt(ObjectPool.class, "parkNanos", 1);
-	private static final int INITIAL_RING_SIZE;
+	private static final int INITIAL_CAPACITY = ApplicationSettings.getInt(ObjectPool.class, "initialCapacity", 1);
 
-	static {
-		Integer initialRingSize = ApplicationSettings.getInt(ObjectPool.class, "initialRingSize", 1);
-		INITIAL_RING_SIZE = 1 << ((32 - numberOfLeadingZeros(initialRingSize - 1)));
+	private volatile Ring<T> ring;
+	private final @Nullable Supplier<T> supplier;
+
+	public ObjectPool() {
+		this(INITIAL_CAPACITY, null);
 	}
 
-	private volatile Ring<T> ring = new Ring<>(INITIAL_RING_SIZE);
+	public ObjectPool(int initialCapacity) {
+		this(initialCapacity, null);
+	}
+
+	public ObjectPool(@Nullable Supplier<T> supplier) {
+		this(INITIAL_CAPACITY, supplier);
+	}
+
+	public ObjectPool(int initialCapacity, @Nullable Supplier<T> supplier) {
+		checkArgument(initialCapacity == 1 << 32 - numberOfLeadingZeros(initialCapacity - 1),
+			"initialCapacity must be a power of 2");
+		this.ring = new Ring<>(initialCapacity);
+		this.supplier = supplier;
+	}
 
 	public T poll() {
 		Ring<T> ring = this.ring;
 		return ring.poll();
+	}
+
+	public T ensure() {
+		if (supplier == null) throw new UnsupportedOperationException();
+		T item = poll();
+		return item != null ? item : supplier.get();
+	}
+
+	public T ensure(Supplier<T> supplier) {
+		if (supplier == null) throw new NullPointerException();
+		T item = poll();
+		return item != null ? item : supplier.get();
 	}
 
 	public void offer(T item) {
@@ -133,10 +163,8 @@ public final class ObjectPool<T> {
 		}
 	}
 
-	public void clear() {
-		while (!isEmpty()) {
-			poll();
-		}
+	public synchronized void clear() {
+		ring = new Ring<>(ring.length);
 	}
 
 	public boolean isEmpty() {
@@ -144,9 +172,9 @@ public final class ObjectPool<T> {
 	}
 
 	public int size() {
-		long pos1 = ring.pos.get();
-		int head = (int) (pos1 >>> 32);
-		int tail = (int) pos1;
+		long pos = ring.pos.get();
+		int head = (int) (pos >>> 32);
+		int tail = (int) pos;
 		return head - tail;
 	}
 

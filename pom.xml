@@ -363,7 +363,7 @@
             <ByteBufPool.minSize>0</ByteBufPool.minSize>
             <ByteBufPool.maxSize>0</ByteBufPool.maxSize>
             <ByteBufPool.clearOnRecycle>true</ByteBufPool.clearOnRecycle>
-            <ObjectPool.initialRingSize>1024</ObjectPool.initialRingSize>
+            <ObjectPool.initialCapacity>1024</ObjectPool.initialCapacity>
           </systemPropertyVariables>
         </configuration>
       </plugin>
