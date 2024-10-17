@@ -19,7 +19,7 @@ package io.activej.bytebuf;
 import io.activej.bytebuf.ByteBuf.ByteBufSlice;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
-import io.activej.common.collection.ObjectPool;
+import io.activej.common.concurrent.ObjectPool;
 
 import java.lang.StackWalker.StackFrame;
 import java.time.Duration;

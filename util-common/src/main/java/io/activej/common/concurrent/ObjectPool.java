@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.collection;
+package io.activej.common.concurrent;
 
 import io.activej.common.ApplicationSettings;
 

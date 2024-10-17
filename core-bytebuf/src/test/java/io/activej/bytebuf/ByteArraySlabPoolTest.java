@@ -1,6 +1,6 @@
 package io.activej.bytebuf;
 
-import io.activej.common.collection.ObjectPool;
+import io.activej.common.concurrent.ObjectPool;
 import org.junit.Test;
 
 import static io.activej.bytebuf.ByteBufTest.initByteBufPool;
