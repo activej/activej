@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -77,7 +76,6 @@ public final class AggregationExecutor extends AbstractReactive
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;
 	public static final int DEFAULT_REDUCER_BUFFER_SIZE = StreamReducer.DEFAULT_BUFFER_SIZE;
 	public static final int DEFAULT_SORTER_ITEMS_IN_MEMORY = 1_000_000;
-	public static final Duration DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD = Duration.ofMinutes(10);
 	public static final int DEFAULT_MAX_CHUNKS_TO_CONSOLIDATE = 1000;
 
 	private final Executor executor;
@@ -92,8 +90,6 @@ public final class AggregationExecutor extends AbstractReactive
 	private int chunkSize = DEFAULT_CHUNK_SIZE;
 	private int reducerBufferSize = DEFAULT_REDUCER_BUFFER_SIZE;
 	private int sorterItemsInMemory = DEFAULT_SORTER_ITEMS_IN_MEMORY;
-	private Duration maxIncrementalReloadPeriod = DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD;
-	private boolean ignoreChunkReadingExceptions = false;
 	private int maxChunksToConsolidate = DEFAULT_MAX_CHUNKS_TO_CONSOLIDATE;
 
 	// jmx
@@ -476,16 +472,6 @@ public final class AggregationExecutor extends AbstractReactive
 	// jmx
 
 	@JmxAttribute
-	public Duration getMaxIncrementalReloadPeriod() {
-		return maxIncrementalReloadPeriod;
-	}
-
-	@JmxAttribute
-	public void setMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
-		this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
-	}
-
-	@JmxAttribute
 	public int getChunkSize() {
 		return chunkSize;
 	}
@@ -503,16 +489,6 @@ public final class AggregationExecutor extends AbstractReactive
 	@JmxAttribute
 	public void setSorterItemsInMemory(int sorterItemsInMemory) {
 		this.sorterItemsInMemory = sorterItemsInMemory;
-	}
-
-	@JmxAttribute
-	public boolean isIgnoreChunkReadingExceptions() {
-		return ignoreChunkReadingExceptions;
-	}
-
-	@JmxAttribute
-	public void setIgnoreChunkReadingExceptions(boolean ignoreChunkReadingExceptions) {
-		this.ignoreChunkReadingExceptions = ignoreChunkReadingExceptions;
 	}
 
 	@JmxAttribute

@@ -118,8 +118,6 @@ public final class CubeExecutor extends AbstractReactive
 	private int aggregationsReducerBufferSize = AggregationExecutor.DEFAULT_REDUCER_BUFFER_SIZE;
 	private int aggregationsSorterItemsInMemory = AggregationExecutor.DEFAULT_SORTER_ITEMS_IN_MEMORY;
 	private int aggregationsMaxChunksToConsolidate = AggregationExecutor.DEFAULT_MAX_CHUNKS_TO_CONSOLIDATE;
-	private boolean aggregationsIgnoreChunkReadingExceptions = false;
-	private Duration maxIncrementalReloadPeriod = AggregationExecutor.DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD;
 
 	// JMX
 	private final AggregationStats aggregationStats = new AggregationStats();
@@ -233,12 +231,6 @@ public final class CubeExecutor extends AbstractReactive
 			return this;
 		}
 
-		public Builder withAggregationsIgnoreChunkReadingExceptions(boolean aggregationsIgnoreChunkReadingExceptions) {
-			checkNotBuilt(this);
-			CubeExecutor.this.aggregationsIgnoreChunkReadingExceptions = aggregationsIgnoreChunkReadingExceptions;
-			return this;
-		}
-
 		public Builder withTemporarySortDir(Path temporarySortDir) {
 			checkNotBuilt(this);
 			CubeExecutor.this.temporarySortDir = temporarySortDir;
@@ -248,12 +240,6 @@ public final class CubeExecutor extends AbstractReactive
 		public Builder withSortFrameFormat(FrameFormat sortFrameFormat) {
 			checkNotBuilt(this);
 			CubeExecutor.this.sortFrameFormat = sortFrameFormat;
-			return this;
-		}
-
-		public Builder withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
-			checkNotBuilt(this);
-			CubeExecutor.this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
 			return this;
 		}
 
@@ -286,8 +272,6 @@ public final class CubeExecutor extends AbstractReactive
 			aggregationExecutor.setMaxChunksToConsolidate(config != null && config.maxChunksToConsolidate != 0 ?
 				config.maxChunksToConsolidate :
 				aggregationsMaxChunksToConsolidate);
-			aggregationExecutor.setIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions);
-			aggregationExecutor.setMaxIncrementalReloadPeriod(maxIncrementalReloadPeriod);
 			aggregationExecutor.setStats(aggregationStats);
 
 			aggregationExecutors.put(id, aggregationExecutor);
@@ -924,19 +908,6 @@ public final class CubeExecutor extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public boolean getAggregationsIgnoreChunkReadingExceptions() {
-		return aggregationsIgnoreChunkReadingExceptions;
-	}
-
-	@JmxAttribute
-	public void setAggregationsIgnoreChunkReadingExceptions(boolean aggregationsIgnoreChunkReadingExceptions) {
-		this.aggregationsIgnoreChunkReadingExceptions = aggregationsIgnoreChunkReadingExceptions;
-		for (AggregationExecutor aggregationExecutor : aggregationExecutors.values()) {
-			aggregationExecutor.setIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions);
-		}
-	}
-
-	@JmxAttribute
 	public ValueStats getQueryTimes() {
 		return queryTimes;
 	}
@@ -959,19 +930,6 @@ public final class CubeExecutor extends AbstractReactive
 	@JmxAttribute
 	public Map<String, AggregationExecutor> getAggregationExecutors() {
 		return aggregationExecutors;
-	}
-
-	@JmxAttribute
-	public Duration getMaxIncrementalReloadPeriod() {
-		return maxIncrementalReloadPeriod;
-	}
-
-	@JmxAttribute
-	public void setMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
-		this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
-		for (AggregationExecutor aggregationExecutor : aggregationExecutors.values()) {
-			aggregationExecutor.setMaxIncrementalReloadPeriod(maxIncrementalReloadPeriod);
-		}
 	}
 
 }
