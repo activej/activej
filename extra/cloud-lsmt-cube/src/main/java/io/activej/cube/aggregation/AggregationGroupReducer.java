@@ -79,12 +79,12 @@ public final class AggregationGroupReducer<T, K extends Comparable> extends Abst
 		if (accumulator != null) {
 			aggregate.accumulate(accumulator, item);
 		} else {
-			accumulator = aggregate.createAccumulator(item);
-			map.put(key, accumulator);
-
 			if (map.size() == chunkSize) {
 				doFlush();
 			}
+
+			accumulator = aggregate.createAccumulator(item);
+			map.put(key, accumulator);
 		}
 	}
 

@@ -28,6 +28,7 @@ import static io.activej.cube.aggregation.measure.Measures.union;
 import static io.activej.cube.aggregation.util.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class AggregationGroupReducerTest {
@@ -125,7 +126,10 @@ public class AggregationGroupReducerTest {
 
 		assertEndOfStream(supplier);
 		assertEndOfStream(groupReducer);
-		assertEquals(5, list.size());
+		assertEquals(4, list.size());
+		for (ProtoAggregationChunk protoAggregationChunk : list) {
+			assertTrue(protoAggregationChunk.count() <= aggregationChunkSize);
+		}
 
 		for (StreamConsumer consumer : listConsumers) {
 			assertEndOfStream(consumer);
