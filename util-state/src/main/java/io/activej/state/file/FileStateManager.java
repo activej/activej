@@ -289,10 +289,6 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		fileSystem.move(tempFilename, filename);
 	}
 
-	public interface StreamOutputConsumer {
-		void accept(StreamOutput outputStream) throws IOException;
-	}
-
 	public interface DownloadMapper {
 		InputStream map(InputStream inputStream) throws IOException;
 	}
@@ -301,4 +297,7 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		OutputStream map(OutputStream inputStream) throws IOException;
 	}
 
+	private interface StreamOutputConsumer {
+		void accept(StreamOutput outputStream) throws IOException;
+	}
 }
