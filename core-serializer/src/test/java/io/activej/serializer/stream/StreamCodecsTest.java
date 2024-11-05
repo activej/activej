@@ -85,6 +85,59 @@ public class StreamCodecsTest {
 		assertArrayEquals(objects, result);
 	}
 
+
+	@Theory
+	public void ofFixedLengthArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<String[]> codec = StreamCodecs.ofFixedLengthArray(StreamCodecs.ofString(), () -> new String[arraySize], arraySize);
+		String[] strings = new String[arraySize];
+		for (int i = 0; i < arraySize; i++) {
+			strings[i] = String.valueOf(i);
+		}
+		String[] result = doTest(codec, strings, readBufferSize, writeBufferSize);
+
+		assertArrayEquals(strings, result);
+	}
+
+	@Theory
+	public void ofFixedLengthArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize > 100) && writeBufferSize > 100);
+
+		StreamCodec<String[]> codec = StreamCodecs.ofFixedLengthArray(StreamCodecs.ofString(), () -> new String[arraySize], arraySize);
+		String[] strings = new String[arraySize];
+		for (int i = 0; i < arraySize; i++) {
+			strings[i] = String.valueOf(i);
+		}
+		String[] result = doTestWithAdditionalData(codec, strings, readBufferSize, writeBufferSize, 100, 100);
+
+		assertArrayEquals(strings, result);
+	}
+
+	@Theory
+	public void ofFixedLengthHeterogeneousArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
+		Object[] objects = {0, "x", true, 12, "y", false, 34, "11241"};
+
+		int length = objects.length;
+		StreamCodec<Object[]> codec = StreamCodecs.ofFixedLengthArray(value -> switch (value % 3) {
+			case 0 -> StreamCodecs.ofInt();
+			case 1 -> StreamCodecs.ofString();
+			case 2 -> StreamCodecs.ofBoolean();
+			default -> throw new AssertionError();
+		}, () -> new Object[length], length);
+		Object[] result = doTest(codec, objects, readBufferSize, writeBufferSize);
+
+		assertArrayEquals(objects, result);
+	}
+
 	@Theory
 	public void ofList(
 		@FromDataPoints("bufferSizes") int readBufferSize,
@@ -351,6 +404,198 @@ public class StreamCodecsTest {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<long[]> codec = StreamCodecs.ofVarLongArray();
+		long[] longs = new long[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < longs.length; i++) {
+			longs[i] = random.nextLong();
+		}
+
+		long[] result = doTestWithAdditionalData(codec, longs, readBufferSize, writeBufferSize, 10, 10);
+
+		assertArrayEquals(longs, result);
+	}
+
+	@Theory
+	public void ofFixedLengthVarIntArrayList(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
+		StreamCodec<List<int[]>> codec = StreamCodecs.ofList(StreamCodecs.ofFixedLengthVarIntArray(3));
+		List<int[]> expected = List.of(
+			new int[]{-1, -2, -3},
+			new int[]{1, 2, 3},
+			new int[]{-1, 0, 1},
+			new int[]{Integer.MIN_VALUE, 0, Integer.MAX_VALUE}
+		);
+		List<int[]> result = doTest(codec, expected, readBufferSize, writeBufferSize);
+
+		assertEquals(expected.size(), result.size());
+
+		for (int i = 0; i < expected.size(); i++) {
+			assertArrayEquals(expected.get(i), result.get(i));
+		}
+	}
+
+	@Theory
+	public void ofFixedLengthVarLongArrayList(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
+		StreamCodec<List<long[]>> codec = StreamCodecs.ofList(StreamCodecs.ofFixedLengthVarLongArray(3));
+		List<long[]> expected = List.of(
+			new long[]{-1, -2, -3},
+			new long[]{1, 2, 3},
+			new long[]{-1, 0, 1},
+			new long[]{Long.MIN_VALUE, 0, Long.MAX_VALUE}
+		);
+		List<long[]> result = doTest(codec, expected, readBufferSize, writeBufferSize);
+
+		assertEquals(expected.size(), result.size());
+
+		for (int i = 0; i < expected.size(); i++) {
+			assertArrayEquals(expected.get(i), result.get(i));
+		}
+	}
+
+	@Theory
+	public void ofFixedLengthIntArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<int[]> codec = StreamCodecs.ofFixedLengthIntArray(arraySize);
+		int[] ints = new int[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = random.nextInt();
+		}
+
+		int[] result = doTest(codec, ints, readBufferSize, writeBufferSize);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Theory
+	public void ofFixedLengthIntArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize > 100) && writeBufferSize > 100);
+
+		StreamCodec<int[]> codec = StreamCodecs.ofFixedLengthIntArray(arraySize);
+		int[] ints = new int[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = random.nextInt();
+		}
+
+		int[] result = doTestWithAdditionalData(codec, ints, readBufferSize, writeBufferSize, 4, 4);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Theory
+	public void ofFixedLengthByteArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<byte[]> codec = StreamCodecs.ofFixedLengthByteArray(arraySize);
+		byte[] bytes = new byte[arraySize];
+		Random random = ThreadLocalRandom.current();
+		random.nextBytes(bytes);
+
+		byte[] result = doTest(codec, bytes, readBufferSize, writeBufferSize);
+
+		assertArrayEquals(bytes, result);
+	}
+
+	@Theory
+	public void ofFixedLengthByteArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<byte[]> codec = StreamCodecs.ofFixedLengthByteArray(arraySize);
+		byte[] bytes = new byte[arraySize];
+		Random random = ThreadLocalRandom.current();
+		random.nextBytes(bytes);
+
+		byte[] result = doTestWithAdditionalData(codec, bytes, readBufferSize, writeBufferSize, 4, 4);
+
+		assertArrayEquals(bytes, result);
+	}
+
+	@Theory
+	public void ofFixedLengthVarIntArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<int[]> codec = StreamCodecs.ofFixedLengthVarIntArray(arraySize);
+		int[] ints = new int[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = random.nextInt();
+		}
+
+		int[] result = doTest(codec, ints, readBufferSize, writeBufferSize);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Theory
+	public void ofFixedLengthVarIntArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<int[]> codec = StreamCodecs.ofFixedLengthVarIntArray(arraySize);
+		int[] ints = new int[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = random.nextInt();
+		}
+
+		int[] result = doTestWithAdditionalData(codec, ints, readBufferSize, writeBufferSize, 5, 5);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Theory
+	public void ofFixedLengthVarLongArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<long[]> codec = StreamCodecs.ofFixedLengthVarLongArray(arraySize);
+		long[] longs = new long[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < longs.length; i++) {
+			longs[i] = random.nextLong();
+		}
+
+		long[] result = doTest(codec, longs, readBufferSize, writeBufferSize);
+
+		assertArrayEquals(longs, result);
+	}
+
+	@Theory
+	public void ofFixedLengthVarLongArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<long[]> codec = StreamCodecs.ofFixedLengthVarLongArray(arraySize);
 		long[] longs = new long[arraySize];
 		Random random = ThreadLocalRandom.current();
 		for (int i = 0; i < longs.length; i++) {
