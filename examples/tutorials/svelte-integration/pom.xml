@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-svelte-integration</artifactId>
-  <version>6.0-SNAPSHOT</version>
+  <version>6.0-rc1</version>
 
   <name>Tutorials : Svelte-Integration</name>
 

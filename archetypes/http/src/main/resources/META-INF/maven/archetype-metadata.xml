@@ -10,7 +10,7 @@
             <defaultValue>my-web-app</defaultValue>
         </requiredProperty>
         <requiredProperty key="version">
-            <defaultValue>6.0-SNAPSHOT</defaultValue>
+            <defaultValue>6.0-rc1</defaultValue>
         </requiredProperty>
         <requiredProperty key="mainClassName">
             <defaultValue>WebApp</defaultValue>
