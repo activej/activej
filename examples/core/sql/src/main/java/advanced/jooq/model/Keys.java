@@ -3,10 +3,12 @@
  */
 package advanced.jooq.model;
 
+
 import advanced.jooq.model.tables.NewUsers;
 import advanced.jooq.model.tables.Users;
 import advanced.jooq.model.tables.records.NewUsersRecord;
 import advanced.jooq.model.tables.records.UsersRecord;
+
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;

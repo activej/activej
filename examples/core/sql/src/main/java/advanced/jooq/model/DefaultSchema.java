@@ -3,14 +3,16 @@
  */
 package advanced.jooq.model;
 
+
 import advanced.jooq.model.tables.NewUsers;
 import advanced.jooq.model.tables.Users;
-import org.jooq.Catalog;
-import org.jooq.Table;
-import org.jooq.impl.SchemaImpl;
 
 import java.util.Arrays;
 import java.util.List;
+
+import org.jooq.Catalog;
+import org.jooq.Table;
+import org.jooq.impl.SchemaImpl;
 
 
 /**

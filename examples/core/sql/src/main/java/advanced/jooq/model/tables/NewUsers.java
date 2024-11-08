@@ -3,15 +3,30 @@
  */
 package advanced.jooq.model.tables;
 
+
 import advanced.jooq.model.DefaultSchema;
 import advanced.jooq.model.Keys;
 import advanced.jooq.model.tables.records.NewUsersRecord;
-import org.jooq.*;
+
+import java.util.Collection;
+
+import org.jooq.Condition;
+import org.jooq.Field;
+import org.jooq.Identity;
+import org.jooq.Name;
+import org.jooq.PlainSQL;
+import org.jooq.QueryPart;
+import org.jooq.SQL;
+import org.jooq.Schema;
+import org.jooq.Select;
+import org.jooq.Stringly;
+import org.jooq.Table;
+import org.jooq.TableField;
+import org.jooq.TableOptions;
+import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
-
-import java.util.Collection;
 
 
 /**

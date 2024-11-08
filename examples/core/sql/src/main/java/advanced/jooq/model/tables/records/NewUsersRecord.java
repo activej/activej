@@ -3,7 +3,9 @@
  */
 package advanced.jooq.model.tables.records;
 
+
 import advanced.jooq.model.tables.NewUsers;
+
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 
