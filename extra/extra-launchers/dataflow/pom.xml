@@ -5,40 +5,28 @@
 
   <parent>
     <groupId>io.activej</groupId>
-    <artifactId>activej-extra</artifactId>
+    <artifactId>extra-launchers</artifactId>
     <version>6.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activej-multilog</artifactId>
+  <artifactId>activej-launchers-dataflow</artifactId>
 
-  <name>ActiveJ : Multilog</name>
+  <name>Extra Launchers : Dataflow</name>
   <description>
-    Tools for working with logs stored on different partitions.
+    Common Dataflow launchers.
   </description>
 
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-fs</artifactId>
+      <artifactId>activej-dataflow</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-datastream</artifactId>
+      <artifactId>activej-launchers-common</artifactId>
       <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-test</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.lz4</groupId>
-      <artifactId>lz4-java</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -50,7 +38,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>io.activej.multilog</Automatic-Module-Name>
+              <Automatic-Module-Name>io.activej.launchers.dataflow</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

@@ -4,23 +4,18 @@
 
   <parent>
     <groupId>io.activej</groupId>
-    <artifactId>examples</artifactId>
+    <artifactId>extra-examples</artifactId>
     <version>6.0-SNAPSHOT</version>
-    <relativePath>../../pom.xml</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>examples-rpc</artifactId>
-  <name>Examples : Cloud : RPC</name>
+  <artifactId>examples-memcache</artifactId>
+  <name>Extra examples : Memcache</name>
 
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-launchers-rpc</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-specializer</artifactId>
+      <artifactId>activej-memcache</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

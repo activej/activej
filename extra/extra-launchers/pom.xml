@@ -4,24 +4,42 @@
 
   <parent>
     <groupId>io.activej</groupId>
-    <artifactId>examples</artifactId>
+    <artifactId>activej-extra</artifactId>
     <version>6.0-SNAPSHOT</version>
-    <relativePath>../../pom.xml</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>examples-rpc</artifactId>
-  <name>Examples : Cloud : RPC</name>
+  <artifactId>extra-launchers</artifactId>
+  <packaging>pom</packaging>
+
+  <name>Extra Launchers</name>
+  <description>
+    A set of predefined launchers for different extra services
+  </description>
+
+  <modules>
+    <module>crdt</module>
+    <module>dataflow</module>
+  </modules>
 
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-launchers-rpc</artifactId>
+      <artifactId>activej-boot</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-specializer</artifactId>
+      <artifactId>activej-test</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
+
 </project>

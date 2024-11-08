@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.activej</groupId>
+    <artifactId>activej</artifactId>
+    <version>6.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>activej-extra</artifactId>
+  <packaging>pom</packaging>
+
+  <name>ActiveJ Extra</name>
+  <description>
+    Various extra components for ActiveJ
+  </description>
+
+  <modules>
+    <module>cloud-dataflow</module>
+    <module>cloud-dataflow-jdbc-driver</module>
+    <module>cloud-crdt</module>
+    <module>cloud-etl</module>
+    <module>cloud-lsmt-cube</module>
+    <module>cloud-memcache</module>
+    <module>cloud-multilog</module>
+    <module>cloud-ot</module>
+    <module>cloud-redis</module>
+    <module>util-etcd</module>
+    <module>extra-launchers</module>
+    <module>extra-benchmarks</module>
+    <module>extra-examples</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>ai.grakn</groupId>
+        <artifactId>redis-mock</artifactId>
+        <version>0.1.6</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.17.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>2.17.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.17.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jsr310</artifactId>
+        <version>2.17.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents.client5</groupId>
+        <artifactId>httpclient5</artifactId>
+        <version>5.3.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.calcite</groupId>
+        <artifactId>calcite-core</artifactId>
+        <version>1.37.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.calcite.avatica</groupId>
+        <artifactId>avatica-core</artifactId>
+        <version>1.25.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.etcd</groupId>
+        <artifactId>jetcd-core</artifactId>
+        <version>0.7.7</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>4.28.2</version>
+      </dependency>
+      <dependency>
+        <groupId>io.minio</groupId>
+        <artifactId>minio</artifactId>
+        <version>8.5.12</version>
+      </dependency>
+
+      <!--Fixing transitive dependency vulnerability-->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>33.3.1-jre</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.17.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec-http</artifactId>
+        <version>4.1.113.Final</version>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+</project>

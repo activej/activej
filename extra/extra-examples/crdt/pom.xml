@@ -4,19 +4,25 @@
 
   <parent>
     <groupId>io.activej</groupId>
-    <artifactId>activej-extra</artifactId>
+    <artifactId>extra-examples</artifactId>
     <version>6.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activej-memcache</artifactId>
-
-  <name>ActiveJ : Memcache</name>
-  <description>
-    Various tools for implementing memcached-like RPC messaging.
-  </description>
+  <artifactId>examples-crdt</artifactId>
+  <name>Extra examples : CRDT</name>
 
   <dependencies>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-crdt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-fs</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-rpc</artifactId>
@@ -24,29 +30,12 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-launchers-common</artifactId>
+      <artifactId>activej-launchers-crdt</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.carrotsearch</groupId>
-      <artifactId>hppc</artifactId>
+      <groupId>org.lz4</groupId>
+      <artifactId>lz4-java</artifactId>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifestEntries>
-              <Automatic-Module-Name>io.activej.memcache</Automatic-Module-Name>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
 </project>

@@ -9,28 +9,29 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activej-memcache</artifactId>
+  <artifactId>activej-etcd</artifactId>
 
-  <name>ActiveJ : Memcache</name>
+  <name>ActiveJ : Util : Etcd</name>
   <description>
-    Various tools for implementing memcached-like RPC messaging.
+    Etcd Codecs, and transactional support for ActiveJ project.
   </description>
 
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-rpc</artifactId>
+      <artifactId>activej-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-launchers-common</artifactId>
-      <version>${project.version}</version>
+      <groupId>io.etcd</groupId>
+      <artifactId>jetcd-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.carrotsearch</groupId>
-      <artifactId>hppc</artifactId>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
     </dependency>
+
   </dependencies>
 
   <build>
@@ -41,12 +42,36 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>io.activej.memcache</Automatic-Module-Name>
+              <Automatic-Module-Name>io.activej.etcd</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>excludeEtcdTests</id>
+      <activation>
+        <property>
+          <name>!excludeEtcdTests</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/WatchTransactionStressTest.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
