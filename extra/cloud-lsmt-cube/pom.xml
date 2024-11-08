@@ -11,7 +11,7 @@
 
   <artifactId>activej-cube</artifactId>
 
-  <name>ActiveJ : LSMT OLAP Cube</name>
+  <name>ActiveJ : Extra : LSMT OLAP Cube</name>
   <description>
     Multidimensional OLAP database with predefined set of dimensions, measures,
     and log-structured merge-tree tables containing pre-aggregated data.

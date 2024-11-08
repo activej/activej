@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>benchmarks-memcache</artifactId>
-  <name>Benchmarks : Memcache</name>
+  <name>Extra benchmarks : Memcache</name>
 
   <dependencies>
     <dependency>

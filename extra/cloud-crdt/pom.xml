@@ -11,7 +11,7 @@
 
   <artifactId>activej-crdt</artifactId>
 
-  <name>ActiveJ : CRDT</name>
+  <name>ActiveJ : Extra : CRDT</name>
   <description>
     Conflict-free replicated data type implementation.
   </description>

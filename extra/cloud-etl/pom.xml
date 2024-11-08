@@ -11,7 +11,7 @@
 
   <artifactId>activej-etl</artifactId>
 
-  <name>ActiveJ : ETL</name>
+  <name>ActiveJ : Extra : ETL</name>
   <description>
     Various tools for extracting, transforming and loading data.
   </description>

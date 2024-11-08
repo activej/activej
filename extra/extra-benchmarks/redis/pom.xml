@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>benchmarks-redis</artifactId>
-  <name>Benchmarks : Redis</name>
+  <name>Extra benchmarks : Redis</name>
 
   <dependencies>
     <dependency>

@@ -11,7 +11,7 @@
 
   <artifactId>activej-memcache</artifactId>
 
-  <name>ActiveJ : Memcache</name>
+  <name>ActiveJ : Extra : Memcache</name>
   <description>
     Various tools for implementing memcached-like RPC messaging.
   </description>

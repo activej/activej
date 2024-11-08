@@ -12,7 +12,7 @@
 
   <artifactId>activej-dataflow</artifactId>
 
-  <name>ActiveJ : Dataflow</name>
+  <name>ActiveJ : Extra : Dataflow</name>
   <description>
     Distributed stream-based batch processing engine for Big Data applications.
     Contains tools for working with large datasets spanned multiple partitions.

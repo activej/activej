@@ -13,7 +13,7 @@
 
   <artifactId>activej-dataflow-jdbc-driver</artifactId>
 
-  <name>ActiveJ : Dataflow JDBC Driver</name>
+  <name>ActiveJ : Extra : Dataflow JDBC Driver</name>
   <description>
     A JDBC driver for accessing Dataflow infrastructure
   </description>

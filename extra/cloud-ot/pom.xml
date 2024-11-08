@@ -11,7 +11,7 @@
 
   <artifactId>activej-ot</artifactId>
 
-  <name>ActiveJ : OT</name>
+  <name>ActiveJ : Extra : OT</name>
   <description>
     Implementation of operational transformation technology. Allows building collaborative software systems.
   </description>
