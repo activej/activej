@@ -29,8 +29,6 @@
     <module>cloud-redis</module>
     <module>util-etcd</module>
     <module>extra-launchers</module>
-    <module>extra-benchmarks</module>
-    <module>extra-examples</module>
   </modules>
 
   <properties>
@@ -119,4 +117,17 @@
 
     </dependencies>
   </dependencyManagement>
+
+  <profiles>
+    <profile>
+      <id>examples</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+        <module>extra-benchmarks</module>
+        <module>extra-examples</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>
