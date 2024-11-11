@@ -5,6 +5,7 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
+import io.activej.codegen.expression.Variable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -77,14 +78,23 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 			() -> ClassGenerator.builder(RecordProjection.class)
 				.withConstructor(List.of(RecordScheme.class, RecordScheme.class),
 					superConstructor(arg(0), arg(1)))
-				.withMethod("accept", void.class, List.of(Record.class, Record.class), sequence(seq -> {
-					for (Map.Entry<String, UnaryOperator<Expression>> entry : mapping.entrySet()) {
-						seq.add(Expressions.set(
-							schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), entry.getKey()),
-							entry.getValue().apply(cast(arg(0), schemeFrom.getRecordClass()))
-						));
-					}
-				}))
+				.withMethod("accept", void.class, List.of(Record.class, Record.class),
+					let(List.of(
+							cast(arg(0), schemeFrom.getRecordClass()),
+							cast(arg(1), schemeTo.getRecordClass())
+						),
+						variables -> sequence(seq -> {
+							Variable recordFrom = variables[0];
+							Variable recordTo = variables[1];
+
+							for (Map.Entry<String, UnaryOperator<Expression>> entry : mapping.entrySet()) {
+								seq.add(Expressions.set(
+									schemeTo.property(recordTo, entry.getKey()),
+									entry.getValue().apply(recordFrom)
+								));
+							}
+						}))
+				)
 				.build(),
 			schemeFrom, schemeTo);
 	}

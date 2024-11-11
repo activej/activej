@@ -19,6 +19,7 @@ package io.activej.cube;
 import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.codegen.expression.Variable;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.attributes.IAttributeResolver;
 import io.activej.cube.attributes.IAttributeResolver.AttributesFunction;
@@ -76,17 +77,22 @@ public final class Utils {
 			ClassKey.of(KeyFunction.class, recordClass, recordDimensions, Arrays.asList(fullySpecifiedDimensionsArray)),
 			() -> ClassGenerator.builder(KeyFunction.class)
 				.withMethod("extractKey",
-					let(
-						arrayNew(Object[].class, value(recordDimensions.size())),
-						key -> sequence(seq -> {
+					let(List.of(
+							arrayNew(Object[].class, value(recordDimensions.size())),
+							cast(arg(0), recordClass)
+						),
+						variables -> sequence(seq -> {
+							Variable array = variables[0];
+							Variable record = variables[1];
+
 							for (int i = 0; i < recordDimensions.size(); i++) {
 								String dimension = recordDimensions.get(i);
-								seq.add(arraySet(key, value(i),
+								seq.add(arraySet(array, value(i),
 									fullySpecifiedDimensions.containsKey(dimension) ?
 										arrayGet(value(fullySpecifiedDimensionsArray), value(i)) :
-										cast(property(cast(arg(0), recordClass), dimension), Object.class)));
+										cast(property(record, dimension), Object.class)));
 							}
-							return key;
+							return array;
 						})))
 				.build()
 		);
@@ -95,16 +101,17 @@ public final class Utils {
 			ClassKey.of(AttributesFunction.class, recordClass, new HashSet<>(recordAttributes)),
 			() -> ClassGenerator.builder(AttributesFunction.class)
 				.withMethod("applyAttributes",
-					sequence(seq -> {
-						List<String> resolverAttributes = new ArrayList<>(attributeResolver.getAttributeTypes().keySet());
-						for (String attribute : recordAttributes) {
-							String attributeName = attribute.substring(attribute.indexOf('.') + 1);
-							int resolverAttributeIndex = resolverAttributes.indexOf(attributeName);
-							seq.add(set(
-								property(cast(arg(0), recordClass), attribute.replace('.', '$')),
-								arrayGet(arg(1), value(resolverAttributeIndex))));
-						}
-					}))
+					let(cast(arg(0), recordClass), record ->
+						sequence(seq -> {
+							List<String> resolverAttributes = new ArrayList<>(attributeResolver.getAttributeTypes().keySet());
+							for (String attribute : recordAttributes) {
+								String attributeName = attribute.substring(attribute.indexOf('.') + 1);
+								int resolverAttributeIndex = resolverAttributes.indexOf(attributeName);
+								seq.add(set(
+									property(record, attribute.replace('.', '$')),
+									arrayGet(arg(1), value(resolverAttributeIndex))));
+							}
+						})))
 				.build()
 		);
 

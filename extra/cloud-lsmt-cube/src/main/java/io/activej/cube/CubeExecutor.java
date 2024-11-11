@@ -20,7 +20,6 @@ import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.codegen.expression.impl.Compare;
 import io.activej.common.builder.AbstractBuilder;
@@ -538,35 +537,37 @@ public final class CubeExecutor extends AbstractReactive
 				ClassKey.of(RecordFunction.class, resultClass, recordScheme.getFields()),
 				() -> ClassGenerator.builder(RecordFunction.class)
 					.withMethod("copyAttributes",
-						sequence(seq -> {
-							for (String field : recordScheme.getFields()) {
-								int fieldIndex = recordScheme.getFieldIndex(field);
-								if (structure.getDimensionTypes().containsKey(field)) {
-									seq.add(call(arg(1), "set", value(fieldIndex),
-										cast(structure.getDimensionTypes().get(field).toValue(
-											property(cast(arg(0), resultClass), field)), Object.class)));
-								} else if (!structure.getMeasures().containsKey(field) && !structure.getComputedMeasures().containsKey(field)) {
-									seq.add(call(arg(1), "set", value(fieldIndex),
-										cast(property(cast(arg(0), resultClass), field.replace('.', '$')), Object.class)));
+						let(cast(arg(0), resultClass), result ->
+							sequence(seq -> {
+								for (String field : recordScheme.getFields()) {
+									int fieldIndex = recordScheme.getFieldIndex(field);
+									if (structure.getDimensionTypes().containsKey(field)) {
+										seq.add(call(arg(1), "set", value(fieldIndex),
+											cast(structure.getDimensionTypes().get(field).toValue(
+												property(result, field)), Object.class)));
+									} else if (!structure.getMeasures().containsKey(field) && !structure.getComputedMeasures().containsKey(field)) {
+										seq.add(call(arg(1), "set", value(fieldIndex),
+											cast(property(result, field.replace('.', '$')), Object.class)));
+									}
 								}
-							}
-						}))
+							})))
 					.withMethod("copyMeasures",
-						sequence(seq -> {
-							for (String field : recordScheme.getFields()) {
-								int fieldIndex = recordScheme.getFieldIndex(field);
-								if (structure.getMeasures().containsKey(field)) {
-									Variable fieldValue = property(cast(arg(0), resultClass), field);
-									seq.add(call(arg(1), "set", value(fieldIndex),
-										cast(structure.getMeasures().get(field).getFieldType().toValue(
-											structure.getMeasures().get(field).valueOfAccumulator(fieldValue)), Object.class)));
-								} else if (structure.getComputedMeasures().containsKey(field)) {
-									Variable fieldValue = property(cast(arg(0), resultClass), field);
-									seq.add(call(arg(1), "set", value(fieldIndex),
-										cast(fieldValue, Object.class)));
+						let(cast(arg(0), resultClass), result ->
+							sequence(seq -> {
+								for (String field : recordScheme.getFields()) {
+									int fieldIndex = recordScheme.getFieldIndex(field);
+									if (structure.getMeasures().containsKey(field)) {
+										Variable fieldValue = property(result, field);
+										seq.add(call(arg(1), "set", value(fieldIndex),
+											cast(structure.getMeasures().get(field).getFieldType().toValue(
+												structure.getMeasures().get(field).valueOfAccumulator(fieldValue)), Object.class)));
+									} else if (structure.getComputedMeasures().containsKey(field)) {
+										Variable fieldValue = property(result, field);
+										seq.add(call(arg(1), "set", value(fieldIndex),
+											cast(fieldValue, Object.class)));
+									}
 								}
-							}
-						}))
+							})))
 					.build()
 			);
 		}
@@ -578,13 +579,13 @@ public final class CubeExecutor extends AbstractReactive
 					.initialize(b ->
 						query.resultComputedMeasures().forEach(computedMeasure ->
 							b.withField(computedMeasure, structure.getComputedMeasures().get(computedMeasure).getType(structure.getMeasures()))))
-					.withMethod("computeMeasures", sequence(seq -> {
-						for (String computedMeasure : query.resultComputedMeasures()) {
-							Expression record = cast(arg(0), resultClass);
-							seq.add(set(property(record, computedMeasure),
-								structure.getComputedMeasures().get(computedMeasure).getExpression(record, structure.getMeasures())));
-						}
-					}))
+					.withMethod("computeMeasures", let(cast(arg(0), resultClass), record ->
+						sequence(seq -> {
+							for (String computedMeasure : query.resultComputedMeasures()) {
+								seq.add(set(property(record, computedMeasure),
+									structure.getComputedMeasures().get(computedMeasure).getExpression(record, structure.getMeasures())));
+							}
+						})))
 					.build()
 			);
 		}
@@ -602,7 +603,7 @@ public final class CubeExecutor extends AbstractReactive
 					);
 					return ClassGenerator.builder(Predicate.class)
 						.withMethod("test",
-							queryHaving.createPredicate(cast(arg(0), resultClass), valueResolver))
+							let(cast(arg(0), resultClass), value -> queryHaving.createPredicate(value, valueResolver)))
 						.build();
 				}
 			);
@@ -819,39 +820,53 @@ public final class CubeExecutor extends AbstractReactive
 				ClassKey.of(TotalsFunction.class, resultClass, query.resultStoredMeasures(), query.resultComputedMeasures()),
 				() -> ClassGenerator.builder(TotalsFunction.class)
 					.withMethod("zero",
-						sequence(seq -> {
-							for (String field : query.resultStoredMeasures()) {
-								Measure measure = structure.getMeasures().get(field);
-								seq.add(measure.zeroAccumulator(
-									property(cast(arg(0), resultClass), field)));
-							}
-						}))
+						let(cast(arg(0), resultClass), totalRecord ->
+							sequence(seq -> {
+								for (String field : query.resultStoredMeasures()) {
+									Measure measure = structure.getMeasures().get(field);
+									seq.add(measure.zeroAccumulator(property(totalRecord, field)));
+								}
+							})))
 					.withMethod("init",
-						sequence(seq -> {
-							for (String field : query.resultStoredMeasures()) {
-								Measure measure = structure.getMeasures().get(field);
-								seq.add(measure.initAccumulatorWithAccumulator(
-									property(cast(arg(0), resultClass), field),
-									property(cast(arg(1), resultClass), field)));
-							}
-						}))
+						let(List.of(
+								cast(arg(0), resultClass),
+								cast(arg(1), resultClass)
+							),
+							variables -> sequence(seq -> {
+								Variable totalRecord = variables[0];
+								Variable firstRecord = variables[1];
+
+								for (String field : query.resultStoredMeasures()) {
+									Measure measure = structure.getMeasures().get(field);
+									seq.add(measure.initAccumulatorWithAccumulator(
+										property(totalRecord, field),
+										property(firstRecord, field)));
+								}
+							})))
 					.withMethod("accumulate",
-						sequence(seq -> {
-							for (String field : query.resultStoredMeasures()) {
-								Measure measure = structure.getMeasures().get(field);
-								seq.add(measure.reduce(
-									property(cast(arg(0), resultClass), field),
-									property(cast(arg(1), resultClass), field)));
-							}
-						}))
+						let(List.of(
+								cast(arg(0), resultClass),
+								cast(arg(1), resultClass)
+							),
+							variables -> sequence(seq -> {
+								Variable totalRecord = variables[0];
+								Variable record = variables[1];
+
+								for (String field : query.resultStoredMeasures()) {
+									Measure measure = structure.getMeasures().get(field);
+									seq.add(measure.reduce(
+										property(totalRecord, field),
+										property(record, field)));
+								}
+							})))
 					.withMethod("computeMeasures",
-						sequence(seq -> {
-							for (String computedMeasure : query.resultComputedMeasures()) {
-								Expression result = cast(arg(0), resultClass);
-								seq.add(set(property(result, computedMeasure),
-									structure.getComputedMeasures().get(computedMeasure).getExpression(result, structure.getMeasures())));
-							}
-						}))
+						let(cast(arg(0), resultClass), totalRecord ->
+							sequence(seq -> {
+								for (String computedMeasure : query.resultComputedMeasures()) {
+									seq.add(set(property(totalRecord, computedMeasure),
+										structure.getComputedMeasures().get(computedMeasure).getExpression(totalRecord, structure.getMeasures())));
+								}
+							})))
 					.build()
 			);
 		}

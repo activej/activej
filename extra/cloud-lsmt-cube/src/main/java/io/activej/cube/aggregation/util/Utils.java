@@ -115,15 +115,22 @@ public class Utils {
 			ClassKey.of(Function.class, recordClass, resultClass, keys, fields),
 			() -> ClassGenerator.builder(Function.class)
 				.withMethod("apply",
-					let(constructor(resultClass), result ->
-						sequence(seq -> {
-							for (String fieldName : concat(keys, fields)) {
-								seq.add(set(
-									property(result, fieldName),
-									property(cast(arg(0), recordClass), fieldName)));
-							}
-							return result;
-						})))
+					let(List.of(
+							constructor(resultClass),
+							cast(arg(0), recordClass)
+						),
+						variables ->
+							sequence(seq -> {
+								Variable result = variables[0];
+								Variable input = variables[1];
+
+								for (String fieldName : concat(keys, fields)) {
+									seq.add(set(
+										property(result, fieldName),
+										property(input, fieldName)));
+								}
+								return result;
+							})))
 				.build());
 	}
 
@@ -134,16 +141,23 @@ public class Utils {
 			ClassKey.of(Function.class, recordClass, keyClass, keys),
 			() -> ClassGenerator.builder(Function.class)
 				.withMethod("apply",
-					let(constructor(keyClass), key ->
-						sequence(seq -> {
-							for (String keyString : keys) {
-								seq.add(
-									set(
-										property(key, keyString),
-										property(cast(arg(0), recordClass), keyString)));
-							}
-							return key;
-						})))
+					let(List.of(
+							constructor(keyClass),
+							cast(arg(0), recordClass)
+						),
+						variables ->
+							sequence(seq -> {
+								Variable key = variables[0];
+								Variable input = variables[1];
+
+								for (String keyString : keys) {
+									seq.add(
+										set(
+											property(key, keyString),
+											property(input, keyString)));
+								}
+								return key;
+							})))
 				.build());
 	}
 
@@ -221,41 +235,56 @@ public class Utils {
 			ClassKey.of(Reducer.class, inputClass, outputClass, keys, fields, extraFields.keySet()),
 			() -> ClassGenerator.builder(Reducer.class)
 				.withMethod("onFirstItem",
-					let(constructor(outputClass), accumulator ->
-						sequence(seq -> {
-							for (String key : keys) {
-								seq.add(
-									set(
-										property(accumulator, key),
-										property(cast(arg(2), inputClass), key)
-									));
-							}
-							for (String field : fields) {
-								seq.add(
-									aggregation.getMeasure(field)
-										.initAccumulatorWithAccumulator(
-											property(accumulator, field),
-											property(cast(arg(2), inputClass), field)
+					let(List.of(
+							constructor(outputClass),
+							cast(arg(2), inputClass)
+						),
+						variables ->
+							sequence(seq -> {
+								Variable accumulator = variables[0];
+								Variable firstItem = variables[1];
+
+								for (String key : keys) {
+									seq.add(
+										set(
+											property(accumulator, key),
+											property(firstItem, key)
 										));
-							}
-							for (Entry<String, Measure> entry : extraFields.entrySet()) {
-								seq.add(entry.getValue()
-									.zeroAccumulator(property(accumulator, entry.getKey())));
-							}
-							return accumulator;
-						})))
+								}
+								for (String field : fields) {
+									seq.add(
+										aggregation.getMeasure(field)
+											.initAccumulatorWithAccumulator(
+												property(accumulator, field),
+												property(firstItem, field)
+											));
+								}
+								for (Entry<String, Measure> entry : extraFields.entrySet()) {
+									seq.add(entry.getValue()
+										.zeroAccumulator(property(accumulator, entry.getKey())));
+								}
+								return accumulator;
+							})))
 				.withMethod("onNextItem",
-					sequence(seq -> {
-						for (String field : fields) {
-							seq.add(
-								aggregation.getMeasure(field)
-									.reduce(
-										property(cast(arg(3), outputClass), field),
-										property(cast(arg(2), inputClass), field)
-									));
-						}
-						return arg(3);
-					}))
+					let(List.of(
+							cast(arg(2), inputClass),
+							cast(arg(3), outputClass)
+						),
+						variables ->
+							sequence(seq -> {
+								Variable nextValue = variables[0];
+								Variable accumulator = variables[1];
+
+								for (String field : fields) {
+									seq.add(
+										aggregation.getMeasure(field)
+											.reduce(
+												property(accumulator, field),
+												property(nextValue, field)
+											));
+								}
+								return arg(3);
+							})))
 				.withMethod("onComplete", call(arg(0), "accept", arg(2)))
 				.build());
 	}
@@ -270,36 +299,51 @@ public class Utils {
 			ClassKey.of(Aggregate.class, inputClass, outputClass, keysList, measuresList),
 			() -> ClassGenerator.builder(Aggregate.class)
 				.withMethod("createAccumulator",
-					let(constructor(outputClass), accumulator ->
-						sequence(seq -> {
-							for (Entry<String, String> entry : keyFields.entrySet()) {
-								seq.add(set(
-									property(accumulator, entry.getKey()),
-									property(cast(arg(0), inputClass), entry.getValue())));
-							}
-							for (Entry<String, String> entry : measureFields.entrySet()) {
-								String measure = entry.getKey();
-								String inputFields = entry.getValue();
-								Measure aggregateFunction = aggregation.getMeasure(measure);
+					let(List.of(
+							constructor(outputClass),
+							cast(arg(0), inputClass)
+						),
+						variables ->
+							sequence(seq -> {
+								Variable accumulator = variables[0];
+								Variable record = variables[1];
 
-								seq.add(aggregateFunction.initAccumulatorWithValue(
-									property(accumulator, measure),
-									inputFields == null ? null : property(cast(arg(0), inputClass), inputFields)));
-							}
-							return accumulator;
-						})))
+								for (Entry<String, String> entry : keyFields.entrySet()) {
+									seq.add(set(
+										property(accumulator, entry.getKey()),
+										property(record, entry.getValue())));
+								}
+								for (Entry<String, String> entry : measureFields.entrySet()) {
+									String measure = entry.getKey();
+									String inputFields = entry.getValue();
+									Measure aggregateFunction = aggregation.getMeasure(measure);
+
+									seq.add(aggregateFunction.initAccumulatorWithValue(
+										property(accumulator, measure),
+										inputFields == null ? null : property(record, inputFields)));
+								}
+								return accumulator;
+							})))
 				.withMethod("accumulate",
-					sequence(seq -> {
-						for (Entry<String, String> entry : measureFields.entrySet()) {
-							String measure = entry.getKey();
-							String inputFields = entry.getValue();
-							Measure aggregateFunction = aggregation.getMeasure(measure);
+					let(List.of(
+							cast(arg(0), outputClass),
+							cast(arg(1), inputClass)
+						),
+						variables ->
+							sequence(seq -> {
+								Variable accumulator = variables[0];
+								Variable record = variables[1];
 
-							seq.add(aggregateFunction.accumulate(
-								property(cast(arg(0), outputClass), measure),
-								inputFields == null ? null : property(cast(arg(1), inputClass), inputFields)));
-						}
-					}))
+								for (Entry<String, String> entry : measureFields.entrySet()) {
+									String measure = entry.getKey();
+									String inputFields = entry.getValue();
+									Measure aggregateFunction = aggregation.getMeasure(measure);
+
+									seq.add(aggregateFunction.accumulate(
+										property(accumulator, measure),
+										inputFields == null ? null : property(record, inputFields)));
+								}
+							})))
 				.build());
 	}
 
@@ -318,11 +362,21 @@ public class Utils {
 		return classLoader.ensureClassAndCreateInstance(
 			ClassKey.of(PartitionPredicate.class, recordClass, partitioningKey),
 			() -> ClassGenerator.builder(PartitionPredicate.class)
-				.withMethod("isSamePartition", and(
-					partitioningKey.stream()
-						.map(keyComponent -> isEq(
-							property(cast(arg(0), recordClass), keyComponent),
-							property(cast(arg(1), recordClass), keyComponent)))))
+				.withMethod("isSamePartition",
+					let(List.of(
+							cast(arg(0), recordClass),
+							cast(arg(1), recordClass)
+						),
+						variables -> {
+							Variable item1 = variables[0];
+							Variable item2 = variables[1];
+
+							return and(
+								partitioningKey.stream()
+									.map(keyComponent -> isEq(
+										property(item1, keyComponent),
+										property(item2, keyComponent))));
+						}))
 				.build());
 	}
 
@@ -390,16 +444,16 @@ public class Utils {
 		return classLoader.ensureClassAndCreateInstance(
 			ClassKey.of(Predicate.class, chunkRecordClass, simplifiedFilter, simplifiedPrecondition),
 			() -> {
-				Expression record = cast(arg(0), chunkRecordClass);
 				ValueResolver valueResolver = createValueResolverOfFields(fieldTypes);
 				return ClassGenerator.builder(Predicate.class)
 					.withMethod("test", boolean.class, List.of(Object.class),
-						ifElse(simplifiedFilter.createPredicate(record, valueResolver),
-							ifElse(simplifiedPrecondition.createPredicate(record, valueResolver),
-								value(true),
-								throwException(IllegalStateException.class)
-							),
-							value(false)))
+						let(cast(arg(0), chunkRecordClass), record ->
+							ifElse(simplifiedFilter.createPredicate(record, valueResolver),
+								ifElse(simplifiedPrecondition.createPredicate(record, valueResolver),
+									value(true),
+									throwException(IllegalStateException.class)
+								),
+								value(false))))
 					.build();
 			}
 		);

@@ -811,9 +811,11 @@ public class Expressions {
 
 	public static Expression iterateMap(Expression map, BinaryOperator<Expression> action) {
 		return iterateIterable(call(map, "entrySet"),
-			it -> action.apply(
-				call(cast(it, Map.Entry.class), "getKey"),
-				call(cast(it, Map.Entry.class), "getValue")));
+			it -> let(cast(it, Map.Entry.class),
+				entry ->
+					action.apply(
+						call(entry, "getKey"),
+						call(entry, "getValue"))));
 	}
 
 	public static Expression iterateMapKeys(Expression map, UnaryOperator<Expression> action) {
