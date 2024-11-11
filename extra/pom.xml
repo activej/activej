@@ -120,6 +120,9 @@
 
   <profiles>
     <profile>
+      <id>release</id>
+    </profile>
+    <profile>
       <id>examples</id>
       <activation>
         <activeByDefault>true</activeByDefault>
