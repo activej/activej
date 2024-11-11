@@ -28,7 +28,7 @@
     <module>cloud-ot</module>
     <module>cloud-redis</module>
     <module>util-etcd</module>
-    <module>extra-launchers</module>
+    <module>launchers</module>
   </modules>
 
   <properties>
@@ -128,8 +128,8 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <modules>
-        <module>extra-benchmarks</module>
-        <module>extra-examples</module>
+        <module>benchmarks</module>
+        <module>examples</module>
       </modules>
     </profile>
   </profiles>
