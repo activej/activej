@@ -35,14 +35,11 @@ import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.datastream.processor.reducer.StreamReducer;
 import io.activej.datastream.supplier.StreamSupplier;
-import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
-import io.activej.fs.http.FileSystemServlet;
-import io.activej.fs.http.HttpClientFileSystem;
-import io.activej.http.HttpClient;
-import io.activej.http.HttpServer;
+import io.activej.fs.tcp.FileSystemServer;
+import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -62,6 +59,7 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -79,7 +77,6 @@ import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 import static io.activej.datastream.supplier.StreamSuppliers.ofChannelSupplier;
-import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
@@ -108,8 +105,8 @@ public final class PartitionedStreamTest {
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private Eventloop serverEventloop;
-	private List<HttpServer> sourceFileSystemServers;
-	private List<HttpServer> targetFileSystemServers;
+	private List<FileSystemServer> sourceFileSystemServers;
+	private List<FileSystemServer> targetFileSystemServers;
 	private List<DataflowServer> dataflowServers;
 
 	@Before
@@ -413,17 +410,15 @@ public final class PartitionedStreamTest {
 	// endregion
 
 	// region helpers
-	private static List<IFileSystem> createClients(NioReactor reactor, List<HttpServer> servers) {
+	private static List<IFileSystem> createClients(NioReactor reactor, List<FileSystemServer> servers) {
 		return servers.stream()
 			.map(server -> createClient(reactor, server))
 			.collect(Collectors.toList());
 	}
 
-	private static IFileSystem createClient(NioReactor reactor, HttpServer server) {
+	private static IFileSystem createClient(NioReactor reactor, FileSystemServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
-		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
-		HttpClient httpClient = HttpClient.create(reactor, dnsClient);
-		return HttpClientFileSystem.create(reactor, "http://localhost:" + port, httpClient);
+		return RemoteFileSystem.create(reactor, new InetSocketAddress("localhost", port));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {
@@ -489,14 +484,14 @@ public final class PartitionedStreamTest {
 		dataflowServers.addAll(launchDataflowServers(nDataflowServers));
 	}
 
-	private List<HttpServer> launchSourceFileSystemServers(int nServers, boolean sorted) throws IOException {
-		List<HttpServer> servers = new ArrayList<>();
+	private List<FileSystemServer> launchSourceFileSystemServers(int nServers, boolean sorted) throws IOException {
+		List<FileSystemServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("source_server_" + i + "_").toPath();
 			writeDataFile(tmp, i, sorted);
 			FileSystem fsClient = FileSystem.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
-			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient))
+			FileSystemServer server = FileSystemServer.builder(serverEventloop, fsClient)
 				.withListenPort(getFreePort())
 				.build();
 			listen(server);
@@ -505,13 +500,13 @@ public final class PartitionedStreamTest {
 		return servers;
 	}
 
-	private List<HttpServer> launchTargetFileSystemServers(int nServers) throws IOException {
-		List<HttpServer> servers = new ArrayList<>();
+	private List<FileSystemServer> launchTargetFileSystemServers(int nServers) throws IOException {
+		List<FileSystemServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
 			FileSystem fsClient = FileSystem.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
-			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient))
+			FileSystemServer server = FileSystemServer.builder(serverEventloop, fsClient)
 				.withListenPort(getFreePort())
 				.build();
 			listen(server);

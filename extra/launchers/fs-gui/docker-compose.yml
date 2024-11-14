@@ -12,7 +12,7 @@ services:
       LOCAL_PARTITION_ID: server1:9000
       SYS_PROPS: "-Dconfig.fs.repartition.replicationCount=2
                   -Dconfig.fs.repartition.initialDelay=PT5S
-                  -DFileSystem_Remote.connectionTimeout=PT1S
+                  -DRemoteFileSystem.connectionTimeout=PT1S
                   -Dconfig.fs.cluster.partitions=server1:9000;server2:9000;server3:9000"
     logging:
       driver: json-file
@@ -31,7 +31,7 @@ services:
       LOCAL_PARTITION_ID: server2:9000
       SYS_PROPS: "-Dconfig.fs.repartition.replicationCount=2
                   -Dconfig.fs.repartition.initialDelay=PT5S
-                  -DFileSystem_Remote.connectionTimeout=PT1S
+                  -DRemoteFileSystem.connectionTimeout=PT1S
                   -Dconfig.fs.cluster.partitions=server1:9000;server2:9000;server3:9000"
     logging:
       driver: json-file
@@ -50,7 +50,7 @@ services:
       LOCAL_PARTITION_ID: server3:9000
       SYS_PROPS: "-Dconfig.fs.repartition.replicationCount=2
                   -Dconfig.fs.repartition.initialDelay=PT5S
-                  -DFileSystem_Remote.connectionTimeout=PT1S
+                  -DRemoteFileSystem.connectionTimeout=PT1S
                   -Dconfig.fs.cluster.partitions=server1:9000;server2:9000;server3:9000"
     logging:
       driver: json-file
@@ -70,7 +70,7 @@ services:
     environment:
       PARTITIONS: server1:9000;server2:9000;server3:9000
       SYS_PROPS: "-Dconfig.fs.cluster.replicationCount=2
-                  -DFileSystem_Remote.connectionTimeout=PT1S"
+                  -DRemoteFileSystem.connectionTimeout=PT1S"
     logging:
       driver: json-file
       options:

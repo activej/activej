@@ -50,7 +50,6 @@
     <module>util-common</module>
     <module>util-types</module>
     <module>util-state</module>
-    <module>util-json</module>
     <module>test</module>
   </modules>
 
@@ -100,11 +99,6 @@
         <version>1.5.8</version>
       </dependency>
       <dependency>
-        <groupId>com.dslplatform</groupId>
-        <artifactId>dsl-json-java8</artifactId>
-        <version>1.10.0</version>
-      </dependency>
-      <dependency>
         <groupId>org.lz4</groupId>
         <artifactId>lz4-java</artifactId>
         <version>1.8.0</version>
@@ -133,11 +127,6 @@
         <groupId>org.jetbrains</groupId>
         <artifactId>annotations</artifactId>
         <version>24.1.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.github.spullara.mustache.java</groupId>
-        <artifactId>compiler</artifactId>
-        <version>0.9.14</version>
       </dependency>
 
     </dependencies>

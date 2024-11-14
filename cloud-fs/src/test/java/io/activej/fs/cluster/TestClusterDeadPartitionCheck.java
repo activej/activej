@@ -3,17 +3,12 @@ package io.activej.fs.cluster;
 import io.activej.async.executor.ReactorExecutor;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemException;
-import io.activej.fs.http.FileSystemServlet;
-import io.activej.fs.http.HttpClientFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
 import io.activej.fs.tcp.RemoteFileSystem;
-import io.activej.http.HttpClient;
-import io.activej.http.HttpServer;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
@@ -24,10 +19,6 @@ import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -38,7 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -49,7 +39,6 @@ import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.fs.FileSystem.DEFAULT_TEMP_DIR;
-import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -62,7 +51,6 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
-@RunWith(Parameterized.class)
 public final class TestClusterDeadPartitionCheck {
 	// region configuration
 	private static final int CLIENT_SERVER_PAIRS = 10;
@@ -80,79 +68,6 @@ public final class TestClusterDeadPartitionCheck {
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
-	@Parameter()
-	public ClientServerFactory factory;
-
-	@Parameters(name = "{0}")
-	public static Collection<Object[]> getParameters() {
-		return List.of(
-			// tcp
-			new Object[]{
-				new ClientServerFactory() {
-					@Override
-					public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
-						return RemoteFileSystem.create(reactor, address);
-					}
-
-					@Override
-					public AbstractReactiveServer createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address) {
-						return FileSystemServer.builder(reactor, fileSystem)
-							.withListenAddress(address)
-							.build();
-					}
-
-					@Override
-					public void closeServer(AbstractReactiveServer server) {
-						server.close();
-						Selector selector = server.getReactor().getSelector();
-						if (selector == null) return;
-						for (SelectionKey key : selector.keys()) {
-							Object attachment = key.attachment();
-							if (attachment instanceof TcpSocket) {
-								((TcpSocket) attachment).close();
-							}
-						}
-					}
-
-					@Override
-					public String toString() {
-						return "TCP";
-					}
-				}
-			},
-
-			// http
-			new Object[]{
-				new ClientServerFactory() {
-					@Override
-					public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
-						DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
-						HttpClient httpClient = HttpClient.create(reactor, dnsClient);
-						return HttpClientFileSystem.create(reactor, "http://localhost:" + address.getPort(), httpClient);
-					}
-
-					@Override
-					public AbstractReactiveServer createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address) {
-						return HttpServer.builder(reactor, FileSystemServlet.create(reactor, fileSystem))
-							.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
-							.withListenAddress(address)
-							.build();
-					}
-
-					@Override
-					public void closeServer(AbstractReactiveServer server) {
-						server.close();
-					}
-
-					@Override
-					public String toString() {
-						return "HTTP";
-					}
-				}
-			}
-		);
-	}
-
 	private FileSystemPartitions partitions;
 	private ClusterFileSystem fileSystemCluster;
 
@@ -169,7 +84,7 @@ public final class TestClusterDeadPartitionCheck {
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
-			partitions.put(i, factory.createClient(reactor, address));
+			partitions.put(i, RemoteFileSystem.create(reactor, address));
 
 			serverStorages[i] = storage.resolve("storage_" + i);
 
@@ -181,7 +96,9 @@ public final class TestClusterDeadPartitionCheck {
 			serverEventloop.keepAlive(true);
 
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, serverStorages[i]);
-			AbstractReactiveServer server = factory.createServer(serverEventloop, fileSystem, address);
+			AbstractReactiveServer server = FileSystemServer.builder(serverEventloop, fileSystem)
+				.withListenAddress(address)
+				.build();
 			CompletableFuture<Void> startFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
@@ -281,7 +198,15 @@ public final class TestClusterDeadPartitionCheck {
 						if (alivePartitions.contains(finalI)) {
 							server.listen();
 						} else {
-							factory.closeServer(server);
+							server.close();
+							Selector selector = server.getReactor().getSelector();
+							if (selector == null) return;
+							for (SelectionKey key : selector.keys()) {
+								Object attachment = key.attachment();
+								if (attachment instanceof TcpSocket) {
+									((TcpSocket) attachment).close();
+								}
+							}
 						}
 					} catch (IOException e) {
 						throw new AssertionError(e);
@@ -334,13 +259,5 @@ public final class TestClusterDeadPartitionCheck {
 		} catch (ExecutionException e) {
 			throw new AssertionError(e);
 		}
-	}
-
-	private interface ClientServerFactory {
-		IFileSystem createClient(NioReactor reactor, InetSocketAddress address);
-
-		AbstractReactiveServer createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address);
-
-		void closeServer(AbstractReactiveServer server) throws IOException;
 	}
 }

@@ -1,8 +1,8 @@
-FROM maven:3.6.3-openjdk-11 as build-java
+FROM maven:3.8.5-openjdk-17 AS build-java
 WORKDIR /build
 
 # tool layer
-RUN apt update && apt install git
+RUN microdnf install git
 
 ARG BRANCH=master
 
@@ -10,7 +10,7 @@ ARG BRANCH=master
 ADD https://api.github.com/repos/activej/activej/git/refs/heads/${BRANCH} last-commit.json
 RUN git clone --depth 1 -b ${BRANCH} https://github.com/activej/activej \
  && cd activej \
- && mvn install -DskipTests \
+ && mvn install -DskipTests -P extra,examples \
  && cd ..
 
 # app-server layer
@@ -18,17 +18,17 @@ COPY pom.xml ./
 COPY src src
 RUN mvn package -DskipTests
 
-FROM openjdk:17-alpine
+FROM openjdk:17.0.1-jdk-slim
 WORKDIR /app
 
-COPY --from=build-java /build/target/cluster-server.jar ./
+COPY --from=build-java /build/target/cluster-client.jar ./
 
 EXPOSE 8080
 EXPOSE 9000
 
-ENTRYPOINT [[ -z "$LOCAL_PARTITION_ID" ]] && { echo "Pass '-e LOCAL_PARTITION_ID=host:port'"; exit 1; } \
+ENTRYPOINT [[ -z "$PARTITIONS" ]] && { echo "Pass '-e PARTITIONS=partition1;partition2...'"; exit 1; } \
         || java $SYS_PROPS \
-                -Dconfig.fs.repartition.localPartitionId=$LOCAL_PARTITION_ID \
+                -Dconfig.fs.cluster.partitions=$PARTITIONS \
                 -Dcom.sun.management.jmxremote \
                 -Dcom.sun.management.jmxremote.authenticate=false \
                 -Dcom.sun.management.jmxremote.ssl=false \
@@ -36,4 +36,4 @@ ENTRYPOINT [[ -z "$LOCAL_PARTITION_ID" ]] && { echo "Pass '-e LOCAL_PARTITION_ID
                 -Dcom.sun.management.jmxremote.rmi.port=${JMX_PORT:-9010} \
                 -Djava.rmi.server.hostname=${JMX_HOST:-localhost} \
                 -Dcom.sun.management.jmxremote.local.only=false \
-                -jar cluster-server.jar
+                -jar cluster-client.jar

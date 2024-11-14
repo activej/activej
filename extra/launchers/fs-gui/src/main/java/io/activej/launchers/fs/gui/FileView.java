@@ -16,6 +16,8 @@
 
 package io.activej.launchers.fs.gui;
 
+import io.activej.common.StringFormatUtils;
+
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.time.Instant;
@@ -32,7 +34,7 @@ public final class FileView {
 		this.name = name;
 		this.fullName = fullName;
 		this.size = formatSize(size);
-		this.timestamp = formatInstant(Instant.ofEpochMilli(timestamp));
+		this.timestamp = StringFormatUtils.formatInstant(Instant.ofEpochMilli(timestamp));
 	}
 
 	public String getName() {

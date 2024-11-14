@@ -20,28 +20,21 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
+import io.activej.common.Utils;
 import io.activej.common.ref.Ref;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.http.FileSystemServlet;
-import io.activej.http.HttpRequest;
-import io.activej.http.HttpResponse;
-import io.activej.http.RoutingServlet;
+import io.activej.http.*;
 import io.activej.reactor.Reactor;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static io.activej.common.Utils.not;
 import static io.activej.fs.http.FileSystemCommand.DOWNLOAD;
 import static io.activej.fs.http.FileSystemCommand.UPLOAD;
-import static io.activej.http.ContentTypes.HTML_UTF_8;
-import static io.activej.http.HttpHeaderValue.ofContentType;
-import static io.activej.http.HttpHeaders.CONTENT_TYPE;
-import static io.activej.http.HttpMethod.POST;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
 
 public final class FileSystemGuiServlet {
 	private static final String HIDDEN_FILE = ".EMPTY";
@@ -64,7 +57,7 @@ public final class FileSystemGuiServlet {
 		return RoutingServlet.builder(reactor)
 			.with("/api/upload", uploadServlet)
 			.with("/api/download/*", downloadServlet)
-			.with(POST, "/api/newDir", request -> request.loadBody()
+			.with(HttpMethod.POST, "/api/newDir", request -> request.loadBody()
 				.then(() -> {
 					String dir = request.getPostParameter("dir");
 					if (dir == null || dir.isEmpty())
@@ -81,7 +74,7 @@ public final class FileSystemGuiServlet {
 						files -> !dir.isEmpty() && files.isEmpty() ?
 							HttpResponse.redirect302("/").toPromise() :
 							HttpResponse.ok200()
-								.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
+								.withHeader(HttpHeaders.CONTENT_TYPE, HttpHeaderValue.ofContentType(ContentTypes.HTML_UTF_8))
 								.withBody(applyTemplate(mustache, Map.of(
 									"title", title,
 									"dirContents", filesToDirView(new HashMap<>(files), dir),
@@ -117,8 +110,8 @@ public final class FileSystemGuiServlet {
 	private static DirView filesToDirView(Map<String, FileMetadata> files, String currentDir) {
 		files.keySet().removeIf(s -> !s.startsWith(currentDir));
 
-		Set<Dir> dirs = new TreeSet<>(comparing(Dir::shortName));
-		Set<FileView> fileViews = new TreeSet<>(comparing(FileView::getName));
+		Set<Dir> dirs = new TreeSet<>(Comparator.comparing(Dir::shortName));
+		Set<FileView> fileViews = new TreeSet<>(Comparator.comparing(FileView::getName));
 		for (Map.Entry<String, FileMetadata> entry : files.entrySet()) {
 			String name = entry.getKey();
 			FileMetadata meta = entry.getValue();
@@ -139,9 +132,9 @@ public final class FileSystemGuiServlet {
 		Ref<String> fullPath = new Ref<>("");
 		return Arrays.stream(dir.split("/+"))
 			.map(String::trim)
-			.filter(not(String::isEmpty))
+			.filter(Utils.not(String::isEmpty))
 			.map(pathPart -> new Dir(pathPart, fullPath.value += (fullPath.value.isEmpty() ? "" : '/') + pathPart))
-			.collect(toList());
+			.collect(Collectors.toList());
 	}
 
 }

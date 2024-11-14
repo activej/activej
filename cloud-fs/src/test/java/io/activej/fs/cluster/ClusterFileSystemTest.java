@@ -6,17 +6,13 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemException;
-import io.activej.fs.http.FileSystemServlet;
-import io.activej.fs.http.HttpClientFileSystem;
-import io.activej.http.HttpClient;
-import io.activej.http.HttpServer;
-import io.activej.http.IHttpClient;
+import io.activej.fs.tcp.FileSystemServer;
+import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -28,6 +24,7 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,7 +35,6 @@ import java.util.stream.IntStream;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
-import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -67,7 +63,7 @@ public final class ClusterFileSystemTest {
 	private final List<Path> serverStorages = new ArrayList<>();
 
 	private ExecutorService executor;
-	private List<HttpServer> servers;
+	private List<AbstractReactiveServer> servers;
 	private Path clientStorage;
 	private IDiscoveryService discoveryService;
 	private FileSystemPartitions partitions;
@@ -84,13 +80,12 @@ public final class ClusterFileSystemTest {
 		Map<Object, IFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		NioReactor reactor = Reactor.getCurrentReactor();
-		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
-		IHttpClient httpClient = HttpClient.create(reactor, dnsClient);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();
+			InetSocketAddress address = new InetSocketAddress("localhost", port);
 
-			partitions.put("server_" + i, HttpClientFileSystem.create(reactor, "http://localhost:" + port, httpClient));
+			partitions.put("server_" + i, RemoteFileSystem.create(reactor, address));
 
 			Path path = Paths.get(tmpFolder.newFolder("storage_" + i).toURI());
 			serverStorages.add(path);
@@ -102,7 +97,7 @@ public final class ClusterFileSystemTest {
 			serverEventloop.keepAlive(true);
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, path);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(fileSystem::start);
-			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fileSystem))
+			AbstractReactiveServer server = FileSystemServer.builder(serverEventloop, fileSystem)
 				.withListenPort(port)
 				.build();
 			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
@@ -118,9 +113,9 @@ public final class ClusterFileSystemTest {
 			listenFuture.get();
 		}
 
-		partitions.put("dead_one", HttpClientFileSystem.create(reactor, "http://localhost:" + 5555, httpClient));
-		partitions.put("dead_two", HttpClientFileSystem.create(reactor, "http://localhost:" + 5556, httpClient));
-		partitions.put("dead_three", HttpClientFileSystem.create(reactor, "http://localhost:" + 5557, httpClient));
+		partitions.put("dead_one", RemoteFileSystem.create(reactor, new InetSocketAddress("localhost", 5555)));
+		partitions.put("dead_two", RemoteFileSystem.create(reactor, new InetSocketAddress("localhost", 5556)));
+		partitions.put("dead_three", RemoteFileSystem.create(reactor, new InetSocketAddress("localhost", 5557)));
 
 		discoveryService = IDiscoveryService.constant(partitions);
 		this.partitions = FileSystemPartitions.create(reactor, discoveryService);

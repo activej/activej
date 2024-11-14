@@ -20,6 +20,7 @@
   <modules>
     <module>crdt</module>
     <module>dataflow</module>
+    <module>fs-gui</module>
   </modules>
 
   <dependencies>

@@ -16,7 +16,6 @@
 
 package io.activej.fs;
 
-import io.activej.json.JsonValidationException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -45,13 +44,6 @@ public final class FileMetadata {
 
 	public static FileMetadata of(long size, long timestamp) {
 		checkArgument(size >= 0, "size >= 0");
-		return new FileMetadata(size, timestamp);
-	}
-
-	public static FileMetadata decode(long size, long timestamp) throws JsonValidationException {
-		if (size < 0) {
-			throw new JsonValidationException("Size is less than zero");
-		}
 		return new FileMetadata(size, timestamp);
 	}
 

@@ -25,14 +25,10 @@ import io.activej.fs.cluster.FileSystemPartitions;
 import io.activej.fs.cluster.IDiscoveryService;
 import io.activej.fs.cluster.ServerSelector;
 import io.activej.fs.tcp.FileSystemServer;
-import io.activej.http.AsyncServlet;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
-import io.activej.inject.module.AbstractModule;
-import io.activej.inject.module.Module;
-import io.activej.launchers.fs.gui.FileSystemGuiServlet;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 
@@ -91,18 +87,6 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 			.build();
 	}
 	//[END EXAMPLE]
-
-	@Override
-	protected Module getOverrideModule() {
-		return new AbstractModule() {
-			@Provides
-			AsyncServlet guiServlet(IFileSystem fs, ClusterRepartitionController controller) {
-				return FileSystemGuiServlet.create(controller.getReactor(), fs,
-					"Cluster server [" +
-					controller.getLocalPartitionId() + ']');
-			}
-		};
-	}
 
 	@Override
 	protected Config createConfig() {

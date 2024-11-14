@@ -24,15 +24,12 @@ import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
-import io.activej.http.AsyncServlet;
-import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.launchers.fs.gui.FileSystemGuiServlet;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
@@ -45,13 +42,11 @@ import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.fs.Initializers.ofFileSystemServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
-import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 
 public class SimpleTcpServerLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "fs-server.properties";
 	public static final Path DEFAULT_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "fs-storage");
 	public static final String DEFAULT_SERVER_LISTEN_ADDRESS = "*:9000";
-	public static final String DEFAULT_GUI_SERVER_LISTEN_ADDRESS = "*:8080";
 
 	@Provides
 	public NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
@@ -67,19 +62,6 @@ public class SimpleTcpServerLauncher extends Launcher {
 		return FileSystemServer.builder(reactor, fileSystem)
 			.initialize(ofFileSystemServer(config.getChild("fs")))
 			.build();
-	}
-
-	@Provides
-	@Eager
-	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
-		return HttpServer.builder(reactor, servlet)
-			.initialize(ofHttpServer(config.getChild("fs.http.gui")))
-			.build();
-	}
-
-	@Provides
-	AsyncServlet guiServlet(Reactor reactor, IFileSystem fileSystem) {
-		return FileSystemGuiServlet.create(reactor, fileSystem);
 	}
 
 	@Provides
@@ -101,13 +83,17 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	protected Config createConfig() {
 		return Config.create()
-			.with("fs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
-			.with("fs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS);
+			.with("fs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS);
+	}
+
+	protected Module getBusinessLogicModule() {
+		return Module.empty();
 	}
 
 	@Override
 	protected final Module getModule() {
 		return combine(
+			getBusinessLogicModule(),
 			ServiceGraphModule.create(),
 			JmxModule.create(),
 			ConfigModule.builder()

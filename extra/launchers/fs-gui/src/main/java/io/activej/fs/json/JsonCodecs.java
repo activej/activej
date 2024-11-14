@@ -5,6 +5,7 @@ import io.activej.fs.exception.*;
 import io.activej.fs.http.UploadAcknowledgement;
 import io.activej.json.JsonCodec;
 import io.activej.json.JsonConstructor2;
+import io.activej.json.JsonValidationException;
 import io.activej.json.SubclassJsonCodec;
 
 import static io.activej.json.JsonCodecs.*;
@@ -41,7 +42,7 @@ public class JsonCodecs {
 
 	public static JsonCodec<FileMetadata> ofFileMetadata() {
 		return ofObject(
-			FileMetadata::decode, "size", FileMetadata::getSize, ofLong(),
+			JsonCodecs::decodeFileMetadata, "size", FileMetadata::getSize, ofLong(),
 			"timestamp", FileMetadata::getTimestamp, ofLong()
 		);
 	}
@@ -49,5 +50,12 @@ public class JsonCodecs {
 	public static JsonCodec<UploadAcknowledgement> ofUploadAcknowledgement() {
 		return ofObject(UploadAcknowledgement::new,
 			"error", UploadAcknowledgement::getError, ofFileSystemException().nullable());
+	}
+
+	public static FileMetadata decodeFileMetadata(long size, long timestamp) throws JsonValidationException {
+		if (size < 0) {
+			throw new JsonValidationException("Size is less than zero");
+		}
+		return FileMetadata.of(size, timestamp);
 	}
 }

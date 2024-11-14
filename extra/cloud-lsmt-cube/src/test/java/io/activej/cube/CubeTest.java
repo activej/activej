@@ -10,15 +10,11 @@ import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSuppliers;
-import io.activej.dns.DnsClient;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
-import io.activej.fs.http.FileSystemServlet;
-import io.activej.fs.http.HttpClientFileSystem;
-import io.activej.http.HttpClient;
-import io.activej.http.HttpServer;
-import io.activej.http.IHttpClient;
+import io.activej.fs.tcp.FileSystemServer;
+import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -33,6 +29,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -47,7 +44,6 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
-import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
@@ -149,11 +145,11 @@ public final class CubeTest {
 		assertEquals(expected, list);
 	}
 
-	private HttpServer startServer(Executor executor, Path serverStorage) throws IOException {
+	private FileSystemServer startServer(Executor executor, Path serverStorage) throws IOException {
 		NioReactor reactor = getCurrentReactor();
 		FileSystem fs = FileSystem.create(reactor, executor, serverStorage);
 		await(fs.start());
-		HttpServer server = HttpServer.builder(reactor, FileSystemServlet.create(reactor, fs))
+		FileSystemServer server = FileSystemServer.builder(reactor, fs)
 			.withListenPort(listenPort)
 			.build();
 		server.listen();
@@ -163,11 +159,9 @@ public final class CubeTest {
 	@Test
 	public void testRemoteFileSystemAggregationStorage() throws Exception {
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
-		HttpServer server1 = startServer(executor, serverStorage);
+		FileSystemServer server1 = startServer(executor, serverStorage);
 		NioReactor reactor = getCurrentReactor();
-		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
-		IHttpClient httpClient = HttpClient.create(reactor, dnsClient);
-		HttpClientFileSystem storage = HttpClientFileSystem.create(reactor, "http://localhost:" + listenPort, httpClient);
+		RemoteFileSystem storage = RemoteFileSystem.create(reactor, new InetSocketAddress("localhost", listenPort));
 		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(), FRAME_FORMAT, storage);
 		cubeReporting = createCubeReporting(cubeReporting.getStructure(), executor, classLoader, chunkStorage);
 
@@ -178,7 +172,7 @@ public final class CubeTest {
 					consume(cubeReporting, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
 				.whenComplete(server1::close)
 		);
-		HttpServer server2 = startServer(executor, serverStorage);
+		FileSystemServer server2 = startServer(executor, serverStorage);
 
 		List<DataItemResult> list = await(cubeReporting.queryRawStream(
 				List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),

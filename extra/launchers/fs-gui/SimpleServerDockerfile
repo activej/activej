@@ -1,8 +1,8 @@
-FROM maven:3.6.3-openjdk-11 as build-java
+FROM maven:3.8.5-openjdk-17 AS build-java
 WORKDIR /build
 
 # tool layer
-RUN apt update && apt install git
+RUN microdnf install git
 
 ARG BRANCH=master
 
@@ -10,7 +10,7 @@ ARG BRANCH=master
 ADD https://api.github.com/repos/activej/activej/git/refs/heads/${BRANCH} last-commit.json
 RUN git clone --depth 1 -b ${BRANCH} https://github.com/activej/activej \
  && cd activej \
- && mvn install -DskipTests \
+ && mvn install -DskipTests -P extra,examples \
  && cd ..
 
 # app-server layer
@@ -18,7 +18,7 @@ COPY pom.xml ./
 COPY src src
 RUN mvn package -DskipTests
 
-FROM openjdk:17-alpine
+FROM openjdk:17.0.1-jdk-slim
 WORKDIR /app
 
 COPY --from=build-java /build/target/simple-server.jar ./

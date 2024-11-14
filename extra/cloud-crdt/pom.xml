@@ -45,6 +45,11 @@
       <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-json</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>io.activej</groupId>

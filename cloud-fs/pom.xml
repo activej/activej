@@ -25,17 +25,7 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-http</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
       <artifactId>activej-csp</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-json</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
