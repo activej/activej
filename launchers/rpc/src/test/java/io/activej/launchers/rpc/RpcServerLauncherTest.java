@@ -11,8 +11,8 @@ import org.junit.Test;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThrows;
 
 public class RpcServerLauncherTest {

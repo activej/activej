@@ -19,15 +19,11 @@ import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class Utils {
-
-	public static void assertBatchException(Exception e, String name, Class<? extends FileSystemScalarException> exceptionClass) {
-		assertBatchException(e, Map.of(name, exceptionClass));
-	}
 
 	public static void assertBatchException(Exception e, Map<String, Class<? extends FileSystemScalarException>> exceptionClasses) {
 		assertThat(e, instanceOf(FileSystemBatchException.class));

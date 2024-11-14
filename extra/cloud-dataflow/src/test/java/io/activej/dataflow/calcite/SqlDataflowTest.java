@@ -14,8 +14,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 import static io.activej.common.Utils.first;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public class SqlDataflowTest extends CalciteTestBase {

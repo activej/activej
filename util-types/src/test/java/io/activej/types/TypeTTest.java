@@ -13,8 +13,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.List;
 
 import static io.activej.types.Types.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public class TypeTTest {

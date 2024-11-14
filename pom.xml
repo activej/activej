@@ -100,11 +100,6 @@
         <version>1.5.8</version>
       </dependency>
       <dependency>
-        <groupId>org.jmock</groupId>
-        <artifactId>jmock-junit4</artifactId>
-        <version>2.13.1</version>
-      </dependency>
-      <dependency>
         <groupId>com.dslplatform</groupId>
         <artifactId>dsl-json-java8</artifactId>
         <version>1.10.0</version>
@@ -168,11 +163,6 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jmock</groupId>
-      <artifactId>jmock-junit4</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

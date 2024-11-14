@@ -5,7 +5,6 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.hamcrest.Matchers;
 import org.jetbrains.annotations.Nullable;
 import org.junit.*;
 
@@ -17,9 +16,9 @@ import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.redis.RedisResponse.*;
 import static io.activej.redis.TestUtils.assertDeepEquals;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -348,7 +347,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 				.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
 					.whenException(connection::close)));
 
-			assertThat(exception.getMessage(), Matchers.containsString("Authentication required"));
+			assertThat(exception.getMessage(), containsString("Authentication required"));
 
 			String response = io.activej.promise.TestUtils.await(client.connect(password)
 				.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)

@@ -14,8 +14,8 @@ import static io.activej.csp.binary.decoder.ByteBufsDecoders.ofCrlfTerminatedByt
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public final class BinaryChannelSupplierTest {

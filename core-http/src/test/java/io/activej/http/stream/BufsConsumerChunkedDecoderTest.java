@@ -21,9 +21,9 @@ import static io.activej.http.TestUtils.AssertingConsumer;
 import static io.activej.http.TestUtils.chunkedByByte;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.startsWith;
 
 public final class BufsConsumerChunkedDecoderTest {
 

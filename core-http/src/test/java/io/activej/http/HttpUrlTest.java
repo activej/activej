@@ -4,7 +4,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.test.rules.ByteBufRule;
-import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -14,7 +13,6 @@ import java.util.stream.Collectors;
 import static io.activej.http.Protocol.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public final class HttpUrlTest {
@@ -370,7 +368,7 @@ public final class HttpUrlTest {
 	public void testEmptyQuery() {
 		UrlParser url = UrlParser.of("http://127.0.0.1/?&&");
 		Set<String> actual = url.getQueryParameters().keySet();
-		assertThat(actual, IsEmptyCollection.empty());
+		assertTrue(actual.isEmpty());
 	}
 
 	@Test

@@ -12,7 +12,6 @@ import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
 import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
-import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +23,6 @@ import java.util.Map;
 import static io.activej.cube.TestUtils.STUB_CUBE_STATE;
 import static io.activej.cube.aggregation.PrimaryKey.ofArray;
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -72,7 +70,7 @@ public class CubeOTTest {
 
 		assertTrue(transform.hasConflict());
 		assertEquals(ConflictResolution.RIGHT, transform.resolution);
-		assertThat(transform.right, IsEmptyCollection.empty());
+		assertTrue(transform.right.isEmpty());
 
 		LogDiff<CubeDiff> result = LogDiff.of(Map.of(
 				"clicks", positionDiff(logFile, 10, 20)),

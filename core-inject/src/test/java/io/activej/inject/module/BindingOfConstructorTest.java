@@ -1,11 +1,11 @@
 package io.activej.inject.module;
 
 import io.activej.inject.Injector;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 
@@ -27,7 +27,7 @@ public class BindingOfConstructorTest {
 		Application instance = injector.getInstance(Application.class);
 
 		assertNotNull(instance);
-		assertThat(instance.myInterface, Matchers.instanceOf(MyInterfaceImpl.class));
+		assertThat(instance.myInterface, instanceOf(MyInterfaceImpl.class));
 	}
 
 	public interface MyInterface {

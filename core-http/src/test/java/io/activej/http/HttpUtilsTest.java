@@ -15,8 +15,8 @@ import java.util.Random;
 import static io.activej.bytebuf.ByteBufStrings.decodeUtf8;
 import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
 public class HttpUtilsTest {

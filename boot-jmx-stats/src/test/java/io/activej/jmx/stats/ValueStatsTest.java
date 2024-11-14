@@ -11,8 +11,8 @@ import java.util.Random;
 
 import static io.activej.jmx.stats.JmxHistogram.POWERS_OF_TWO;
 import static java.lang.Math.*;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

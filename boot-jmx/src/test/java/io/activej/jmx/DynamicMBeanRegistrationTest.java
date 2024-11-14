@@ -4,9 +4,7 @@ import io.activej.inject.Key;
 import io.activej.inject.annotation.QualifierAnnotation;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Rule;
+import io.activej.jmx.helper.MBeanServerStub;
 import org.junit.Test;
 
 import javax.management.*;
@@ -14,19 +12,16 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
+import java.util.Map;
 
-import static io.activej.jmx.helper.CustomMatchers.objectname;
+import static io.activej.jmx.helper.CustomMatchers.objectName;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 
 public class DynamicMBeanRegistrationTest {
 
-	@Rule
-	public final JUnitRuleMockery context = new JUnitRuleMockery();
-
-	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
+	private final MBeanServerStub mBeanServer = new MBeanServerStub();
 	private final DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();
 	private final JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, mbeanFactory);
 	private final String domain = CustomKeyClass.class.getPackage().getName();
@@ -35,14 +30,14 @@ public class DynamicMBeanRegistrationTest {
 	public void itShouldRegisterDynamicMBeans() throws Exception {
 		DynamicMBeanStub service = new DynamicMBeanStub();
 
-		context.checking(new Expectations() {{
-			oneOf(mBeanServer).registerMBean(with(service),
-				with(objectname(domain + ":type=CustomKeyClass,CustomAnnotation=Global"))
-			);
-		}});
-
 		Key<?> key = Key.of(CustomKeyClass.class, createCustomAnnotation("Global"));
 		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
+
+		Map<ObjectName, Object> registeredMBeans = mBeanServer.getRegisteredMBeans();
+		assertEquals(1, registeredMBeans.size());
+
+		ObjectName objectName = objectName(domain + ":type=CustomKeyClass,CustomAnnotation=Global");
+		assertSame(service, registeredMBeans.get(objectName));
 	}
 
 	@Test

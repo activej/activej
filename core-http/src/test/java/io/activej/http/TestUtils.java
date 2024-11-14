@@ -19,8 +19,8 @@ import java.util.function.Consumer;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class TestUtils {

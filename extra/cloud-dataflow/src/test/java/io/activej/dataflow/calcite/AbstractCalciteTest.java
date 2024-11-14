@@ -17,8 +17,8 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.calcite.utils.Utils.DATE_TIME_FORMATTER;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
 public abstract class AbstractCalciteTest extends CalciteTestBase {

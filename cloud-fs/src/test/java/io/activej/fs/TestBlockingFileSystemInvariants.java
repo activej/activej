@@ -21,8 +21,9 @@ import static io.activej.common.Utils.first;
 import static io.activej.fs.Utils.*;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("ConstantConditions")
@@ -115,7 +116,7 @@ public final class TestBlockingFileSystemInvariants {
 		both(client -> client.move(from, to));
 
 		bothPaths(path -> {
-			assertThat(listPaths(path), not(contains(from)));
+			assertFalse(listPaths(path).contains(Paths.get(from)));
 			assertArrayEquals(bytesBefore, Files.readAllBytes(path.resolve(to)));
 		});
 		assertFilesAreSame(firstPath, secondPath);
@@ -130,7 +131,7 @@ public final class TestBlockingFileSystemInvariants {
 		both(client -> client.move(from, to));
 
 		bothPaths(path -> {
-			assertThat(listPaths(path), not(contains(from)));
+			assertFalse(listPaths(path).contains(Paths.get(from)));
 			assertArrayEquals(bytesBefore, Files.readAllBytes(path.resolve(to)));
 		});
 		assertFilesAreSame(firstPath, secondPath);
@@ -212,7 +213,7 @@ public final class TestBlockingFileSystemInvariants {
 	public void moveSelfFiles() {
 		both(client -> client.move("file2", "file2"));
 
-		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file2")))));
+		bothPaths(path -> assertTrue(listPaths(path).contains(Paths.get("file2"))));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
@@ -389,7 +390,7 @@ public final class TestBlockingFileSystemInvariants {
 	public void deleteAllSingleFile() {
 		both(client -> client.deleteAll(Set.of("file")));
 
-		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file")))));
+		bothPaths(path -> assertFalse(listPaths(path).contains(Paths.get("file"))));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
@@ -397,7 +398,11 @@ public final class TestBlockingFileSystemInvariants {
 	public void deleteAllMultipleFiles() {
 		both(client -> client.deleteAll(Set.of("file", "file2")));
 
-		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2")))));
+		bothPaths(path -> {
+			List<Path> paths = listPaths(path);
+			assertFalse(paths.contains(Paths.get("file")));
+			assertFalse(paths.contains(Paths.get("file2")));
+		});
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
@@ -429,7 +434,7 @@ public final class TestBlockingFileSystemInvariants {
 	public void deleteAllWithNonExisting() {
 		both(client -> client.deleteAll(Set.of("file", "nonexistent")));
 
-		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file")))));
+		bothPaths(path -> assertFalse(listPaths(path).contains(Paths.get("file"))));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
@@ -461,7 +466,11 @@ public final class TestBlockingFileSystemInvariants {
 			client.deleteAll(Set.of("file", "file2"));
 		});
 
-		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2")))));
+		bothPaths(path -> {
+			List<Path> paths = listPaths(path);
+			assertFalse(paths.contains(Paths.get("file")));
+			assertFalse(paths.contains(Paths.get("file2")));
+		});
 		assertFilesAreSame(firstPath, secondPath);
 	}
 	//endregion
@@ -662,7 +671,7 @@ public final class TestBlockingFileSystemInvariants {
 		both(client -> client.moveAll(Map.of("file", "newFile")));
 
 		bothPaths(path -> {
-			assertThat(listPaths(path), not(contains(Paths.get("file"))));
+			assertFalse(listPaths(path).contains(Paths.get("file")));
 			assertArrayEquals(bytesBefore, Files.readAllBytes(path.resolve("newFile")));
 		});
 
@@ -680,7 +689,9 @@ public final class TestBlockingFileSystemInvariants {
 		)));
 
 		bothPaths(path -> {
-			assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2"))));
+			List<Path> paths = listPaths(path);
+			assertFalse(paths.contains(Paths.get("file")));
+			assertFalse(paths.contains(Paths.get("file2")));
 			assertArrayEquals(bytesBefore1, Files.readAllBytes(path.resolve("newFile")));
 			assertArrayEquals(bytesBefore2, Files.readAllBytes(path.resolve("newFile2")));
 		});
@@ -839,7 +850,7 @@ public final class TestBlockingFileSystemInvariants {
 		)));
 
 		bothPaths(path -> {
-			assertThat(listPaths(path), not(contains(Paths.get("file2"))));
+			assertFalse(listPaths(path).contains(Paths.get("file2")));
 			assertArrayEquals(bytesBefore1, Files.readAllBytes(path.resolve("file")));
 			assertArrayEquals(bytesBefore2, Files.readAllBytes(path.resolve("newFile2")));
 		});

@@ -37,8 +37,8 @@ import static io.activej.http.TestUtils.readFully;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class HttpServerTest {
@@ -882,7 +882,7 @@ public final class HttpServerTest {
 	}
 
 	@Test
-	public void testEmptyGzipRequestChunked() throws IOException, InterruptedException, ExecutionException {
+	public void testEmptyGzipRequestChunked() throws IOException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, request -> request.loadBody()
 				.map($ -> HttpResponse.ok200().build()))
@@ -923,7 +923,7 @@ public final class HttpServerTest {
 	}
 
 	@Test
-	public void testMalformedGzipRequest() throws IOException, InterruptedException, ExecutionException {
+	public void testMalformedGzipRequest() throws IOException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, request -> request.loadBody()
 				.map($ -> HttpResponse.ok200().build()))
@@ -961,7 +961,7 @@ public final class HttpServerTest {
 	}
 
 	@Test
-	public void testMalformedGzipHeader() throws IOException, InterruptedException, ExecutionException {
+	public void testMalformedGzipHeader() throws IOException, InterruptedException {
 		Ref<Exception> exceptionRef = new Ref<>();
 		HttpServer server = HttpServer.builder(eventloop, request -> request.loadBody()
 				.map($ -> HttpResponse.ok200().build())

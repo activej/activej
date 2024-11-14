@@ -16,8 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertArrayEquals;

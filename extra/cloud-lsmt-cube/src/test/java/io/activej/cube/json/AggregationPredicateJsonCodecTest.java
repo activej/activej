@@ -14,8 +14,8 @@ import java.util.Objects;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThrows;
 
 public class AggregationPredicateJsonCodecTest {

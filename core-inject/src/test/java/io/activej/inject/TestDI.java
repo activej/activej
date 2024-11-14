@@ -21,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static io.activej.inject.binding.BindingGenerators.combinedGenerator;
@@ -31,8 +32,6 @@ import static io.activej.inject.module.Modules.combine;
 import static io.activej.inject.module.Modules.override;
 import static io.activej.inject.util.Utils.printGraphVizGraph;
 import static java.util.stream.Collectors.toSet;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.*;
 
 public final class TestDI {
@@ -1488,10 +1487,9 @@ public final class TestDI {
 			.build();
 
 		DIException e = assertThrows(DIException.class, () -> Injector.of(module));
-		assertThat(e.getMessage(), matchesPattern(
-			"Could not synthesize a binding for Iterable in scope \\(\\)\\. " +
-			"Ambiguous bindings in scope \\(\\): \\[List<(String|Integer)>, List<(String|Integer)>]")
-		);
+		Pattern pattern = Pattern.compile("Could not synthesize a binding for Iterable in scope \\(\\)\\. " +
+										  "Ambiguous bindings in scope \\(\\): \\[List<(String|Integer)>, List<(String|Integer)>]");
+		assertTrue(pattern.matcher(e.getMessage()).matches());
 	}
 
 	@Test

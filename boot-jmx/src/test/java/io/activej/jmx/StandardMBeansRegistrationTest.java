@@ -1,47 +1,43 @@
 package io.activej.jmx;
 
 import io.activej.inject.Key;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Rule;
+import io.activej.jmx.helper.MBeanServerStub;
 import org.junit.Test;
 
-import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import java.util.Map;
 
-import static io.activej.jmx.helper.CustomMatchers.objectname;
+import static io.activej.jmx.helper.CustomMatchers.objectName;
+import static org.junit.Assert.*;
 
 public class StandardMBeansRegistrationTest {
 
-	@Rule
-	public final JUnitRuleMockery context = new JUnitRuleMockery();
-
-	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
+	private final MBeanServerStub mBeanServer = new MBeanServerStub();
 	private final JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, DynamicMBeanFactory.create());
 	private final String domain = ServiceStub.class.getPackage().getName();
 
 	@Test
-	public void itShouldRegisterStandardMBeans() throws Exception {
+	public void itShouldRegisterStandardMBeans() {
 		ServiceStub service = new ServiceStub();
-
-		context.checking(new Expectations() {{
-			oneOf(mBeanServer).registerMBean(with(service), with(objectname(domain + ":type=ServiceStub")));
-		}});
 
 		Key<?> key = Key.of(ServiceStub.class);
 		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
+
+		Map<ObjectName, Object> registeredMBeans = mBeanServer.getRegisteredMBeans();
+		assertEquals(1, registeredMBeans.size());
+
+		ObjectName objectName = objectName(domain + ":type=ServiceStub");
+		assertSame(service, registeredMBeans.get(objectName));
 	}
 
 	@Test
 	public void itShouldNotRegisterClassesThatAreNotMBeans() {
 		NonMBeanServiceImpl nonMBean = new NonMBeanServiceImpl();
 
-		context.checking(new Expectations() {
-			// we do not expect any calls
-			// any call of mBeanServer will produce error
-		});
-
 		Key<?> key = Key.of(NonMBeanServiceImpl.class);
 		jmxRegistry.registerSingleton(key, nonMBean, JmxBeanSettings.create());
+
+		assertTrue(mBeanServer.getRegisteredMBeans().isEmpty());
 	}
 
 	public interface ServiceStubMBean {
