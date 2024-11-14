@@ -352,9 +352,6 @@
     </profile>
     <profile>
       <id>examples</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <modules>
         <module>benchmarks</module>
         <module>examples</module>
