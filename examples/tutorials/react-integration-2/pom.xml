@@ -15,9 +15,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-json</artifactId>
-      <version>${project.version}</version>
+      <groupId>com.dslplatform</groupId>
+      <artifactId>dsl-json-java8</artifactId>
+      <version>1.10.0</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>

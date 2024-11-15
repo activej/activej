@@ -1,28 +1,30 @@
+import com.dslplatform.json.DslJson;
+import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StaticServlet;
 import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
-import io.activej.json.JsonCodec;
-import io.activej.json.JsonCodecs;
-import io.activej.json.JsonKeyCodec;
-import io.activej.json.JsonUtils;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.reactor.Reactor;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 import static java.lang.Integer.parseInt;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 //[START REGION_1]
 public final class ApplicationLauncher extends HttpServerLauncher {
+	private static final DslJson<?> DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
+
 	@Provides
 	RecordDAO recordRepo() {
 		return new RecordImplDAO();
@@ -41,19 +43,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	JsonCodec<Record> recordJsonCodec() {
-		return JsonCodecs.ofObject(Record::new,
-			"title", Record::getTitle, JsonCodecs.ofString(),
-			"plans", Record::getPlans, JsonCodecs.ofList(
-				JsonCodecs.ofObject(Plan::new,
-					"text", Plan::getText, JsonCodecs.ofString(),
-					"isComplete", Plan::isComplete, JsonCodecs.ofBoolean())
-			));
-	}
-
-	@Provides
-	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, RecordDAO recordDAO, JsonCodec<Record> recordJsonCodec) {
-		JsonCodec<Map<Integer, Record>> mapJsonCodec = JsonCodecs.ofMap(JsonKeyCodec.ofNumberKey(Integer.class), recordJsonCodec);
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, RecordDAO recordDAO) {
 		return RoutingServlet.builder(reactor)
 			.with("/*", StaticServlet.builder(reactor, staticLoader)
 				.withIndexHtml()
@@ -65,17 +55,19 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 					ByteBuf body = request.getBody();
 					try {
 						byte[] bodyBytes = body.getArray();
-						Record record = JsonUtils.fromJsonBytes(recordJsonCodec, bodyBytes);
+						Record record = DSL_JSON.deserialize(Record.class, bodyBytes, bodyBytes.length);
 						recordDAO.add(record);
 						return HttpResponse.ok200().toPromise();
-					} catch (MalformedDataException e) {
+					} catch (IOException e) {
 						return HttpResponse.ofCode(400).toPromise();
 					}
 				}))
 			.with(GET, "/get/all", request -> {
 				Map<Integer, Record> records = recordDAO.findAll();
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				DSL_JSON.serialize(records, stream);
 				return HttpResponse.ok200()
-					.withJson(JsonUtils.toJson(mapJsonCodec, records))
+					.withJson(stream.toString(UTF_8))
 					.toPromise();
 			})
 			//[START REGION_4]
