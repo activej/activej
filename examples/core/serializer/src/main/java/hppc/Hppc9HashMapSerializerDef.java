@@ -1,4 +1,4 @@
-package io.activej.serializer.examples;
+package hppc;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.common.exception.UncheckedException;
@@ -9,7 +9,7 @@ import io.activej.serializer.def.impl.RegularMapSerializerDef;
 import java.util.function.BinaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.examples.SerializerFactoryUtils.capitalize;
+import static hppc.SerializerFactoryUtils.capitalize;
 import static io.activej.serializer.util.Utils.initialCapacity;
 
 public final class Hppc9HashMapSerializerDef extends RegularMapSerializerDef {

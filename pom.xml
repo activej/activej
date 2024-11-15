@@ -119,11 +119,6 @@
         <version>${asm.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.carrotsearch</groupId>
-        <artifactId>hppc</artifactId>
-        <version>0.10.0</version>
-      </dependency>
-      <dependency>
         <groupId>org.jetbrains</groupId>
         <artifactId>annotations</artifactId>
         <version>24.1.0</version>

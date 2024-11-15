@@ -28,13 +28,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>com.carrotsearch</groupId>
-      <artifactId>hppc</artifactId>
-      <optional>true</optional>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>

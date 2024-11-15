@@ -1,4 +1,4 @@
-package io.activej.serializer.examples;
+package hppc;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.SerializerFactory;

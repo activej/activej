@@ -18,5 +18,10 @@
       <artifactId>activej-serializer</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.carrotsearch</groupId>
+      <artifactId>hppc</artifactId>
+      <version>0.10.0</version>
+    </dependency>
   </dependencies>
 </project>

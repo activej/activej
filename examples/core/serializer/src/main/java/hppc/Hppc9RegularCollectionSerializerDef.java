@@ -1,4 +1,4 @@
-package io.activej.serializer.examples;
+package hppc;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.common.exception.UncheckedException;
@@ -9,7 +9,7 @@ import io.activej.serializer.def.impl.RegularCollectionSerializerDef;
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.examples.SerializerFactoryUtils.capitalize;
+import static hppc.SerializerFactoryUtils.capitalize;
 
 public class Hppc9RegularCollectionSerializerDef extends RegularCollectionSerializerDef {
 	public Hppc9RegularCollectionSerializerDef(SerializerDef valueSerializer, Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
