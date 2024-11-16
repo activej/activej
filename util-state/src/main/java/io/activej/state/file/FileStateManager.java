@@ -27,8 +27,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 	private StreamEncoder<T> encoder;
 	private StreamDecoder<T> decoder;
 
-	private @Nullable DownloadMapper downloadMapper;
-	private @Nullable UploadMapper uploadMapper;
+	private @Nullable InputStreamWrapper inputStreamWrapper;
+	private @Nullable OutputStreamWrapper outputStreamWrapper;
 
 	private int maxSaveDiffs = 0;
 	private String tempDir = DEFAULT_TEMP_DIR;
@@ -78,15 +78,15 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 			return this;
 		}
 
-		public Builder withDownloadMapper(DownloadMapper mapper) {
+		public Builder withDownloadWrapper(InputStreamWrapper wrapper) {
 			checkNotBuilt(this);
-			FileStateManager.this.downloadMapper = mapper;
+			FileStateManager.this.inputStreamWrapper = wrapper;
 			return this;
 		}
 
-		public Builder withUploadMapper(UploadMapper mapper) {
+		public Builder withUploadWrapper(OutputStreamWrapper wrapper) {
 			checkNotBuilt(this);
-			FileStateManager.this.uploadMapper = mapper;
+			FileStateManager.this.outputStreamWrapper = wrapper;
 			return this;
 		}
 
@@ -132,8 +132,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		if (fileSystem.info(filename) == null) return null;
 
 		InputStream inputStream = fileSystem.download(filename);
-		if (downloadMapper != null) {
-			inputStream = downloadMapper.map(inputStream);
+		if (inputStreamWrapper != null) {
+			inputStream = inputStreamWrapper.wrap(inputStream);
 		}
 		try (StreamInput input = StreamInput.create(inputStream)) {
 			return decoder.decode(input);
@@ -159,8 +159,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		if (fileSystem.info(filename) == null) return null;
 
 		InputStream inputStream = fileSystem.download(filename);
-		if (downloadMapper != null) {
-			inputStream = downloadMapper.map(inputStream);
+		if (inputStreamWrapper != null) {
+			inputStream = inputStreamWrapper.wrap(inputStream);
 		}
 		try (StreamInput input = StreamInput.create(inputStream)) {
 			return ((DiffStreamDecoder<T>) this.decoder).decodeDiff(input, state);
@@ -252,8 +252,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 			for (long revisionFrom : revisionsFrom) {
 				String filenameFrom = fileNamingScheme.encodeSnapshot(revisionFrom);
 				InputStream inputStream = fileSystem.download(filenameFrom);
-				if (downloadMapper != null) {
-					inputStream = downloadMapper.map(inputStream);
+				if (inputStreamWrapper != null) {
+					inputStream = inputStreamWrapper.wrap(inputStream);
 				}
 				T stateFrom;
 				try (StreamInput input = StreamInput.create(inputStream)) {
@@ -272,8 +272,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 	private void safeUpload(String filename, StreamOutputConsumer consumer) throws IOException {
 		String tempFilename = tempDir + UUID.randomUUID();
 		OutputStream outputStream = fileSystem.upload(tempFilename);
-		if (uploadMapper != null) {
-			outputStream = uploadMapper.map(outputStream);
+		if (outputStreamWrapper != null) {
+			outputStream = outputStreamWrapper.wrap(outputStream);
 		}
 		try (StreamOutput outputStreamEx = StreamOutput.create(outputStream)) {
 			consumer.accept(outputStreamEx);
@@ -289,12 +289,12 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		fileSystem.move(tempFilename, filename);
 	}
 
-	public interface DownloadMapper {
-		InputStream map(InputStream inputStream) throws IOException;
+	public interface InputStreamWrapper {
+		InputStream wrap(InputStream inputStream) throws IOException;
 	}
 
-	public interface UploadMapper {
-		OutputStream map(OutputStream inputStream) throws IOException;
+	public interface OutputStreamWrapper {
+		OutputStream wrap(OutputStream inputStream) throws IOException;
 	}
 
 	private interface StreamOutputConsumer {

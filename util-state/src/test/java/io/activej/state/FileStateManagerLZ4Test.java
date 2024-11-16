@@ -42,8 +42,8 @@ public class FileStateManagerLZ4Test {
 
 		manager = FileStateManager.<byte[]>builder(fileSystem, NAMING_SCHEME)
 			.withCodec(new BytesCodec())
-			.withUploadMapper(LZ4FrameOutputStream::new)
-			.withDownloadMapper(LZ4FrameInputStream::new)
+			.withUploadWrapper(LZ4FrameOutputStream::new)
+			.withDownloadWrapper(LZ4FrameInputStream::new)
 			.build();
 	}
 
