@@ -1543,6 +1543,45 @@ public final class TestDI {
 		assertEquals("scope 1 -> scope 2", scope1String);
 	}
 
+	@Test
+	public void automaticResolutionOptionalDependency() {
+		Injector injector = Injector.of(new AbstractModule() {
+			@Provides
+			Integer totalSize(OptionalDependency<List<?>> lists) {
+				return lists.get().size();
+			}
+
+			@Provides
+			List<String> strings() {
+				return List.of("a", "b", "c");
+			}
+		});
+
+		assertEquals(3, injector.getInstance(Integer.class).intValue());
+	}
+
+	@Test
+	public void automaticResolutionOptionalDependencyMultiple() {
+		Injector injector = Injector.of(new AbstractModule() {
+			@Provides
+			Integer totalSize(OptionalDependency<Set<List<?>>> lists) {
+				return lists.get().stream().mapToInt(List::size).sum();
+			}
+
+			@ProvidesIntoSet
+			List<String> strings1() {
+				return List.of("a", "b", "c");
+			}
+
+			@ProvidesIntoSet
+			List<String> strings2() {
+				return List.of("d", "e", "f", "g", "h");
+			}
+		});
+
+		assertEquals(8, injector.getInstance(Integer.class).intValue());
+	}
+
 	public static final class SingleInjectConstructor {
 		private final String text;
 

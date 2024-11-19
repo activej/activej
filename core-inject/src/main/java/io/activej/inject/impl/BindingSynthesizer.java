@@ -150,6 +150,8 @@ class BindingSynthesizer {
 			return new Synthesized(Binding.toInstance(OptionalDependency.empty()));
 		}
 
+		scopeState.synthesized.put(instanceKey, instanceSynthesized);
+
 		return new Synthesized(optinalDependencyBinding(instanceKey));
 	}
 
@@ -158,11 +160,13 @@ class BindingSynthesizer {
 
 		Synthesized instanceSynthesized = synthesizeBinding(scope, scopeState, localBindings, instanceKey);
 
-		if (instanceSynthesized != null && instanceSynthesized.error() == null) {
-			return new Synthesized(instanceProviderBinding(instanceKey));
+		if (instanceSynthesized == null || instanceSynthesized.binding() == null) {
+			return null;
 		}
 
-		return null;
+		scopeState.synthesized.put(instanceKey, instanceSynthesized);
+
+		return new Synthesized(instanceProviderBinding(instanceKey));
 	}
 
 	static Binding<OptionalDependency<?>> optinalDependencyBinding(Key<?> instanceKey) {
