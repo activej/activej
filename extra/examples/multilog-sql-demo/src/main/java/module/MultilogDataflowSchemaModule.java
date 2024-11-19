@@ -17,7 +17,7 @@ public class MultilogDataflowSchemaModule extends AbstractModule {
 	}
 
 	@ProvidesIntoSet
-	DataflowTable<LogItem> logItemTable(DefiningClassLoader classLoader) {
+	DataflowTable<?> logItemTable(DefiningClassLoader classLoader) {
 		return DataflowTable.builder(classLoader, LOG_ITEM_TABLE_NAME, LogItem.class)
 			.withColumn("date", int.class, logItem -> logItem.date)
 			.withColumn("advertiser", int.class, logItem -> logItem.advertiser)
