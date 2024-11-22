@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 
-import static io.activej.common.Utils.concat;
+import static io.activej.common.collection.CollectionUtils.concat;
 
 public interface DiffsReducer<A, D> {
 	A initialValue();

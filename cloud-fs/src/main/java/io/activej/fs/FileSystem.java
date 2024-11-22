@@ -22,6 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
@@ -59,7 +60,8 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.isBijection;
+import static io.activej.common.Utils.noMergeFunction;
 import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.csp.process.transformer.ChannelConsumerTransformer.identity;
 import static io.activej.fs.LocalFileUtils.*;
@@ -611,7 +613,7 @@ public final class FileSystem extends AbstractReactive
 			if (e instanceof FileSystemBatchException) {
 				Map<String, FileSystemScalarException> exceptions = ((FileSystemBatchException) e).getExceptions();
 				assert exceptions.size() == 1;
-				throw first(exceptions.values());
+				throw CollectionUtils.first(exceptions.values());
 			} else if (e instanceof FileSystemException || e instanceof MalformedDataException) {
 				throw e;
 			} else if (e instanceof FileAlreadyExistsException) {

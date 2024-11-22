@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;

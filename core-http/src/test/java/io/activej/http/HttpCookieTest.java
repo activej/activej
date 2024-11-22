@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static java.time.Month.JANUARY;
 import static java.time.ZoneOffset.UTC;
 import static org.junit.Assert.*;

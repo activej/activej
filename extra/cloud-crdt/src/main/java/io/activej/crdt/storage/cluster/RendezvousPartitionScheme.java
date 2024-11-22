@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
-import static io.activej.common.Utils.difference;
+import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.crdt.storage.cluster.RendezvousHashSharder.NUMBER_OF_BUCKETS;
 import static java.util.stream.Collectors.toSet;
 

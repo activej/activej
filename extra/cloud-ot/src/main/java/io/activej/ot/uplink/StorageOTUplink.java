@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static io.activej.common.Utils.concat;
+import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 import static io.activej.reactor.Reactive.checkInReactorThread;

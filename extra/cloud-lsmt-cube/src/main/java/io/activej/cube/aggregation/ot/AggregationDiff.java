@@ -22,7 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
 
 public final class AggregationDiff {
 	private final Set<AggregationChunk> addedChunks;

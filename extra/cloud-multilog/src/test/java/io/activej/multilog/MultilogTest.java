@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;

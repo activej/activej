@@ -34,7 +34,7 @@ import java.util.function.UnaryOperator;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.common.Utils.toHashMap;
+import static io.activej.common.collection.CollectorUtils.toHashMap;
 import static java.lang.Character.toUpperCase;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;

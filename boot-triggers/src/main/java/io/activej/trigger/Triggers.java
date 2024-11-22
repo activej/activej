@@ -29,8 +29,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static io.activej.common.Utils.difference;
-import static io.activej.common.Utils.last;
+import static io.activej.common.collection.CollectionUtils.difference;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;

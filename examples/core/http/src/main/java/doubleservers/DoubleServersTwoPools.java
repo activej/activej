@@ -19,7 +19,7 @@ import io.activej.worker.annotation.WorkerId;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.common.Utils.concat;
+import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.http.HttpUtils.getHttpAddresses;
 import static io.activej.inject.module.Modules.combine;
 

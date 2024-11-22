@@ -43,7 +43,7 @@ import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.checkout;
 import static io.activej.reactor.Reactive.checkInReactorThread;

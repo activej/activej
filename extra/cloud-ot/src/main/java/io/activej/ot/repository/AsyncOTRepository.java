@@ -25,7 +25,7 @@ import io.activej.promise.Promises;
 import java.util.*;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.not;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
 
 public interface AsyncOTRepository<K, D> extends AsyncOTCommitFactory<K, D> {

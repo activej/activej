@@ -71,7 +71,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;

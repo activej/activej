@@ -17,7 +17,7 @@ import java.sql.SQLException;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;

@@ -20,7 +20,6 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
-import io.activej.common.Utils;
 import io.activej.common.ref.Ref;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
@@ -31,6 +30,7 @@ import io.activej.http.*;
 import io.activej.reactor.Reactor;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.fs.http.FileSystemCommand.DOWNLOAD;
@@ -132,7 +132,7 @@ public final class FileSystemGuiServlet {
 		Ref<String> fullPath = new Ref<>("");
 		return Arrays.stream(dir.split("/+"))
 			.map(String::trim)
-			.filter(Utils.not(String::isEmpty))
+			.filter(Predicate.not(String::isEmpty))
 			.map(pathPart -> new Dir(pathPart, fullPath.value += (fullPath.value.isEmpty() ? "" : '/') + pathPart))
 			.collect(Collectors.toList());
 	}

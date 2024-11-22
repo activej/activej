@@ -53,8 +53,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Utils.entriesToLinkedHashMap;
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.cube.etcd.CubeEtcdOTUplink.logPositionEtcdCodec;
 import static io.activej.cube.etcd.EtcdUtils.*;

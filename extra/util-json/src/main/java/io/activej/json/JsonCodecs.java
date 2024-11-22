@@ -32,8 +32,8 @@ import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.common.Utils.newLinkedHashMap;
-import static io.activej.common.Utils.transformIterator;
+import static io.activej.common.collection.CollectionUtils.newLinkedHashMap;
+import static io.activej.common.collection.IteratorUtils.transformIterator;
 import static io.activej.json.JsonKeyCodec.ofStringKey;
 import static io.activej.json.JsonValidationUtils.validateNotNull;
 

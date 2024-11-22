@@ -32,7 +32,7 @@ import io.activej.inject.binding.OptionalDependency;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
 import static io.activej.launchers.initializers.Initializers.ofTaskScheduler;

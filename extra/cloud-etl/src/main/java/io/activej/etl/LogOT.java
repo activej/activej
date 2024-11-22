@@ -16,6 +16,8 @@
 
 package io.activej.etl;
 
+import io.activej.common.collection.CollectionUtils;
+import io.activej.common.collection.CollectorUtils;
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
 import io.activej.ot.system.OTSystem;
@@ -29,13 +31,12 @@ import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.*;
 
 public class LogOT {
 	public static <T> OTSystem<LogDiff<T>> createLogOT(OTSystem<T> otSystem) {
 		return OTSystemImpl.<LogDiff<T>>builder()
 			.withTransformFunction(LogDiff.class, LogDiff.class, (left, right) -> {
-				Set<String> intersection = intersection(left.getPositions().keySet(), right.getPositions().keySet());
+				Set<String> intersection = CollectionUtils.intersection(left.getPositions().keySet(), right.getPositions().keySet());
 				if (intersection.isEmpty()) {
 					TransformResult<T> transformed = otSystem.transform(left.getDiffs(), right.getDiffs());
 					if (transformed.hasConflict()) {
@@ -75,12 +76,12 @@ public class LogOT {
 						positions.remove(log);
 					}
 				}
-				List<T> ops = concat(commit1.getDiffs(), commit2.getDiffs());
+				List<T> ops = CollectionUtils.concat(commit1.getDiffs(), commit2.getDiffs());
 				return LogDiff.of(positions, otSystem.squash(ops));
 			})
 			.withInvertFunction(LogDiff.class, commit -> List.of(LogDiff.of(
 				commit.getPositions().entrySet().stream()
-					.collect(entriesToLinkedHashMap(LogPositionDiff::inverse)),
+					.collect(CollectorUtils.entriesToLinkedHashMap(LogPositionDiff::inverse)),
 				otSystem.invert(commit.getDiffs()))))
 			.build();
 	}

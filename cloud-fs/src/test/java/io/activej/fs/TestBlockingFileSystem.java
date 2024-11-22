@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.last;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.fs.BlockingFileSystem.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.asString;
 import static io.activej.fs.Utils.createEmptyDirectories;

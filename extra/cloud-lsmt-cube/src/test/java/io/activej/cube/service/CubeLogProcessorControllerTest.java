@@ -32,7 +32,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;

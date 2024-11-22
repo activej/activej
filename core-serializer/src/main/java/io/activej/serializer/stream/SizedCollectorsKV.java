@@ -1,6 +1,6 @@
 package io.activej.serializer.stream;
 
-import io.activej.common.Utils;
+import io.activej.common.collection.CollectionUtils;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.IntFunction;
 
-import static io.activej.common.Utils.newHashMap;
+import static io.activej.common.collection.CollectionUtils.newHashMap;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 
@@ -63,11 +63,11 @@ public class SizedCollectorsKV {
 	}
 
 	public static <K, V> SizedCollectorKV<K, V, ?, HashMap<K, V>> toHashMap() {
-		return toMap(Utils::newHashMap);
+		return toMap(CollectionUtils::newHashMap);
 	}
 
 	public static <K, V> SizedCollectorKV<K, V, ?, LinkedHashMap<K, V>> toLinkedHashMap() {
-		return toMap(Utils::newLinkedHashMap);
+		return toMap(CollectionUtils::newLinkedHashMap);
 	}
 
 	public static <K extends Enum<K>, V> SizedCollectorKV<K, V, ?, EnumMap<K, V>> toEnumMap(Class<K> type) {

@@ -19,8 +19,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.difference;
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.difference;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.ot.TransformResult.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;

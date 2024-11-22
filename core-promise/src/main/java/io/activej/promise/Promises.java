@@ -44,8 +44,8 @@ import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.iteratorOf;
-import static io.activej.common.Utils.transformIterator;
+import static io.activej.common.collection.IteratorUtils.iteratorOf;
+import static io.activej.common.collection.IteratorUtils.transformIterator;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.promise.PromisePredicates.isResult;
 import static io.activej.reactor.Reactor.getCurrentReactor;

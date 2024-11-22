@@ -16,7 +16,7 @@
 
 package io.activej.dataflow.dataset;
 
-import io.activej.common.Utils;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
@@ -149,7 +149,7 @@ public class DatasetUtils {
 		Node nodeDownload = Nodes.download(downloadIndex, streamSchema, sourcePartition.address(), sourceStreamId);
 		graph.addNode(sourcePartition, nodeUpload);
 		graph.addNode(targetPartition, nodeDownload);
-		return Utils.first(nodeDownload.getOutputs());
+		return CollectionUtils.first(nodeDownload.getOutputs());
 	}
 
 	public static int[] generateIndexes(DataflowContext context, int size) {

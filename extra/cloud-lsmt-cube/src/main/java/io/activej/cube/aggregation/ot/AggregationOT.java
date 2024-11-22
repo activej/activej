@@ -23,7 +23,7 @@ import io.activej.ot.system.OTSystemImpl;
 
 import java.util.List;
 
-import static io.activej.common.Utils.hasIntersection;
+import static io.activej.common.collection.CollectionUtils.hasIntersection;
 
 public class AggregationOT {
 	public static OTSystem<AggregationDiff> createAggregationOT() {

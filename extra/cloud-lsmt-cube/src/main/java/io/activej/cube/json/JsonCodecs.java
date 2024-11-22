@@ -30,7 +30,7 @@ import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static io.activej.common.Utils.entriesToHashMap;
+import static io.activej.common.collection.CollectorUtils.entriesToHashMap;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofAggregationDiff;
 import static io.activej.json.JsonCodecs.ofMap;
 

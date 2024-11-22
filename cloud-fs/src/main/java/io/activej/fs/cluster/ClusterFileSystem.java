@@ -50,7 +50,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.transformIterator;
+import static io.activej.common.collection.IteratorUtils.transformIterator;
 import static io.activej.csp.process.transformer.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 import static io.activej.promise.Promises.first;

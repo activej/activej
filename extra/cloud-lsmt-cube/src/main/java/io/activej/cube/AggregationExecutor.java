@@ -17,6 +17,8 @@
 package io.activej.cube;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.collection.CollectionUtils;
+import io.activej.common.collection.CollectorUtils;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.QueryPlan.Sequence;
@@ -53,7 +55,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.iterate;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.cube.aggregation.util.Utils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -141,14 +143,14 @@ public final class AggregationExecutor extends AbstractReactive
 	) {
 		checkInReactorThread(this);
 		checkArgument(new HashSet<>(structure.getKeys()).equals(keyFields.keySet()), "Expected keys: %s, actual keyFields: %s", structure.getKeys(), keyFields);
-		checkArgument(structure.getMeasureTypes().keySet().containsAll(measureFields.keySet()), "Unknown measures: %s", difference(measureFields.keySet(),
+		checkArgument(structure.getMeasureTypes().keySet().containsAll(measureFields.keySet()), "Unknown measures: %s", CollectionUtils.difference(measureFields.keySet(),
 			structure.getMeasureTypes().keySet()));
 
 		logger.info("Started consuming data in aggregation {}. Keys: {} Measures: {}", this, keyFields.keySet(), measureFields.keySet());
 
 		Class<K> keyClass = createKeyClass(
 			structure.getKeys().stream()
-				.collect(toLinkedHashMap(structure.getKeyTypes()::get)),
+				.collect(CollectorUtils.toLinkedHashMap(structure.getKeyTypes()::get)),
 			classLoader);
 		Set<String> measureFieldKeys = measureFields.keySet();
 		List<String> measures = structure.getMeasureTypes().keySet().stream().filter(measureFieldKeys::contains).collect(toList());
@@ -369,7 +371,7 @@ public final class AggregationExecutor extends AbstractReactive
 
 		Class<K> keyClass = createKeyClass(
 			queryKeys.stream()
-				.collect(toLinkedHashMap(structure.getKeyTypes()::get)),
+				.collect(CollectorUtils.toLinkedHashMap(structure.getKeyTypes()::get)),
 			this.classLoader);
 
 		for (SequenceStream<S> sequence : sequences) {

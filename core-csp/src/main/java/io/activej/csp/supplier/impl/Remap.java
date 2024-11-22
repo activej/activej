@@ -9,7 +9,7 @@ import io.activej.promise.SettableCallback;
 import java.util.Iterator;
 import java.util.function.Function;
 
-import static io.activej.common.Utils.iteratorOf;
+import static io.activej.common.collection.IteratorUtils.iteratorOf;
 
 @ExposedInternals
 public final class Remap<T, V> extends AbstractChannelSupplier<V> {

@@ -19,6 +19,7 @@ package io.activej.cube.service;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.cube.aggregation.AggregationChunkStorage;
@@ -49,7 +50,7 @@ import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -229,7 +230,7 @@ public final class CubeCleanerController<K, D> extends AbstractReactive
 						new HashSet<>(),
 						(Set<Long> accumulatedChunks, List<? extends D> diffs) ->
 							union(accumulatedChunks, chunksInDiffs(cubeDiffScheme, diffs)),
-						Utils::union))
+						CollectionUtils::union))
 					.whenComplete(promiseCleanupCollectRequiredChunks.recordStats()))
 			.map(accumulators -> accumulators.values().stream().flatMap(Collection::stream).collect(toSet()))
 			.whenComplete(transform(Set::size,

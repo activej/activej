@@ -30,7 +30,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.Utils.last;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.fs.FileSystem.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.createEmptyDirectories;
 import static io.activej.promise.TestUtils.await;

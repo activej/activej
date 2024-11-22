@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static io.activej.common.Utils.concat;
+import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.ot.TransformResult.left;
 import static io.activej.ot.TransformResult.right;
 import static io.activej.ot.system.MergedOTSystem.mergeOtSystems;

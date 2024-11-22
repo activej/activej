@@ -12,8 +12,8 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.common.Utils.not;
 import static io.activej.reactor.Reactive.checkInReactorThread;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toSet;
 
 public final class StubOTRepository<K, D> extends ImplicitlyReactive

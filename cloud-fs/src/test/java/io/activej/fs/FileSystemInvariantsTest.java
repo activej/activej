@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.fs.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;

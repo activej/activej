@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.intersection;
+import static io.activej.common.collection.CollectionUtils.intersection;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.unmodifiableMap;
 

@@ -20,7 +20,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 import static io.activej.cube.TestUtils.aggregationStructureBuilder;
 import static io.activej.cube.aggregation.StreamUtils.assertEndOfStream;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;

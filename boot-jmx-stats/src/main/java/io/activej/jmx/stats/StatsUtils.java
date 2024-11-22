@@ -25,7 +25,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.Predicate;
 
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.reflection.ReflectionUtils.isSimpleType;
 import static java.lang.System.identityHashCode;
 

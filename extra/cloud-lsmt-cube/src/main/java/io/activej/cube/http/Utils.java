@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static io.activej.common.Utils.not;
+import static java.util.function.Predicate.not;
 
 public class Utils {
 	static final String MEASURES_PARAM = "measures";

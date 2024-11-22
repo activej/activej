@@ -44,8 +44,8 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.concat;
-import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.collection.CollectionUtils.concat;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.ReportType.DATA;

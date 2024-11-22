@@ -43,8 +43,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.entriesToLinkedHashMap;
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.cube.etcd.EtcdUtils.*;
 import static io.activej.etcd.EtcdUtils.*;

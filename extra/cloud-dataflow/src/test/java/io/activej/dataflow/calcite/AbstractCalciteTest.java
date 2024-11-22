@@ -1,6 +1,6 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.common.Utils;
+import io.activej.common.collection.CollectionUtils;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.concat;
+import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.dataflow.calcite.utils.Utils.DATE_TIME_FORMATTER;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -63,7 +63,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 			FROM student_duplicates_no_primary
 			""");
 
-		QueryResult expected = studentsToQueryResult(Utils.concat(
+		QueryResult expected = studentsToQueryResult(CollectionUtils.concat(
 			STUDENT_DUPLICATES_NO_PRIMARY_LIST_1,
 			STUDENT_DUPLICATES_NO_PRIMARY_LIST_2.subList(1, 2)
 		));

@@ -35,7 +35,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
 import static io.activej.crdt.wal.FileWriteAheadLog.FRAME_FORMAT;
 import static io.activej.promise.TestUtils.await;

@@ -70,7 +70,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.crdt.util.CrdtDataBinarySerializer.TIMESTAMP_SERIALIZER;
 import static io.activej.crdt.util.Utils.onItem;
 import static io.activej.reactor.Reactive.checkInReactorThread;

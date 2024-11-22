@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.Utils.not;
 import static io.activej.cube.http.Utils.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
@@ -44,6 +43,7 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJsonBytes;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 
 public final class ReportingServiceServlet extends ServletWithStats {

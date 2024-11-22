@@ -32,7 +32,7 @@ import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
-import static io.activej.common.Utils.transformIterator;
+import static io.activej.common.collection.IteratorUtils.transformIterator;
 import static io.activej.fs.util.RemoteFileSystemUtils.escapeGlob;
 import static io.activej.fs.util.RemoteFileSystemUtils.reduceErrors;
 import static java.util.stream.Collectors.toSet;

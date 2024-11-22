@@ -28,8 +28,8 @@ import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.entriesToLinkedHashMap;
-import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 
 public final class OTCommit<K, D> {
 	public static final int INITIAL_EPOCH = 0;

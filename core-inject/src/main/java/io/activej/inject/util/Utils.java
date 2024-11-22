@@ -16,6 +16,7 @@
 
 package io.activej.inject.util;
 
+import io.activej.common.collection.CollectionUtils;
 import io.activej.inject.InstanceProvider;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
@@ -93,7 +94,7 @@ public final class Utils {
 		Function<? super T, ? extends K> keyMapper,
 		Function<? super T, ? extends V> valueMapper
 	) {
-		return toMap(keyMapper, t -> Set.of(valueMapper.apply(t)), io.activej.common.Utils::union);
+		return toMap(keyMapper, t -> Set.of(valueMapper.apply(t)), CollectionUtils::union);
 	}
 
 	public static <K, V> Map<K, V> squash(Map<K, Set<V>> multimap, BiFunction<K, Set<V>, V> squasher) {

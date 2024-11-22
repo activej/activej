@@ -12,8 +12,8 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.common.Utils.difference;
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.difference;
+import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;

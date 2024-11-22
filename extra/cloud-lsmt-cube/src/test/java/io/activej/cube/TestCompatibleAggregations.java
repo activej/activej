@@ -15,8 +15,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.entriesToLinkedHashMap;
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.*;

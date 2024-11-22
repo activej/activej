@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static java.util.Collections.singletonMap;
 
 public abstract class AbstractAttributeNodeForLeaf implements AttributeNode {

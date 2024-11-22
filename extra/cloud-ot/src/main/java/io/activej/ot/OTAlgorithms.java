@@ -17,6 +17,8 @@
 package io.activej.ot;
 
 import io.activej.async.function.AsyncPredicate;
+import io.activej.common.collection.CollectionUtils;
+import io.activej.common.collection.CollectorUtils;
 import io.activej.common.ref.Ref;
 import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
 import io.activej.ot.exception.GraphExhaustedException;
@@ -39,7 +41,7 @@ import java.util.function.Predicate;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.ot.reducers.GraphReducer.Result.*;
 import static io.activej.promise.Promises.toList;
 import static java.util.Collections.reverseOrder;
@@ -199,7 +201,7 @@ public final class OTAlgorithms {
 	}
 
 	public static <K, D> Promise<K> mergeAndPush(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
-		if (heads.size() == 1) return Promise.of(first(heads)); // nothing to merge
+		if (heads.size() == 1) return Promise.of(CollectionUtils.first(heads)); // nothing to merge
 		return merge(repository, system, heads)
 			.then(mergeCommit -> repository.push(mergeCommit)
 				.map($ -> mergeCommit.getId()))
@@ -213,7 +215,7 @@ public final class OTAlgorithms {
 
 	public static <K, D> Promise<K> mergeAndUpdateHeads(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		return mergeAndPush(repository, system, heads)
-			.then(mergeId -> repository.updateHeads(difference(Set.of(mergeId), heads), difference(heads, Set.of(mergeId)))
+			.then(mergeId -> repository.updateHeads(CollectionUtils.difference(Set.of(mergeId), heads), CollectionUtils.difference(heads, Set.of(mergeId)))
 				.map($ -> mergeId))
 			.whenComplete(toLogger(logger, thisMethod()));
 	}
@@ -239,7 +241,7 @@ public final class OTAlgorithms {
 					})
 					.then(mergeResult -> repository.createCommit(
 						heads.stream()
-							.collect(toLinkedHashMap(head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head)))))));
+							.collect(CollectorUtils.toLinkedHashMap(head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head)))))));
 	}
 
 	public static <K, D> Promise<Set<K>> findCut(
@@ -285,7 +287,7 @@ public final class OTAlgorithms {
 			.map(entry -> {
 				List<D> diffs1 = entry.getValue().get(node1);
 				List<D> diffs2 = entry.getValue().get(node2);
-				return concat(diffs2, system.invert(diffs1));
+				return CollectionUtils.concat(diffs2, system.invert(diffs1));
 			})
 			.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
@@ -384,11 +386,11 @@ public final class OTAlgorithms {
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
 			.then(heads ->
-				findParent(repository, system, union(heads, Set.of(commitId)), DiffsReducer.toVoid(),
+				findParent(repository, system, CollectionUtils.union(heads, Set.of(commitId)), DiffsReducer.toVoid(),
 					commit -> repository.loadSnapshot(commit.getId())
 						.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null))
 					.then(findResult -> diff(repository, system, findResult.commit, commitId)
-						.map(diff -> concat(cachedSnapshotRef.value, diff))))
+						.map(diff -> CollectionUtils.concat(cachedSnapshotRef.value, diff))))
 			.whenComplete(toLogger(logger, thisMethod(), commitId));
 	}
 
@@ -443,9 +445,9 @@ public final class OTAlgorithms {
 				Map<K, List<? extends D>> grandChildren = nonNullElseEmpty(graph.getChildren(child));
 				Map<K, List<? extends D>> coParents = nonNullElseEmpty(graph.getParents(child));
 				if (grandChildren.size() != 1 || coParents.size() != 1) continue;
-				K grandChild = first(grandChildren.keySet());
-				List<? extends D> grandChildDiffs = first(grandChildren.values());
-				graph.addEdge(node, grandChild, system.squash(concat(childDiffs, grandChildDiffs)));
+				K grandChild = CollectionUtils.first(grandChildren.keySet());
+				List<? extends D> grandChildDiffs = CollectionUtils.first(grandChildren.values());
+				graph.addEdge(node, grandChild, system.squash(CollectionUtils.concat(childDiffs, grandChildDiffs)));
 				graph.removeNode(child);
 			}
 

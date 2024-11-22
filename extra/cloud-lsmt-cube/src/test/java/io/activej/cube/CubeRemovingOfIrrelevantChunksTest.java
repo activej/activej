@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
-import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;

@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import java.util.*;
 
-import static io.activej.common.Utils.last;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.promise.TestUtils.await;

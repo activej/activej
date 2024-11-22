@@ -1,11 +1,11 @@
 package io.activej.serializer.stream;
 
-import io.activej.common.Utils;
+import io.activej.common.collection.CollectionUtils;
 
 import java.util.*;
 import java.util.function.IntFunction;
 
-import static io.activej.common.Utils.newHashSet;
+import static io.activej.common.collection.CollectionUtils.newHashSet;
 import static java.util.Collections.*;
 
 public class SizedCollectors {
@@ -102,11 +102,11 @@ public class SizedCollectors {
 	}
 
 	public static <T> SizedCollector<T, ?, HashSet<T>> toHashSet() {
-		return toCollection(Utils::newHashSet);
+		return toCollection(CollectionUtils::newHashSet);
 	}
 
 	public static <T> SizedCollector<T, ?, LinkedHashSet<T>> toLinkedHashSet() {
-		return toCollection(Utils::newLinkedHashSet);
+		return toCollection(CollectionUtils::newLinkedHashSet);
 	}
 
 	public static <T extends Enum<T>> SizedCollector<T, ?, EnumSet<T>> toEnumSet(Class<T> type) {

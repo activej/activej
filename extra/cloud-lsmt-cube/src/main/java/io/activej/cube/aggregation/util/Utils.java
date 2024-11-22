@@ -59,8 +59,8 @@ import java.util.stream.Collectors;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.concat;
-import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.common.collection.CollectionUtils.concat;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 import static io.activej.common.reflection.ReflectionUtils.extractFieldNameFromGetter;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.transformHasPredicates;
 import static io.activej.serializer.def.SerializerExpressions.readVarLong;

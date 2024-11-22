@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.operand.impl;
 
-import io.activej.common.Utils;
 import io.activej.common.annotation.ExposedInternals;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.dataflow.calcite.Param;
 import io.activej.dataflow.calcite.operand.FunctionOperand;
 import io.activej.dataflow.calcite.operand.Operand;
@@ -55,7 +55,7 @@ public final class ListGet extends FunctionOperand<ListGet> {
 
 	@Override
 	public List<Param> getParams() {
-		return Utils.concat(listOperand.getParams(), indexOperand.getParams());
+		return CollectionUtils.concat(listOperand.getParams(), indexOperand.getParams());
 	}
 
 	@Override

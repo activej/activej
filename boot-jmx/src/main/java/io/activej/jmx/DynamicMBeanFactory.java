@@ -46,8 +46,8 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import static io.activej.common.Checks.*;
-import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.nonNullElse;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.reflection.ReflectionUtils.*;
 import static io.activej.jmx.Utils.findAdapterClass;
 import static io.activej.jmx.stats.StatsUtils.isJmxStats;

@@ -19,7 +19,7 @@ package io.activej.http.decoder;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static io.activej.common.Utils.concat;
+import static io.activej.common.collection.CollectionUtils.concat;
 
 /**
  * An enhanced predicate which can return a list of errors for given input object.

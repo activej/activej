@@ -28,7 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
 
 public class CubeOT {
 	public static OTSystem<CubeDiff> createCubeOT() {

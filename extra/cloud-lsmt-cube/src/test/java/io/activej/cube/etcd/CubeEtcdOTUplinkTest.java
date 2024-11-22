@@ -33,7 +33,7 @@ import org.junit.runner.Description;
 
 import java.util.*;
 
-import static io.activej.common.Utils.concat;
+import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.cube.TestUtils.noFail;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.promise.TestUtils.await;

@@ -31,7 +31,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.util.*;
 
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;

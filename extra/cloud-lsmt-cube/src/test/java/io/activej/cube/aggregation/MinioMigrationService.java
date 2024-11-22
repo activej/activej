@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Utils.difference;
+import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.cube.aggregation.AggregationChunkStorage.LOG;
 
 public final class MinioMigrationService {

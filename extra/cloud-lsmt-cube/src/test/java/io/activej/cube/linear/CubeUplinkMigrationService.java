@@ -1,7 +1,7 @@
 package io.activej.cube.linear;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.Utils;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
@@ -71,7 +71,7 @@ public final class CubeUplinkMigrationService {
 					}
 					//noinspection Convert2MethodRef
 					return startRevision == null ?
-						repo.getHeads().map(iterable -> Utils.first(iterable)) :
+						repo.getHeads().map(iterable -> CollectionUtils.first(iterable)) :
 						Promise.of(startRevision);
 				})
 				.then(head -> {

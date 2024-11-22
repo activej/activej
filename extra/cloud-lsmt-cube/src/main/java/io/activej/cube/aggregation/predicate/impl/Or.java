@@ -25,7 +25,7 @@ import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 
 @ExposedInternals
 public final class Or implements AggregationPredicate {

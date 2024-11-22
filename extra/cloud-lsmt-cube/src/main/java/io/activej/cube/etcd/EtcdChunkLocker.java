@@ -2,8 +2,8 @@ package io.activej.cube.etcd;
 
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Utils;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.cube.aggregation.ChunksAlreadyLockedException;
 import io.activej.cube.aggregation.IChunkLocker;
 import io.activej.etcd.EtcdUtils;
@@ -121,7 +121,7 @@ public final class EtcdChunkLocker extends AbstractReactive
 
 		for (Map.Entry<Set<Long>, Long> entry : leaseIds.entrySet()) {
 			Set<Long> lockedIds = entry.getKey();
-			Set<Long> intersection = Utils.intersection(lockedIds, chunkIds);
+			Set<Long> intersection = CollectionUtils.intersection(lockedIds, chunkIds);
 			chunkIdsToRelease.addAll(intersection);
 			if (intersection.size() == lockedIds.size()) {
 				releasedLeaseIds.add(entry.getValue());

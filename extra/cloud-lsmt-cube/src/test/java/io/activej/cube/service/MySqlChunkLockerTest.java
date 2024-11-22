@@ -17,7 +17,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.LongStream;
 
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.cube.TestUtils.dataSource;
 import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
 import static io.activej.cube.service.MySqlChunkLocker.DEFAULT_LOCK_TTL;

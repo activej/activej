@@ -62,10 +62,10 @@ import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseGet;
-import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.checkInReactorThread;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 

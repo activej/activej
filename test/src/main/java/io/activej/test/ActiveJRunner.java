@@ -39,7 +39,7 @@ import org.junit.runners.model.Statement;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.types.Types.parameterizedType;
 import static java.util.stream.Collectors.toSet;
 

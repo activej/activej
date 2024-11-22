@@ -17,6 +17,7 @@
 package io.activej.service;
 
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -33,7 +34,6 @@ import java.util.concurrent.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.StringFormatUtils.formatDuration;
-import static io.activej.common.Utils.*;
 import static io.activej.inject.util.ReflectionUtils.getDisplayName;
 import static io.activej.inject.util.Utils.getDisplayString;
 import static io.activej.service.Utils.combineAll;
@@ -277,7 +277,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 	}
 
 	public void add(Key key, Key first, Key... rest) {
-		add(key, concat(List.of(first), List.of(rest)));
+		add(key, CollectionUtils.concat(List.of(first), List.of(rest)));
 	}
 
 	public synchronized boolean isStarted() {
@@ -297,7 +297,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		}
 		List<Key> circularDependencies = findCircularDependencies();
 		checkState(circularDependencies == null, "Circular dependencies found: %s", circularDependencies);
-		Set<Key> rootNodes = difference(union(services.keySet(), forwards.keySet()), backwards.keySet());
+		Set<Key> rootNodes = CollectionUtils.difference(CollectionUtils.union(services.keySet(), forwards.keySet()), backwards.keySet());
 		if (rootNodes.isEmpty()) {
 			throw new IllegalStateException("No root nodes found, nobody requested a service");
 		}
@@ -320,7 +320,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 	 * Stop services from the service graph
 	 */
 	public synchronized CompletableFuture<?> stopFuture() {
-		Set<Key> leafNodes = difference(union(services.keySet(), backwards.keySet()), forwards.keySet());
+		Set<Key> leafNodes = CollectionUtils.difference(CollectionUtils.union(services.keySet(), backwards.keySet()), forwards.keySet());
 		logger.info("Stopping services");
 		logger.trace("Leaf nodes: {}", leafNodes);
 		stopBegin = currentTimeMillis();
@@ -448,7 +448,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 	 */
 	public void removeIntermediateNodes() {
 		List<Key> toRemove = new ArrayList<>();
-		for (Key v : union(forwards.keySet(), backwards.keySet())) {
+		for (Key v : CollectionUtils.union(forwards.keySet(), backwards.keySet())) {
 			if (!services.containsKey(v)) {
 				toRemove.add(v);
 			}
@@ -492,7 +492,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		static final SlowestChain EMPTY = new SlowestChain(List.of(), 0);
 
 		SlowestChain concat(Key key, long time) {
-			return new SlowestChain(io.activej.common.Utils.concat(path, List.of(key)), sum + time);
+			return new SlowestChain(CollectionUtils.concat(path, List.of(key)), sum + time);
 		}
 
 		static SlowestChain of(Key key, long keyValue) {
@@ -591,7 +591,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		nodeColors.put(NodeStatus.Operation.EXCEPTION, graphvizException);
 
 		sb.append("\n");
-		for (Key key : union(services.keySet(), union(backwards.keySet(), forwards.keySet()))) {
+		for (Key key : CollectionUtils.union(services.keySet(), CollectionUtils.union(backwards.keySet(), forwards.keySet()))) {
 			NodeStatus status = nodeStatuses.get(key);
 			String nodeColor = status != null ? nodeColors.getOrDefault(status.getOperation(), "") : "";
 			sb.append("\t" + keyToNode(key) + " [ label=\"" + keyToLabel(key))
@@ -603,7 +603,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 
 		sb.append(
 				"\n\t{ rank=same; " +
-				difference(union(services.keySet(), backwards.keySet()), forwards.keySet())
+				CollectionUtils.difference(CollectionUtils.union(services.keySet(), backwards.keySet()), forwards.keySet())
 					.stream()
 					.map(this::keyToNode)
 					.collect(joining(" ")))
@@ -615,7 +615,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public String getStartingNodes() {
-		return union(services.keySet(), union(backwards.keySet(), forwards.keySet())).stream()
+		return CollectionUtils.union(services.keySet(), CollectionUtils.union(backwards.keySet(), forwards.keySet())).stream()
 			.filter(node -> {
 				NodeStatus status = nodeStatuses.get(node);
 				return status != null && status.isStarting();
@@ -626,7 +626,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public String getStoppingNodes() {
-		return union(services.keySet(), union(backwards.keySet(), forwards.keySet())).stream()
+		return CollectionUtils.union(services.keySet(), CollectionUtils.union(backwards.keySet(), forwards.keySet())).stream()
 			.filter(node -> {
 				NodeStatus status = nodeStatuses.get(node);
 				return status != null && status.isStopping();
@@ -637,7 +637,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public @Nullable String getSlowestNode() {
-		return union(services.keySet(), union(backwards.keySet(), forwards.keySet())).stream()
+		return CollectionUtils.union(services.keySet(), CollectionUtils.union(backwards.keySet(), forwards.keySet())).stream()
 			.filter(key -> {
 				NodeStatus nodeStatus = nodeStatuses.get(key);
 				return nodeStatus != null && nodeStatus.isStarted();

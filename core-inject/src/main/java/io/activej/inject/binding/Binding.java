@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 

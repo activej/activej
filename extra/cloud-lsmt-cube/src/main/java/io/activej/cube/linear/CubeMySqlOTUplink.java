@@ -18,6 +18,8 @@ package io.activej.cube.linear;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.CollectionUtils;
+import io.activej.common.collection.CollectorUtils;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.tuple.Tuple2;
 import io.activej.cube.CubeStructure;
@@ -54,7 +56,6 @@ import java.util.stream.LongStream;
 
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.*;
 import static io.activej.cube.linear.Utils.*;
 import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
@@ -233,7 +234,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 						Set<ChunkWithAggregationId> removed = collectChunks(diffsList, false);
 
 						// squash
-						Set<ChunkWithAggregationId> intersection = intersection(added, removed);
+						Set<ChunkWithAggregationId> intersection = CollectionUtils.intersection(added, removed);
 						added.removeAll(intersection);
 						removed.removeAll(intersection);
 
@@ -319,7 +320,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 			}
 
 			cubeDiff = CubeDiff.of(aggregationDiffs.entrySet().stream()
-				.collect(entriesToLinkedHashMap(tuple -> AggregationDiff.of(tuple.value1(), tuple.value2()))));
+				.collect(CollectorUtils.entriesToLinkedHashMap(tuple -> AggregationDiff.of(tuple.value1(), tuple.value2()))));
 		}
 		return cubeDiff;
 	}
@@ -406,7 +407,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 				.boxed()
 				.collect(toSet());
 
-			throw new StateFarAheadException(from, difference(expected, retrieved));
+			throw new StateFarAheadException(from, CollectionUtils.difference(expected, retrieved));
 		}
 	}
 

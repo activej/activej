@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.inject.binding.BindingType.SYNTHETIC;
 import static io.activej.inject.util.Utils.*;
 

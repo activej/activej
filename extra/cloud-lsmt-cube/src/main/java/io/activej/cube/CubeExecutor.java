@@ -23,6 +23,8 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Variable;
 import io.activej.codegen.expression.impl.Compare;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.CollectionUtils;
+import io.activej.common.collection.CollectorUtils;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.process.frame.FrameFormat;
@@ -78,8 +80,6 @@ import java.util.stream.Stream;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.iterate;
-import static io.activej.common.Utils.not;
-import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.createResultClass;
 import static io.activej.cube.Utils.filterEntryKeys;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse;
@@ -89,6 +89,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.function.Predicate.isEqual;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -244,7 +245,7 @@ public final class CubeExecutor extends AbstractReactive
 
 		@Override
 		protected CubeExecutor doBuild() {
-			Set<String> difference = difference(aggregationConfigs.keySet(), structure.getAggregationIds());
+			Set<String> difference = CollectionUtils.difference(aggregationConfigs.keySet(), structure.getAggregationIds());
 			checkArgument(difference.isEmpty(), "Found configs for unknown aggregations: " + difference);
 
 			for (Entry<String, AggregationStructure> entry : structure.getAggregationStructures().entrySet()) {
@@ -344,9 +345,9 @@ public final class CubeExecutor extends AbstractReactive
 			AggregationStructure aggregationStructure = aggregationExecutor.getStructure();
 			List<String> keys = aggregationStructure.getKeys();
 			Map<String, String> aggregationKeyFields = filterEntryKeys(dimensionFields.entrySet().stream(), keys::contains)
-				.collect(entriesToLinkedHashMap());
+				.collect(CollectorUtils.entriesToLinkedHashMap());
 			Map<String, String> aggregationMeasureFields = filterEntryKeys(measureFields.entrySet().stream(), aggregationStructure.getMeasures()::contains)
-				.collect(entriesToLinkedHashMap());
+				.collect(CollectorUtils.entriesToLinkedHashMap());
 
 			AggregationPredicate dataInputFilterPredicate = entry.getValue();
 			StreamSupplier<T> output = streamSplitter.newOutput();
@@ -378,7 +379,7 @@ public final class CubeExecutor extends AbstractReactive
 
 		Class<K> resultKeyClass = createKeyClass(
 			dimensions.stream()
-				.collect(toLinkedHashMap(structure.getDimensionTypes()::get)),
+				.collect(CollectorUtils.toLinkedHashMap(structure.getDimensionTypes()::get)),
 			queryClassLoader);
 
 		StreamReducer<K, T, A> streamReducer = StreamReducer.create();
@@ -388,9 +389,9 @@ public final class CubeExecutor extends AbstractReactive
 			List<String> compatibleMeasures = compatibleAggregation.measures();
 			Class<S> aggregationClass = createRecordClass(
 				dimensions.stream()
-					.collect(toLinkedHashMap(structure.getDimensionTypes()::get)),
+					.collect(CollectorUtils.toLinkedHashMap(structure.getDimensionTypes()::get)),
 				compatibleMeasures.stream()
-					.collect(toLinkedHashMap(m -> structure.getMeasures().get(m).getFieldType())),
+					.collect(CollectorUtils.toLinkedHashMap(m -> structure.getMeasures().get(m).getFieldType())),
 				queryClassLoader);
 
 			AggregationExecutor aggregation = aggregationExecutors.get(compatibleAggregation.id());
@@ -424,7 +425,7 @@ public final class CubeExecutor extends AbstractReactive
 
 			Map<String, Measure> extraFields = storedMeasures.stream()
 				.filter(not(compatibleMeasures::contains))
-				.collect(toLinkedHashMap(structure.getMeasures()::get));
+				.collect(CollectorUtils.toLinkedHashMap(structure.getMeasures()::get));
 			Reducer<K, S, T, A> reducer = aggregationReducer(aggregation.getStructure(), aggregationClass, resultClass,
 				dimensions, compatibleMeasures, extraFields, queryClassLoader);
 
@@ -739,7 +740,7 @@ public final class CubeExecutor extends AbstractReactive
 		private <K extends Comparable> Stream<R> remergeRecords(List<R> results) {
 			Class<K> keyClass = createKeyClass(queryClassLoader,
 				query.recordAttributes().stream()
-					.collect(toLinkedHashMap(
+					.collect(CollectorUtils.toLinkedHashMap(
 						attribute -> attribute.replace(".", "$"),
 						structure::getAttributeInternalType)
 					)

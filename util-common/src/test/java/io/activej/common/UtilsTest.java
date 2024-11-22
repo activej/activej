@@ -1,5 +1,6 @@
 package io.activej.common;
 
+import io.activej.common.collection.IteratorUtils;
 import org.junit.Test;
 
 import java.util.*;
@@ -12,7 +13,7 @@ public class UtilsTest {
 		List<Integer> list1 = Arrays.asList(1, 2, 3);
 		List<Integer> list2 = Arrays.asList(3, 4, 5);
 
-		Iterator<Integer> concat = Utils.concat(list1.iterator(), list2.iterator());
+		Iterator<Integer> concat = IteratorUtils.concat(list1.iterator(), list2.iterator());
 		List<Integer> result = new ArrayList<>();
 		concat.forEachRemaining(result::add);
 
@@ -25,7 +26,7 @@ public class UtilsTest {
 		List<Integer> list2 = Arrays.asList(3, 4, 5);
 
 		//noinspection RedundantOperationOnEmptyContainer
-		Iterator<Integer> concat = Utils.concat(list1.iterator(), list2.iterator());
+		Iterator<Integer> concat = IteratorUtils.concat(list1.iterator(), list2.iterator());
 		List<Integer> result = new ArrayList<>();
 		concat.forEachRemaining(result::add);
 

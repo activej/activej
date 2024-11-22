@@ -48,8 +48,8 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.nonNullElseEmpty;
+import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.promise.Promises.sequence;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 

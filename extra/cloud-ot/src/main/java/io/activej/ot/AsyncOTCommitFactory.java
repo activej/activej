@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
-import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 
 public interface AsyncOTCommitFactory<K, D> {
 	record DiffsWithLevel<D>(long level, List<D> diffs) {

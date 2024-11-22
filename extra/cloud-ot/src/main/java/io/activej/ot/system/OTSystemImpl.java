@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static io.activej.common.Utils.concat;
+import static io.activej.common.collection.CollectionUtils.concat;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 

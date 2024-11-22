@@ -5,7 +5,7 @@ import io.activej.cube.aggregation.measure.Measure;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 

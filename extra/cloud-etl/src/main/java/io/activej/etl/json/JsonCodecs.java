@@ -24,7 +24,7 @@ import io.activej.multilog.LogPosition;
 
 import java.util.Map;
 
-import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 import static io.activej.json.JsonCodecs.*;
 
 public final class JsonCodecs {

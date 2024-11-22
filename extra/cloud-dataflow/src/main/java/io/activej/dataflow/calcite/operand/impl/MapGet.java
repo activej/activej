@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.operand.impl;
 
-import io.activej.common.Utils;
 import io.activej.common.annotation.ExposedInternals;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.dataflow.calcite.Param;
 import io.activej.dataflow.calcite.operand.FunctionOperand;
 import io.activej.dataflow.calcite.operand.Operand;
@@ -57,7 +57,7 @@ public final class MapGet extends FunctionOperand<MapGet> {
 
 	@Override
 	public List<Param> getParams() {
-		return Utils.concat(mapOperand.getParams(), keyOperand.getParams());
+		return CollectionUtils.concat(mapOperand.getParams(), keyOperand.getParams());
 	}
 
 	@Override

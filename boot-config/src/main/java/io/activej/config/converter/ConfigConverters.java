@@ -40,10 +40,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static io.activej.common.Utils.not;
 import static io.activej.common.exception.FatalErrorHandlers.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
+import static java.util.function.Predicate.not;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;

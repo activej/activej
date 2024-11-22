@@ -16,6 +16,7 @@
 
 package io.activej.ot;
 
+import io.activej.common.collection.CollectionUtils;
 import io.activej.ot.exception.OTException;
 import io.activej.ot.system.OTSystem;
 import org.jetbrains.annotations.Nullable;
@@ -26,9 +27,10 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.nonNullElse;
+import static io.activej.common.Utils.nonNullElseEmpty;
 import static java.util.Comparator.comparingInt;
-import static java.util.stream.Collectors.toMap;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -156,7 +158,7 @@ public class OTLoadedGraph<K, D> {
 			for (Map.Entry<K, List<? extends D>> entry : nodeParents.entrySet()) {
 				K nodeParent = entry.getKey();
 				if (!visited.contains(nodeParent) && !result.containsKey(nodeParent)) {
-					List<D> parent2child = concat(entry.getValue(), node2child);
+					List<D> parent2child = CollectionUtils.concat(entry.getValue(), node2child);
 					if (nodeParent.equals(parent)) return parent2child;
 					result.put(nodeParent, parent2child);
 					queue.add(nodeParent);
@@ -225,7 +227,7 @@ public class OTLoadedGraph<K, D> {
 			for (Map.Entry<K, List<? extends D>> entry : parentsMap.entrySet()) {
 				K parent = entry.getKey();
 				if (visited.contains(parent) || paths.containsKey(parent)) continue;
-				paths.put(parent, concat(entry.getValue(), path));
+				paths.put(parent, CollectionUtils.concat(entry.getValue(), path));
 				queue.add(parent);
 			}
 		}
@@ -237,15 +239,15 @@ public class OTLoadedGraph<K, D> {
 	@SuppressWarnings("unchecked")
 	private K doMerge(Set<K> nodes) throws OTException {
 		assert !nodes.isEmpty();
-		if (nodes.size() == 1) return first(nodes);
+		if (nodes.size() == 1) return CollectionUtils.first(nodes);
 
 		Optional<K> min = nodes.stream().min(comparingInt((K node) -> findRoots(node).size()));
 		K pivotNode = min.get();
 
 		Map<K, List<? extends D>> pivotNodeParents = getParents(pivotNode);
-		Set<K> recursiveMergeNodes = union(pivotNodeParents.keySet(), difference(nodes, Set.of(pivotNode)));
+		Set<K> recursiveMergeNodes = CollectionUtils.union(pivotNodeParents.keySet(), CollectionUtils.difference(nodes, Set.of(pivotNode)));
 		K mergeNode = doMerge(excludeParents(recursiveMergeNodes));
-		K parentNode = first(pivotNodeParents.keySet());
+		K parentNode = CollectionUtils.first(pivotNodeParents.keySet());
 		List<? extends D> parentToPivotNode = pivotNodeParents.get(parentNode);
 		List<D> parentToMergeNode = findParent(parentNode, mergeNode);
 
@@ -253,7 +255,7 @@ public class OTLoadedGraph<K, D> {
 			K resultNode = (K) new MergeNode(mergeId.incrementAndGet());
 			addEdge(mergeNode, resultNode, List.of());
 			addEdge(pivotNode, resultNode,
-				otSystem.squash(concat(otSystem.invert(parentToPivotNode), parentToMergeNode)));
+				otSystem.squash(CollectionUtils.concat(otSystem.invert(parentToPivotNode), parentToMergeNode)));
 			return resultNode;
 		}
 
@@ -270,7 +272,7 @@ public class OTLoadedGraph<K, D> {
 
 	public String toGraphViz() {
 		Set<K> tips = getTips();
-		K currentCommit = tips.isEmpty() ? first(getRoots()) : first(getTips());
+		K currentCommit = tips.isEmpty() ? CollectionUtils.first(getRoots()) : CollectionUtils.first(getTips());
 		return toGraphViz(currentCommit);
 	}
 
@@ -331,7 +333,7 @@ public class OTLoadedGraph<K, D> {
 	@Override
 	public String toString() {
 		return
-			"{nodes=" + union(child2parent.keySet(), parent2child.keySet()) +
+			"{nodes=" + CollectionUtils.union(child2parent.keySet(), parent2child.keySet()) +
 			", edges:" + parent2child.values().stream().mapToInt(Map::size).sum() + '}';
 	}
 }

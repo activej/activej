@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.activej.common.Utils.last;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.cube.TestUtils.aggregationStructureBuilder;
 import static io.activej.cube.TestUtils.createAggregationState;
 import static io.activej.cube.aggregation.StreamUtils.assertClosedWithError;

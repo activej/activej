@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;

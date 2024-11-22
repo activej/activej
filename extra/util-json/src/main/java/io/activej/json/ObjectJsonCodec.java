@@ -1,13 +1,13 @@
 package io.activej.json;
 
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.CollectorUtils;
+import io.activej.common.collection.IteratorUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import static io.activej.common.Utils.*;
 
 @SuppressWarnings("unchecked")
 public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A, Object> {
@@ -99,7 +99,7 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A, Obje
 				accumulatorSupplier,
 				constructor,
 				fields.toArray(Field[]::new),
-				fields.stream().collect(toHashMap(f -> f.key, f -> f)));
+				fields.stream().collect(CollectorUtils.toHashMap(f -> f.key, f -> f)));
 		}
 	}
 
@@ -152,18 +152,18 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A, Obje
 						return constructor.create(array);
 					},
 					fields.toArray(Field[]::new),
-					fields.stream().collect(toHashMap(f -> f.key, f -> f))) :
+					fields.stream().collect(CollectorUtils.toHashMap(f -> f.key, f -> f))) :
 				new ObjectJsonCodec<>(
 					() -> new Object[prototype.length],
 					constructor::create,
 					fields.toArray(Field[]::new),
-					fields.stream().collect(toHashMap(f -> f.key, f -> f)));
+					fields.stream().collect(CollectorUtils.toHashMap(f -> f.key, f -> f)));
 		}
 	}
 
 	@Override
 	protected Iterator<JsonMapEntry<Object>> iterate(T item) {
-		return transformIterator(iteratorOf(fields), field -> new JsonMapEntry<>(field.key, field.getter.apply(item)));
+		return IteratorUtils.transformIterator(IteratorUtils.iteratorOf(fields), field -> new JsonMapEntry<>(field.key, field.getter.apply(item)));
 	}
 
 	@Override

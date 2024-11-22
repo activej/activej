@@ -19,7 +19,7 @@ import io.etcd.jetcd.ByteSequence;
 import java.util.Map;
 import java.util.function.Function;
 
-import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.cube.etcd.CubeEtcdOTUplink.logPositionEtcdCodec;
 import static io.activej.etcd.EtcdUtils.*;
 

@@ -17,11 +17,11 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.entriesToLinkedHashMap;
-import static io.activej.common.Utils.not;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.cube.Utils.filterEntryKeys;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.types.Primitives.wrap;
+import static java.util.function.Predicate.not;
 
 @SuppressWarnings("rawtypes")
 public final class CubeStructure {

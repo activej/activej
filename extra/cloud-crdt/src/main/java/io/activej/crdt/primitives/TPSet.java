@@ -23,7 +23,7 @@ import io.activej.serializer.BinarySerializer;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.not;
+import static java.util.function.Predicate.not;
 
 @SuppressWarnings("NullableProblems")
 public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {

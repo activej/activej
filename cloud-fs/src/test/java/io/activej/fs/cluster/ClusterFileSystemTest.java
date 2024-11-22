@@ -32,8 +32,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.toLinkedHashMap;
-import static io.activej.common.Utils.union;
+import static io.activej.common.collection.CollectionUtils.union;
+import static io.activej.common.collection.CollectorUtils.toLinkedHashMap;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;

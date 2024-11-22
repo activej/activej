@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.collection.CollectorUtils.entriesToLinkedHashMap;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**

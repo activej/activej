@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
-import static io.activej.common.Utils.first;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.OTCommit.ofCommit;
 import static io.activej.ot.OTCommit.ofRoot;

@@ -17,6 +17,7 @@
 package io.activej.ot.uplink;
 
 import io.activej.async.function.AsyncPredicate;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.Ref;
 import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
@@ -36,7 +37,6 @@ import java.util.Set;
 
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Utils.*;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
@@ -99,11 +99,11 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 		}
 		return repository.push(commit)
 			.then(repository::getHeads)
-			.then(initialHeads -> excludeParents(repository, otSystem, union(initialHeads, Set.of(commit.getId())))
+			.then(initialHeads -> excludeParents(repository, otSystem, CollectionUtils.union(initialHeads, Set.of(commit.getId())))
 				.then(heads -> mergeAndPush(repository, otSystem, heads))
 				.then(mergeHead -> {
 					Set<K> mergeHeadSet = Set.of(mergeHead);
-					return repository.updateHeads(mergeHeadSet, difference(initialHeads, mergeHeadSet))
+					return repository.updateHeads(mergeHeadSet, CollectionUtils.difference(initialHeads, mergeHeadSet))
 						.then(() -> doFetch(mergeHeadSet, commit.getId()));
 				}))
 			.whenComplete(toLogger(logger, thisMethod(), protoCommit));
@@ -125,12 +125,12 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 				new FetchData<>(
 					findResult.getChild(),
 					findResult.getChildLevel(),
-					concat(cachedSnapshotRef.value, findResult.getAccumulatedDiffs()))))
+					CollectionUtils.concat(cachedSnapshotRef.value, findResult.getAccumulatedDiffs()))))
 			.then(checkoutData -> fetch(checkoutData.commitId())
 				.map(fetchData -> new FetchData<>(
 					fetchData.commitId(),
 					fetchData.level(),
-					otSystem.squash(concat(checkoutData.diffs(), fetchData.diffs()))
+					otSystem.squash(CollectionUtils.concat(checkoutData.diffs(), fetchData.diffs()))
 				))
 			)
 			.whenComplete(toLogger(logger, thisMethod()));
