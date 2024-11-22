@@ -31,6 +31,8 @@ public final class CollectionUtils {
 	 * so list should be considered unmodifiable
 	 * <p>
 	 * If any of concatenated lists is modified, the behaviour of a concatenated list is undefined
+	 *
+	 * @throws NullPointerException may be thrown if any list is {@code null} or contains {@code null} elements
 	 */
 	@SuppressWarnings("unchecked")
 	public static <D> List<D> concat(List<? extends D> list1, List<? extends D> list2) {
