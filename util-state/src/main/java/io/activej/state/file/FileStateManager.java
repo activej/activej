@@ -14,18 +14,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 
-@SuppressWarnings({"unused", "unchecked"})
+@SuppressWarnings({"unused"})
 public final class FileStateManager<T> implements IStateManager<T, Long> {
 	public static final String DEFAULT_TEMP_DIR = ".temp/";
 
 	private final IBlockingFileSystem fileSystem;
 	private final FileNamingScheme fileNamingScheme;
-	private StreamEncoder<T> encoder;
-	private StreamDecoder<T> decoder;
+	private Supplier<? extends StreamEncoder<T>> encoderSupplier;
+	private Supplier<? extends StreamDecoder<T>> decoderSupplier;
 
 	private @Nullable InputStreamWrapper inputStreamWrapper;
 	private @Nullable OutputStreamWrapper outputStreamWrapper;
@@ -47,20 +48,39 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 		public Builder withEncoder(StreamEncoder<T> encoder) {
 			checkNotBuilt(this);
-			FileStateManager.this.encoder = encoder;
+			FileStateManager.this.encoderSupplier = () -> encoder;
+			return this;
+		}
+
+		public Builder withEncoder(Supplier<? extends StreamEncoder<T>> encoderSupplier) {
+			checkNotBuilt(this);
+			FileStateManager.this.encoderSupplier = encoderSupplier;
 			return this;
 		}
 
 		public Builder withDecoder(StreamDecoder<T> decoder) {
 			checkNotBuilt(this);
-			FileStateManager.this.decoder = decoder;
+			FileStateManager.this.decoderSupplier = () -> decoder;
+			return this;
+		}
+
+		public Builder withDecoder(Supplier<? extends StreamDecoder<T>> decoderSupplier) {
+			checkNotBuilt(this);
+			FileStateManager.this.decoderSupplier = decoderSupplier;
 			return this;
 		}
 
 		public Builder withCodec(StreamCodec<T> codec) {
 			checkNotBuilt(this);
-			FileStateManager.this.encoder = codec;
-			FileStateManager.this.decoder = codec;
+			FileStateManager.this.encoderSupplier = () -> codec;
+			FileStateManager.this.decoderSupplier = () -> codec;
+			return this;
+		}
+
+		public Builder withCodec(Supplier<? extends StreamCodec<T>> codecSupplier) {
+			checkNotBuilt(this);
+			FileStateManager.this.encoderSupplier = codecSupplier;
+			FileStateManager.this.decoderSupplier = codecSupplier;
 			return this;
 		}
 
@@ -92,7 +112,7 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 		@Override
 		protected FileStateManager<T> doBuild() {
-			checkState(encoder != null || decoder != null, "Neither encoder nor decoder are set");
+			checkState(encoderSupplier != null || decoderSupplier != null, "Neither encoder nor decoder are set");
 			return FileStateManager.this;
 		}
 	}
@@ -136,6 +156,7 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 			inputStream = inputStreamWrapper.wrap(inputStream);
 		}
 		try (StreamInput input = StreamInput.create(inputStream)) {
+			StreamDecoder<T> decoder = decoderSupplier.get();
 			return decoder.decode(input);
 		}
 	}
@@ -152,9 +173,6 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 	@Override
 	public @Nullable T tryLoadDiff(T state, Long revisionFrom, Long revisionTo) throws IOException {
 		if (revisionFrom.equals(revisionTo)) return state;
-		if (!(this.decoder instanceof DiffStreamDecoder)) {
-			throw new UnsupportedOperationException();
-		}
 		String filename = fileNamingScheme.encodeDiff(revisionFrom, revisionTo);
 		if (fileSystem.info(filename) == null) return null;
 
@@ -163,20 +181,23 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 			inputStream = inputStreamWrapper.wrap(inputStream);
 		}
 		try (StreamInput input = StreamInput.create(inputStream)) {
-			return ((DiffStreamDecoder<T>) this.decoder).decodeDiff(input, state);
+			DiffStreamDecoder<T> decoder = (DiffStreamDecoder<T>) this.decoderSupplier.get();
+			return decoder.decodeDiff(input, state);
 		}
 	}
 
 	@Override
 	public void saveSnapshot(T state, Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
+		StreamEncoder<T> encoder = encoderSupplier.get();
 		safeUpload(filename, output -> encoder.encode(output, state));
 	}
 
 	@Override
 	public void saveDiff(T state, Long revision, T stateFrom, Long revisionFrom) throws IOException {
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
-		safeUpload(filenameDiff, output -> ((DiffStreamEncoder<T>) this.encoder).encodeDiff(output, stateFrom, state));
+		DiffStreamEncoder<T> encoder = (DiffStreamEncoder<T>) encoderSupplier.get();
+		safeUpload(filenameDiff, output -> encoder.encodeDiff(output, stateFrom, state));
 	}
 
 	public FileState<T> load() throws IOException {
@@ -208,12 +229,10 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		if (revisionFrom.equals(lastRevision)) {
 			return new FileState<>(stateFrom, revisionFrom);
 		}
-		if (decoder instanceof DiffStreamDecoder) {
-			Long lastDiffRevision = getLastDiffRevision(revisionFrom);
-			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
-				T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
-				return new FileState<>(state, lastDiffRevision);
-			}
+		Long lastDiffRevision = getLastDiffRevision(revisionFrom);
+		if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
+			T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
+			return new FileState<>(state, lastDiffRevision);
 		}
 		if (lastRevision != null) {
 			T state = loadSnapshot(lastRevision);
@@ -257,15 +276,18 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 				}
 				T stateFrom;
 				try (StreamInput input = StreamInput.create(inputStream)) {
+					StreamDecoder<T> decoder = decoderSupplier.get();
 					stateFrom = decoder.decode(input);
 				}
 
 				String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
-				safeUpload(filenameDiff, output -> ((DiffStreamEncoder<T>) this.encoder).encodeDiff(output, state, stateFrom));
+				DiffStreamEncoder<T> encoder = (DiffStreamEncoder<T>) encoderSupplier.get();
+				safeUpload(filenameDiff, output -> encoder.encodeDiff(output, state, stateFrom));
 			}
 		}
 
 		String filename = fileNamingScheme.encodeSnapshot(revision);
+		StreamEncoder<T> encoder = encoderSupplier.get();
 		safeUpload(filename, output -> encoder.encode(output, state));
 	}
 
