@@ -8,11 +8,11 @@ public class FileNamingSchemes {
 		return new FileNamingSchemeImpl(prefix, suffix);
 	}
 
-	public static FileNamingScheme create(String prefix, String suffix, String diffPrefix, String diffSuffix, char diffSeparator) {
-		return new FileNamingSchemeImplImpl2(prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
+	public static FileNamingDiffScheme create(String prefix, String suffix, String diffPrefix, String diffSuffix, char diffSeparator) {
+		return new FileNamingSchemeDiffImpl(prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
 	}
 
-	public static class FileNamingSchemeImpl implements FileNamingScheme {
+	static class FileNamingSchemeImpl implements FileNamingScheme {
 		private final String prefix;
 		private final String suffix;
 
@@ -42,34 +42,14 @@ public class FileNamingSchemes {
 				return null;
 			}
 		}
-
-		@Override
-		public String diffGlob() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String diffGlob(long from) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String encodeDiff(long from, long to) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public @Nullable Diff decodeDiff(String filename) {
-			throw new UnsupportedOperationException();
-		}
 	}
 
-	public static class FileNamingSchemeImplImpl2 extends FileNamingSchemeImpl {
+	static class FileNamingSchemeDiffImpl extends FileNamingSchemeImpl implements FileNamingDiffScheme {
 		private final String diffPrefix;
 		private final String diffSuffix;
 		private final char diffSeparator;
 
-		public FileNamingSchemeImplImpl2(String prefix, String suffix, String diffPrefix, String diffSuffix, char diffSeparator) {
+		public FileNamingSchemeDiffImpl(String prefix, String suffix, String diffPrefix, String diffSuffix, char diffSeparator) {
 			super(prefix, suffix);
 			this.diffPrefix = diffPrefix;
 			this.diffSuffix = diffSuffix;

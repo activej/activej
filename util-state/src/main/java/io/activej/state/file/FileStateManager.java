@@ -5,6 +5,7 @@ import io.activej.fs.FileMetadata;
 import io.activej.fs.IBlockingFileSystem;
 import io.activej.serializer.stream.*;
 import io.activej.state.IStateManager;
+import io.activej.state.file.FileNamingDiffScheme.Diff;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
+import static java.util.Comparator.reverseOrder;
 
 @SuppressWarnings({"unused"})
 public final class FileStateManager<T> implements IStateManager<T, Long> {
@@ -33,6 +35,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 	private int maxSaveDiffs = 0;
 	private String tempDir = DEFAULT_TEMP_DIR;
+
+	private int maxRevisions;
 
 	private FileStateManager(IBlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
 		this.fileSystem = fileSystem;
@@ -91,6 +95,13 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 			return this;
 		}
 
+		public Builder withMaxRevisions(int maxRevisions) {
+			checkNotBuilt(this);
+			checkArgument(maxRevisions >= 0);
+			FileStateManager.this.maxRevisions = maxRevisions;
+			return this;
+		}
+
 		public Builder withTempDir(String tempDir) {
 			checkNotBuilt(this);
 			checkArgument(!tempDir.isEmpty() && !tempDir.equals("/"), "Temporary directory cannot be same as main directory");
@@ -117,6 +128,22 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		}
 	}
 
+	public FileNamingScheme getFileNamingScheme() {
+		return fileNamingScheme;
+	}
+
+	public IBlockingFileSystem getFileSystem() {
+		return fileSystem;
+	}
+
+	public StreamEncoder<T> getEncoder() {
+		return encoderSupplier.get();
+	}
+
+	public StreamDecoder<T> getDecoder() {
+		return decoderSupplier.get();
+	}
+
 	@Override
 	public Long newRevision() throws IOException {
 		Long lastSnapshotRevision = getLastSnapshotRevision();
@@ -132,8 +159,10 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 	@Override
 	public @Nullable Long getLastDiffRevision(Long currentRevision) throws IOException {
+		if (!(fileNamingScheme instanceof FileNamingDiffScheme)) throw new UnsupportedOperationException();
+		FileNamingDiffScheme fileNamingScheme = (FileNamingDiffScheme) this.fileNamingScheme;
 		Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.diffGlob(currentRevision));
-		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeDiff).filter(Objects::nonNull).mapToLong(FileNamingScheme.Diff::to).max();
+		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeDiff).filter(Objects::nonNull).mapToLong(Diff::to).max();
 		return max.isPresent() ? max.getAsLong() : null;
 	}
 
@@ -163,6 +192,7 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 	@Override
 	public T loadDiff(T state, Long revisionFrom, Long revisionTo) throws IOException {
+		if (!(fileNamingScheme instanceof FileNamingDiffScheme)) throw new UnsupportedOperationException();
 		T loaded = tryLoadDiff(state, revisionFrom, revisionTo);
 		if (loaded == null) {
 			throw new IOException("Cannot find diffs between revision " + revisionFrom + " and " + revisionTo);
@@ -172,6 +202,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 	@Override
 	public @Nullable T tryLoadDiff(T state, Long revisionFrom, Long revisionTo) throws IOException {
+		if (!(fileNamingScheme instanceof FileNamingDiffScheme)) throw new UnsupportedOperationException();
+		FileNamingDiffScheme fileNamingScheme = (FileNamingDiffScheme) this.fileNamingScheme;
 		if (revisionFrom.equals(revisionTo)) return state;
 		String filename = fileNamingScheme.encodeDiff(revisionFrom, revisionTo);
 		if (fileSystem.info(filename) == null) return null;
@@ -195,6 +227,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 	@Override
 	public void saveDiff(T state, Long revision, T stateFrom, Long revisionFrom) throws IOException {
+		if (!(fileNamingScheme instanceof FileNamingDiffScheme)) throw new UnsupportedOperationException();
+		FileNamingDiffScheme fileNamingScheme = (FileNamingDiffScheme) this.fileNamingScheme;
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
 		DiffStreamEncoder<T> encoder = (DiffStreamEncoder<T>) encoderSupplier.get();
 		safeUpload(filenameDiff, output -> encoder.encodeDiff(output, stateFrom, state));
@@ -257,6 +291,8 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 	private void doSave(T state, long revision) throws IOException {
 		if (maxSaveDiffs != 0) {
+			FileNamingDiffScheme fileNamingScheme = (FileNamingDiffScheme) this.fileNamingScheme;
+
 			Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.snapshotGlob());
 			long[] revisionsFrom = list.keySet().stream()
 				.map(fileNamingScheme::decodeSnapshot)
@@ -309,6 +345,41 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		}
 
 		fileSystem.move(tempFilename, filename);
+
+		if (maxRevisions != 0) {
+			try {
+				cleanup(maxRevisions);
+			} catch (IOException ignored) {
+			}
+		}
+	}
+
+	public void cleanup(int maxRevisions) throws IOException {
+		Map<String, FileMetadata> filenames = fileSystem.list("**");
+		var retainedMinRevisionOpt = filenames.keySet().stream()
+			.map(fileNamingScheme::decodeSnapshot)
+			.filter(Objects::nonNull)
+			.sorted(reverseOrder())
+			.limit(maxRevisions)
+			.sorted()
+			.findFirst();
+		if (retainedMinRevisionOpt.isEmpty()) return;
+		long minRetainedRevision = retainedMinRevisionOpt.get();
+		if (fileNamingScheme instanceof FileNamingDiffScheme) {
+			FileNamingDiffScheme fileNamingScheme = (FileNamingDiffScheme) this.fileNamingScheme;
+			for (String filename : filenames.keySet()) {
+				Diff diff = fileNamingScheme.decodeDiff(filename);
+				if (diff != null && diff.from() < minRetainedRevision) {
+					fileSystem.delete(filename);
+				}
+			}
+		}
+		for (String filename : filenames.keySet()) {
+			Long snapshot = fileNamingScheme.decodeSnapshot(filename);
+			if (snapshot != null && snapshot < minRetainedRevision) {
+				fileSystem.delete(filename);
+			}
+		}
 	}
 
 	public interface InputStreamWrapper {
