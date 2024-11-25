@@ -189,6 +189,21 @@ public class FileStateManagerTest {
 		assertEquals(100, manager.loadSnapshot(10L).intValue());
 	}
 
+	@Test
+	public void saveAndLoadFromWithoutDiff() throws IOException {
+		manager = FileStateManager.<Integer>builder(fileSystem, FileNamingSchemes.create("", ""))
+			.withCodec(new IntegerCodec())
+			.build();
+
+		manager.saveSnapshot(123, 1L);
+		manager.saveSnapshot(345, 2L);
+		manager.saveSnapshot(-3245, 3L);
+
+		FileState<Integer> loaded = manager.load(123, 1L);
+		assertEquals(-3245, loaded.state().intValue());
+		assertEquals(3L, loaded.revision());
+	}
+
 	private static class IntegerCodec implements DiffStreamCodec<Integer> {
 		@Override
 		public Integer decode(StreamInput input) throws IOException {

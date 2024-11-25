@@ -263,10 +263,12 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		if (revisionFrom.equals(lastRevision)) {
 			return new FileState<>(stateFrom, revisionFrom);
 		}
-		Long lastDiffRevision = getLastDiffRevision(revisionFrom);
-		if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
-			T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
-			return new FileState<>(state, lastDiffRevision);
+		if (fileNamingScheme instanceof FileNamingDiffScheme) {
+			Long lastDiffRevision = getLastDiffRevision(revisionFrom);
+			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
+				T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
+				return new FileState<>(state, lastDiffRevision);
+			}
 		}
 		if (lastRevision != null) {
 			T state = loadSnapshot(lastRevision);
