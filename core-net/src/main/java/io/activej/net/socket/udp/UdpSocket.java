@@ -27,7 +27,7 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.Tuple2;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.SettableCallback;
 import io.activej.reactor.AbstractNioReactive;
@@ -83,20 +83,20 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
 		private final EventStats creates;
-		private final ValueStats receives;
+		private final LongValueStats receives;
 		private final EventStats receiveErrors;
-		private final ValueStats sends;
+		private final LongValueStats sends;
 		private final EventStats sendErrors;
 		private final EventStats closes;
 
 		public JmxInspector(Duration smoothingWindow) {
 			this.creates = EventStats.create(smoothingWindow);
-			this.receives = ValueStats.builder(smoothingWindow)
+			this.receives = LongValueStats.builder(smoothingWindow)
 				.withUnit("bytes")
 				.withRate()
 				.build();
 			this.receiveErrors = EventStats.create(smoothingWindow);
-			this.sends = ValueStats.builder(smoothingWindow)
+			this.sends = LongValueStats.builder(smoothingWindow)
 				.withUnit("bytes")
 				.withRate()
 				.build();
@@ -140,7 +140,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 		}
 
 		@JmxAttribute(description = "Received packet size")
-		public ValueStats getReceives() {
+		public LongValueStats getReceives() {
 			return receives;
 		}
 
@@ -150,7 +150,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 		}
 
 		@JmxAttribute(description = "Sent packet size")
-		public ValueStats getSends() {
+		public LongValueStats getSends() {
 			return sends;
 		}
 

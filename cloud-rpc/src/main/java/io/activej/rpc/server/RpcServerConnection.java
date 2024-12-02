@@ -22,7 +22,7 @@ import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -51,7 +51,7 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 	// jmx
 	private final InetAddress remoteAddress;
 	private final ExceptionStats lastRequestHandlingException = ExceptionStats.create();
-	private final ValueStats requestHandlingTime = ValueStats.builder(RpcServer.SMOOTHING_WINDOW)
+	private final LongValueStats requestHandlingTime = LongValueStats.builder(RpcServer.SMOOTHING_WINDOW)
 		.withUnit("milliseconds")
 		.build();
 	private final EventStats successfulRequests = EventStats.create(RpcServer.SMOOTHING_WINDOW);
@@ -196,7 +196,7 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 	}
 
 	@JmxAttribute
-	public ValueStats getRequestHandlingTime() {
+	public LongValueStats getRequestHandlingTime() {
 		return requestHandlingTime;
 	}
 

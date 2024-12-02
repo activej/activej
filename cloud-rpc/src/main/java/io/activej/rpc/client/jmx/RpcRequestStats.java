@@ -20,7 +20,7 @@ import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 
 import java.time.Duration;
 
@@ -31,8 +31,8 @@ public final class RpcRequestStats implements JmxRefreshable {
 	private final EventStats failedRequests;
 	private final EventStats rejectedRequests;
 	private final EventStats expiredRequests;
-	private final ValueStats responseTime;
-	private final ValueStats overdues;
+	private final LongValueStats responseTime;
+	private final LongValueStats overdues;
 	private final ExceptionStats serverExceptions;
 
 	private RpcRequestStats(Duration smoothingWindow) {
@@ -40,11 +40,11 @@ public final class RpcRequestStats implements JmxRefreshable {
 		failedRequests = EventStats.create(smoothingWindow);
 		rejectedRequests = EventStats.create(smoothingWindow);
 		expiredRequests = EventStats.create(smoothingWindow);
-		responseTime = ValueStats.builder(smoothingWindow)
+		responseTime = LongValueStats.builder(smoothingWindow)
 			.withHistogram(POWERS_OF_TWO)
 			.withUnit("milliseconds")
 			.build();
-		overdues = ValueStats.builder(smoothingWindow)
+		overdues = LongValueStats.builder(smoothingWindow)
 			.withHistogram(POWERS_OF_TWO)
 			.withRate()
 			.withUnit("milliseconds")
@@ -90,7 +90,7 @@ public final class RpcRequestStats implements JmxRefreshable {
 		description = "delay between successful or failed request/response (in milliseconds)",
 		extraSubAttributes = "histogram"
 	)
-	public ValueStats getResponseTime() {
+	public LongValueStats getResponseTime() {
 		return responseTime;
 	}
 
@@ -100,7 +100,7 @@ public final class RpcRequestStats implements JmxRefreshable {
 			"successful or failed requests",
 		extraSubAttributes = "histogram"
 	)
-	public ValueStats getOverdues() {
+	public LongValueStats getOverdues() {
 		return overdues;
 	}
 

@@ -27,7 +27,7 @@ import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -100,7 +100,7 @@ public final class MinioChunkStorage extends AbstractReactive
 	private final BasicStreamStats<?> writeSerialize = StreamStats.basic();
 	private final DetailedStreamStats<?> writeSerializeDetailed = StreamStats.detailed();
 
-	private final ValueStats chunksCount = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final LongValueStats chunksCount = LongValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final EventStats readChunks = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final EventStats writtenChunks = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final EventStats deletedChunks = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -475,7 +475,7 @@ public final class MinioChunkStorage extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public ValueStats getChunksCount() {
+	public LongValueStats getChunksCount() {
 		return chunksCount;
 	}
 

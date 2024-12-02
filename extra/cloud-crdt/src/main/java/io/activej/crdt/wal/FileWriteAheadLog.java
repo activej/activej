@@ -38,7 +38,7 @@ import io.activej.datastream.supplier.AbstractStreamSupplier;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -104,7 +104,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 	private final PromiseStats flushPromise = PromiseStats.create(SMOOTHING_WINDOW);
 	private final EventStats totalPuts = EventStats.create(SMOOTHING_WINDOW);
 	private final EventStats totalFlushes = EventStats.create(SMOOTHING_WINDOW);
-	private final ValueStats totalFlushedSize = ValueStats.builder(SMOOTHING_WINDOW)
+	private final LongValueStats totalFlushedSize = LongValueStats.builder(SMOOTHING_WINDOW)
 		.withUnit("bytes")
 		.build();
 	private boolean detailedMonitoring;
@@ -379,7 +379,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 	}
 
 	@JmxAttribute
-	public ValueStats getTotalFlushedSize() {
+	public LongValueStats getTotalFlushedSize() {
 		return totalFlushedSize;
 	}
 

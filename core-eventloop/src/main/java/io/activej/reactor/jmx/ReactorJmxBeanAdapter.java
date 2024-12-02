@@ -18,7 +18,7 @@ package io.activej.reactor.jmx;
 
 import io.activej.jmx.api.JmxBeanAdapterWithRefresh;
 import io.activej.jmx.api.JmxRefreshable;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.reactor.Reactor;
 
 import java.lang.reflect.InvocationTargetException;
@@ -53,7 +53,7 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 		this.refreshPeriod = refreshPeriod;
 		this.maxRefreshesPerCycle = maxRefreshesPerCycle;
 		for (Map.Entry<Reactor, List<JmxRefreshable>> entry : reactorToJmxRefreshables.entrySet()) {
-			entry.getKey().execute(() -> ((ValueStats) entry.getValue().get(0)).resetStats());
+			entry.getKey().execute(() -> ((LongValueStats) entry.getValue().get(0)).resetStats());
 		}
 	}
 
@@ -73,7 +73,7 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 			if (smoothingWindows == null) {
 				smoothingWindows = DEFAULT_SMOOTHING_WINDOW;
 			}
-			ValueStats refreshStats = ValueStats.builder(smoothingWindows)
+			LongValueStats refreshStats = LongValueStats.builder(smoothingWindows)
 				.withRate()
 				.withUnit("ns")
 				.build();
@@ -112,23 +112,23 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 		List<String> result = new ArrayList<>();
 		if (reactorToJmxRefreshables.size() > 1) {
 			int count = 0;
-			ValueStats total = ValueStats.accumulatorBuilder()
+			LongValueStats total = LongValueStats.accumulatorBuilder()
 				.withRate()
 				.withUnit("ms")
 				.build();
 			for (List<JmxRefreshable> refreshables : reactorToJmxRefreshables.values()) {
-				total.add((ValueStats) refreshables.get(0));
+				total.add((LongValueStats) refreshables.get(0));
 				count += refreshables.size();
 			}
 			result.add(getStatsString(count, total));
 		}
 		for (List<JmxRefreshable> refreshables : reactorToJmxRefreshables.values()) {
-			result.add(getStatsString(refreshables.size(), (ValueStats) refreshables.get(0)));
+			result.add(getStatsString(refreshables.size(), (LongValueStats) refreshables.get(0)));
 		}
 		return result;
 	}
 
-	private void refresh(Reactor reactor, List<JmxRefreshable> list, int startIndex, ValueStats refreshStats) {
+	private void refresh(Reactor reactor, List<JmxRefreshable> list, int startIndex, LongValueStats refreshStats) {
 		assert reactor.inReactorThread();
 
 		long timestamp = reactor.currentTimeMillis();
@@ -153,7 +153,7 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 			refreshPeriod.toMillis() * maxRefreshesPerCycle / totalCount;
 	}
 
-	private static String getStatsString(int numberOfRefreshables, ValueStats stats) {
+	private static String getStatsString(int numberOfRefreshables, LongValueStats stats) {
 		return "# of refreshables: " + numberOfRefreshables + "  " + stats;
 	}
 

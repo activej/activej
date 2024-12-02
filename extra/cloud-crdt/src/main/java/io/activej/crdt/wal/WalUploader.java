@@ -36,7 +36,7 @@ import io.activej.datastream.processor.transformer.sort.StreamSorterStorage;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -80,8 +80,8 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	private final ICrdtStorage<K, S> storage;
 
 	private final PromiseStats uploadPromise = PromiseStats.create(SMOOTHING_WINDOW);
-	private final ValueStats totalFilesUploaded = ValueStats.create(SMOOTHING_WINDOW);
-	private final ValueStats totalFilesUploadedSize = ValueStats.builder(SMOOTHING_WINDOW)
+	private final LongValueStats totalFilesUploaded = LongValueStats.create(SMOOTHING_WINDOW);
+	private final LongValueStats totalFilesUploadedSize = LongValueStats.builder(SMOOTHING_WINDOW)
 		.withUnit("bytes")
 		.build();
 	private boolean detailedMonitoring;
@@ -236,12 +236,12 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	@JmxAttribute
-	public ValueStats getTotalFilesUploaded() {
+	public LongValueStats getTotalFilesUploaded() {
 		return totalFilesUploaded;
 	}
 
 	@JmxAttribute
-	public ValueStats getTotalFilesUploadedSize() {
+	public LongValueStats getTotalFilesUploadedSize() {
 		return totalFilesUploadedSize;
 	}
 

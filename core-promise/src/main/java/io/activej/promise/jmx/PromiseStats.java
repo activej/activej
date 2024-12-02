@@ -23,7 +23,7 @@ import io.activej.common.function.BiConsumerEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.JmxHistogram;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
@@ -43,10 +43,10 @@ public class PromiseStats {
 	private int activePromises = 0;
 	private long lastStartTimestamp = 0;
 	private long lastCompleteTimestamp = 0;
-	private final ValueStats duration;
+	private final LongValueStats duration;
 	private final ExceptionStats exceptions = ExceptionStats.create();
 
-	protected PromiseStats(@Nullable Reactor reactor, ValueStats duration) {
+	protected PromiseStats(@Nullable Reactor reactor, LongValueStats duration) {
 		this.reactor = reactor;
 		this.duration = duration;
 	}
@@ -60,11 +60,11 @@ public class PromiseStats {
 	}
 
 	public static Builder builder(Duration smoothingWindow) {
-		return new PromiseStats(null, ValueStats.create(smoothingWindow)).new Builder();
+		return new PromiseStats(null, LongValueStats.create(smoothingWindow)).new Builder();
 	}
 
 	public static Builder builder(Reactor reactor, Duration smoothingWindow) {
-		return new PromiseStats(reactor, ValueStats.create(smoothingWindow)).new Builder();
+		return new PromiseStats(reactor, LongValueStats.create(smoothingWindow)).new Builder();
 	}
 
 	public class Builder extends AbstractBuilder<Builder, PromiseStats> {
@@ -153,7 +153,7 @@ public class PromiseStats {
 	}
 
 	@JmxAttribute
-	public ValueStats getDuration() {
+	public LongValueStats getDuration() {
 		return duration;
 	}
 

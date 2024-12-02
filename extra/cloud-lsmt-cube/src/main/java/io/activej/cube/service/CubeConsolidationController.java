@@ -28,7 +28,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -82,12 +82,12 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 	private final PromiseStats promiseConsolidateImpl = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseCleanupIrrelevantChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	private final ValueStats removedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final ValueStats removedChunksRecords = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+	private final LongValueStats removedChunks = LongValueStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final LongValueStats removedChunksRecords = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 		.withRate()
 		.build();
-	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final ValueStats addedChunksRecords = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+	private final LongValueStats addedChunks = LongValueStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final LongValueStats addedChunksRecords = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 		.withRate()
 		.build();
 	private long lastNotEmptyConsolidationTimestamp;
@@ -240,22 +240,22 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public ValueStats getRemovedChunks() {
+	public LongValueStats getRemovedChunks() {
 		return removedChunks;
 	}
 
 	@JmxAttribute
-	public ValueStats getAddedChunks() {
+	public LongValueStats getAddedChunks() {
 		return addedChunks;
 	}
 
 	@JmxAttribute
-	public ValueStats getRemovedChunksRecords() {
+	public LongValueStats getRemovedChunksRecords() {
 		return removedChunksRecords;
 	}
 
 	@JmxAttribute
-	public ValueStats getAddedChunksRecords() {
+	public LongValueStats getAddedChunksRecords() {
 		return addedChunksRecords;
 	}
 

@@ -39,7 +39,7 @@ import static java.util.stream.Collectors.toList;
  * <p>
  * Class is supposed to work in a single thread
  */
-public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxStatsWithReset, JmxStatsWithSmoothingWindow {
+public final class LongValueStats implements JmxRefreshableStats<LongValueStats>, JmxStatsWithReset, JmxStatsWithSmoothingWindow {
 	private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
 	private static final long MAX_INTERVAL_BETWEEN_REFRESHES = ApplicationSettings.getDuration(JmxStats.class, "maxIntervalBetweenRefreshes", Duration.ofHours(1)).toMillis();
 	private static final double LN_2 = log(2);
@@ -88,24 +88,24 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	private boolean useAbsoluteValues;
 	private int precision = 1000;
 
-	private ValueStats(double smoothingWindow) {
+	private LongValueStats(double smoothingWindow) {
 		this.smoothingWindow = smoothingWindow;
 		this.smoothingWindowCoef = calculateSmoothingWindowCoef(smoothingWindow);
 		resetStats();
 	}
 
-	private ValueStats() {
+	private LongValueStats() {
 		// create accumulator instance, smoothing window will be taken from actual stats
 		this.smoothingWindow = -1;
 		this.smoothingWindowCoef = -1;
 	}
 
-	public static ValueStats createAccumulator() {
+	public static LongValueStats createAccumulator() {
 		return accumulatorBuilder().build();
 	}
 
 	public static Builder accumulatorBuilder() {
-		return new ValueStats().new Builder();
+		return new LongValueStats().new Builder();
 	}
 
 	/**
@@ -113,7 +113,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	 *
 	 * @param smoothingWindow in seconds
 	 */
-	public static ValueStats create(Duration smoothingWindow) {
+	public static LongValueStats create(Duration smoothingWindow) {
 		return builder(smoothingWindow).build();
 	}
 
@@ -123,33 +123,33 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	 * @param smoothingWindow a smoothing window to use
 	 */
 	public static Builder builder(Duration smoothingWindow) {
-		return new ValueStats(smoothingWindow.toMillis() / 1000.0).new Builder();
+		return new LongValueStats(smoothingWindow.toMillis() / 1000.0).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, ValueStats> {
+	public final class Builder extends AbstractBuilder<Builder, LongValueStats> {
 		private Builder() {}
 
 		public Builder withUnit(String unit) {
 			checkNotBuilt(this);
-			ValueStats.this.unit = unit;
+			LongValueStats.this.unit = unit;
 			return this;
 		}
 
 		public Builder withRate(String rateUnit) {
 			checkNotBuilt(this);
-			ValueStats.this.rateUnit = rateUnit;
+			LongValueStats.this.rateUnit = rateUnit;
 			return this;
 		}
 
 		public Builder withRate() {
 			checkNotBuilt(this);
-			ValueStats.this.rateUnit = "";
+			LongValueStats.this.rateUnit = "";
 			return this;
 		}
 
 		public Builder withHistogram(JmxHistogram histogram) {
 			checkNotBuilt(this);
-			ValueStats.this.histogram = histogram;
+			LongValueStats.this.histogram = histogram;
 			return this;
 		}
 
@@ -161,44 +161,44 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 
 		public Builder withAbsoluteValues(boolean value) {
 			checkNotBuilt(this);
-			ValueStats.this.useAbsoluteValues = value;
+			LongValueStats.this.useAbsoluteValues = value;
 			return this;
 		}
 
 		public Builder withAverageAndDeviation(boolean value) {
 			checkNotBuilt(this);
-			ValueStats.this.useAvgAndDeviation = value;
+			LongValueStats.this.useAvgAndDeviation = value;
 			return this;
 		}
 
 		public Builder withMinMax(boolean value) {
 			checkNotBuilt(this);
-			ValueStats.this.useMinMax = value;
+			LongValueStats.this.useMinMax = value;
 			return this;
 		}
 
 		public Builder withLastValue(boolean value) {
 			checkNotBuilt(this);
-			ValueStats.this.useLastValue = value;
+			LongValueStats.this.useLastValue = value;
 			return this;
 		}
 
 		public Builder withPrecision(int precision) {
 			checkNotBuilt(this);
 			checkArgument(precision > 0, "Precision should be a positive value");
-			ValueStats.this.precision = precision;
+			LongValueStats.this.precision = precision;
 			return this;
 		}
 
 		public Builder withScientificNotation() {
 			checkNotBuilt(this);
-			ValueStats.this.precision = -1;
+			LongValueStats.this.precision = -1;
 			return this;
 		}
 
 		@Override
-		protected ValueStats doBuild() {
-			return ValueStats.this;
+		protected LongValueStats doBuild() {
+			return LongValueStats.this;
 		}
 	}
 
@@ -332,7 +332,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	}
 
 	@Override
-	public void add(ValueStats anotherStats) {
+	public void add(LongValueStats anotherStats) {
 		if (anotherStats.lastTimestampMillis == 0L)
 			return;
 

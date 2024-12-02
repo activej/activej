@@ -56,7 +56,7 @@ import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
@@ -121,7 +121,7 @@ public final class CubeExecutor extends AbstractReactive
 
 	// JMX
 	private final AggregationStats aggregationStats = new AggregationStats();
-	private final ValueStats queryTimes = ValueStats.create(Duration.ofMinutes(10));
+	private final LongValueStats queryTimes = LongValueStats.create(Duration.ofMinutes(10));
 	private long queryErrors;
 	private Exception queryLastError;
 
@@ -924,7 +924,7 @@ public final class CubeExecutor extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public ValueStats getQueryTimes() {
+	public LongValueStats getQueryTimes() {
 		return queryTimes;
 	}
 

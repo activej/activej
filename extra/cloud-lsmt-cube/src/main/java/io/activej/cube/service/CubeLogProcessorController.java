@@ -30,7 +30,7 @@ import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -73,8 +73,8 @@ public final class CubeLogProcessorController extends AbstractReactive
 
 	private final PromiseStats promiseProcessLogs = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseProcessLogsImpl = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final ValueStats addedChunksRecords = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+	private final LongValueStats addedChunks = LongValueStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final LongValueStats addedChunksRecords = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 		.withRate()
 		.build();
 
@@ -210,12 +210,12 @@ public final class CubeLogProcessorController extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public ValueStats getLastAddedChunks() {
+	public LongValueStats getLastAddedChunks() {
 		return addedChunks;
 	}
 
 	@JmxAttribute
-	public ValueStats getLastAddedChunksRecords() {
+	public LongValueStats getLastAddedChunksRecords() {
 		return addedChunksRecords;
 	}
 

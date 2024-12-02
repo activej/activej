@@ -16,7 +16,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ValueStatsTest {
+public class LongValueStatsTest {
 	private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 	private static final int ONE_SECOND_IN_MILLIS = 1000;
 	private static final Random RANDOM = new Random();
@@ -25,7 +25,7 @@ public class ValueStatsTest {
 	public void smoothedAverageAtLimitShouldBeSameAsInputInCaseOfConstantData() {
 		Duration smoothingWindow = Duration.ofSeconds(10);
 		long currentTimestamp = 0;
-		ValueStats valueStats = ValueStats.create(smoothingWindow);
+		LongValueStats valueStats = LongValueStats.create(smoothingWindow);
 		int inputValue = 5;
 		int iterations = 1000;
 
@@ -42,7 +42,7 @@ public class ValueStatsTest {
 	@Test
 	public void ifDataIsFloatValueStatsShouldApproximateThat() {
 		long currentTimestamp = 0;
-		ValueStats valueStats = ValueStats.create(Duration.ofSeconds(10));
+		LongValueStats valueStats = LongValueStats.create(Duration.ofSeconds(10));
 		int inputValue = 5;
 		int iterations = 1000;
 		int refreshPeriod = ONE_SECOND_IN_MILLIS;
@@ -79,7 +79,7 @@ public class ValueStatsTest {
 	public void itShouldReturnProperStandardDeviationAtLimit() {
 		Duration smoothingWindow = Duration.ofSeconds(100);
 		long currentTimestamp = 0;
-		ValueStats valueStats = ValueStats.create(smoothingWindow);
+		LongValueStats valueStats = LongValueStats.create(smoothingWindow);
 		int iterations = 10000;
 		int minValue = 0;
 		int maxValue = 10;
@@ -102,7 +102,7 @@ public class ValueStatsTest {
 	public void itShouldResetStatsAfterResetMethodCall() {
 		Duration smoothingWindow = Duration.ofSeconds(10);
 		long currentTimestamp = 0;
-		ValueStats valueStats = ValueStats.create(smoothingWindow);
+		LongValueStats valueStats = LongValueStats.create(smoothingWindow);
 		int inputValue = 5;
 		int iterations = 1000;
 
@@ -125,8 +125,8 @@ public class ValueStatsTest {
 	public void itShouldAccumulateProperly() {
 		Duration smoothingWindow = Duration.ofSeconds(10);
 		long currentTimestamp = 0;
-		ValueStats valueStats_1 = ValueStats.create(smoothingWindow);
-		ValueStats valueStats_2 = ValueStats.create(smoothingWindow);
+		LongValueStats valueStats_1 = LongValueStats.create(smoothingWindow);
+		LongValueStats valueStats_2 = LongValueStats.create(smoothingWindow);
 		int inputValue_1 = 5;
 		int inputValue_2 = 10;
 		int iterations = 1000;
@@ -139,7 +139,7 @@ public class ValueStatsTest {
 			valueStats_2.refresh(currentTimestamp);
 		}
 
-		ValueStats accumulator = ValueStats.createAccumulator();
+		LongValueStats accumulator = LongValueStats.createAccumulator();
 		accumulator.add(valueStats_1);
 		accumulator.add(valueStats_2);
 
@@ -152,8 +152,8 @@ public class ValueStatsTest {
 	public void itShouldAccumulateWithOriginalUnits() {
 		Duration smoothingWindow = Duration.ofSeconds(10);
 		long currentTimestamp = 0;
-		ValueStats valueStats_1 = ValueStats.builder(smoothingWindow).withUnit("seconds").build();
-		ValueStats valueStats_2 = ValueStats.builder(smoothingWindow).withUnit("seconds").build();
+		LongValueStats valueStats_1 = LongValueStats.builder(smoothingWindow).withUnit("seconds").build();
+		LongValueStats valueStats_2 = LongValueStats.builder(smoothingWindow).withUnit("seconds").build();
 		int inputValue_1 = 5;
 		int inputValue_2 = 10;
 		int iterations = 1000;
@@ -166,7 +166,7 @@ public class ValueStatsTest {
 			valueStats_2.refresh(currentTimestamp);
 		}
 
-		ValueStats accumulator = ValueStats.createAccumulator();
+		LongValueStats accumulator = LongValueStats.createAccumulator();
 		accumulator.add(valueStats_1);
 		accumulator.add(valueStats_2);
 
@@ -175,7 +175,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldBuildHistogram() {
-		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(new long[]{5, 15, 500})
 			.build();
 
@@ -212,7 +212,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldNotRenderUnusedLeftAndRightHistogramLevels() {
-		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(new long[]{5, 10, 15, 20, 25, 30, 35})
 			.build();
 
@@ -231,7 +231,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldBuildHistogramProperlyInCaseOfOnlyOneIntermediateValue() {
-		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(new long[]{5, 15, 500})
 			.build();
 
@@ -245,7 +245,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldBuildHistogramProperlyInCaseOfOnlyOneRightmostValue() {
-		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(new long[]{5, 15, 500})
 			.build();
 
@@ -259,7 +259,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldBuildHistogramProperlyInCaseOfOnlyOneLeftmostValue() {
-		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(new long[]{5, 15, 500})
 			.build();
 
@@ -273,10 +273,10 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldAccumulateHistogram() {
-		ValueStats stats_1 = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats_1 = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(new long[]{5, 10, 15})
 			.build();
-		ValueStats stats_2 = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats_2 = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(new long[]{5, 10, 15})
 			.build();
 
@@ -296,7 +296,7 @@ public class ValueStatsTest {
 		stats_1.refresh(1L);
 		stats_2.refresh(1L);
 
-		ValueStats accumulator = ValueStats.createAccumulator();
+		LongValueStats accumulator = LongValueStats.createAccumulator();
 		accumulator.add(stats_1);
 		accumulator.add(stats_2);
 
@@ -311,7 +311,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldProperlyBuild_Pow2_Histogram() {
-		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(POWERS_OF_TWO)
 			.build();
 
@@ -338,7 +338,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldProperlyBuild_Pow2_Histogram_withLimitValues() {
-		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
+		LongValueStats stats = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withHistogram(POWERS_OF_TWO)
 			.build();
 
@@ -420,7 +420,7 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldProperlyBuildStringForPositiveNumbers() {
 		long currentTimestamp = 0;
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(10))
 			.withRate()
 			.build();
 		long inputValue = 1;
@@ -462,7 +462,7 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldProperlyBuildStringForNegativeNumbers() {
 		long currentTimestamp = 0;
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(10))
 			.withRate()
 			.build();
 		long inputValue = 0;
@@ -507,7 +507,7 @@ public class ValueStatsTest {
 	public void itShouldProperlyBuildStringForMirroredNumbers() {
 		long currentTimestamp = 0;
 
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(10))
 			.withAbsoluteValues(true)
 			.withRate()
 			.build();
@@ -539,7 +539,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void testFormatterEdgeCases() {
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(10))
 			.withRate()
 			.build();
 
@@ -581,7 +581,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void testPrecision() {
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(10))
 			.withAbsoluteValues(true)
 			.build();
 
@@ -630,7 +630,7 @@ public class ValueStatsTest {
 
 		// Test if precision is 100, difference is 10 - precision should be 10/100 = 0.1 (1 digit)
 		inputValue = 0;
-		valueStats = ValueStats.builder(SMOOTHING_WINDOW)
+		valueStats = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withPrecision(100)
 			.build();
 		for (int i = 0; i < 2; i++) {
@@ -644,7 +644,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void testWithUnit() {
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(10))
 			.withUnit("bytes")
 			.build();
 
@@ -664,7 +664,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldProperlyBuildStringWithFormatter() {
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(10))
 			.withRate()
 			.build();
 
@@ -684,7 +684,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void ifRateIsFloatEventStatsShouldApproximateThatRateAfterEnoughTimePassed() {
-		ValueStats valueStats = ValueStats.create(Duration.ofSeconds(1));
+		LongValueStats valueStats = LongValueStats.create(Duration.ofSeconds(1));
 		long currentTimestamp = 0;
 		int events = 10000;
 		double rate = 20.0;
@@ -720,7 +720,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldProperlyCalculateRateWithRateUnit() {
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(1))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(1))
 			.withRate()
 			.build();
 		long currentTimestamp = 0;
@@ -741,7 +741,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void itShouldProperlyCalculateRateWithNamedRateUnit() {
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(1))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(1))
 			.withRate("requests")
 			.build();
 		long currentTimestamp = 0;
@@ -762,7 +762,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void testScientificNotation() {
-		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats = LongValueStats.builder(Duration.ofSeconds(10))
 			.withScientificNotation()
 			.build();
 
@@ -793,7 +793,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void testValueStatsWithoutComponents() {
-		ValueStats valueStats1 = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats1 = LongValueStats.builder(Duration.ofSeconds(10))
 			.withAverageAndDeviation(false)
 			.build();
 		long currentTimestamp = 0;
@@ -803,7 +803,7 @@ public class ValueStatsTest {
 		valueStats1.refresh(currentTimestamp);
 		assertEquals("[123456789...123456789]  last: 123456789", valueStats1.toString());
 
-		ValueStats valueStats2 = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats2 = LongValueStats.builder(Duration.ofSeconds(10))
 			.withMinMax(false)
 			.build();
 		valueStats2.recordValue(inputValue);
@@ -811,7 +811,7 @@ public class ValueStatsTest {
 		valueStats2.refresh(currentTimestamp);
 		assertEquals("123456789±0  last: 123456789", valueStats2.toString());
 
-		ValueStats valueStats3 = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats3 = LongValueStats.builder(Duration.ofSeconds(10))
 			.withLastValue(false)
 			.build();
 		valueStats3.recordValue(inputValue);
@@ -819,7 +819,7 @@ public class ValueStatsTest {
 		valueStats3.refresh(currentTimestamp);
 		assertEquals("123456789±0  [123456789...123456789]", valueStats3.toString());
 
-		ValueStats valueStats4 = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats4 = LongValueStats.builder(Duration.ofSeconds(10))
 			.withLastValue(false)
 			.withMinMax(false)
 			.withAverageAndDeviation(false)
@@ -832,7 +832,7 @@ public class ValueStatsTest {
 
 	@Test
 	public void testValueStatsWithComponents() {
-		ValueStats valueStats1 = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats1 = LongValueStats.builder(Duration.ofSeconds(10))
 			.withRate()
 			.build();
 		long currentTimestamp = 0;
@@ -845,7 +845,7 @@ public class ValueStatsTest {
 		valueStats1.refresh(currentTimestamp);
 		assertEquals("123456789.5173±0  [123456789.0346...123456790]  last: 123456790  calls: 2 @ 1.933/second", valueStats1.toString());
 
-		ValueStats valueStats2 = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats2 = LongValueStats.builder(Duration.ofSeconds(10))
 			.withAbsoluteValues(true)
 			.build();
 		valueStats2.recordValue(inputValue);
@@ -856,7 +856,7 @@ public class ValueStatsTest {
 		valueStats2.refresh(currentTimestamp);
 		assertEquals("123456789.517±0  [123456789...123456790]  last: 123456790", valueStats2.toString());
 
-		ValueStats valueStats3 = ValueStats.builder(Duration.ofSeconds(10))
+		LongValueStats valueStats3 = LongValueStats.builder(Duration.ofSeconds(10))
 			.withAbsoluteValues(true)
 			.withRate()
 			.build();
@@ -869,7 +869,7 @@ public class ValueStatsTest {
 		assertEquals("123456789.517±0  [123456789...123456790]  last: 123456790  calls: 2 @ 1.933/second", valueStats3.toString());
 	}
 
-	private void assertNumberOfDigitsAfterDot(ValueStats stats) {
+	private void assertNumberOfDigitsAfterDot(LongValueStats stats) {
 		String statsString = stats.toString();
 		String formattedMin = statsString.substring(statsString.indexOf('[') + 1, statsString.indexOf("..."));
 		String formattedMax = statsString.substring(statsString.indexOf("...") + 3, statsString.indexOf("]"));
@@ -884,7 +884,7 @@ public class ValueStatsTest {
 		assertEquals(format.format(stats.getSmoothedMax()), formattedMax);
 	}
 
-	private void assertNumberOfDigitsAfterDot(ValueStats stats, int number) {
+	private void assertNumberOfDigitsAfterDot(LongValueStats stats, int number) {
 		String statsString = stats.toString();
 		String formattedAvg = statsString.substring(0, statsString.indexOf("±"));
 		String[] splitAvg = formattedAvg.split("\\.");

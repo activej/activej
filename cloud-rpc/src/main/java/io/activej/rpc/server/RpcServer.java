@@ -25,7 +25,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
@@ -96,7 +96,7 @@ public final class RpcServer extends AbstractReactiveServer {
 	private final Map<InetAddress, EventStats> connectsPerAddress = new HashMap<>();
 	private final EventStats successfulRequests = EventStats.create(SMOOTHING_WINDOW);
 	private final EventStats failedRequests = EventStats.create(SMOOTHING_WINDOW);
-	private final ValueStats requestHandlingTime = ValueStats.builder(SMOOTHING_WINDOW)
+	private final LongValueStats requestHandlingTime = LongValueStats.builder(SMOOTHING_WINDOW)
 		.withUnit("milliseconds")
 		.build();
 	private final ExceptionStats lastRequestHandlingException = ExceptionStats.create();
@@ -389,7 +389,7 @@ public final class RpcServer extends AbstractReactiveServer {
 	}
 
 	@JmxAttribute(description = "time for handling one request in milliseconds (both successful and failed)")
-	public ValueStats getRequestHandlingTime() {
+	public LongValueStats getRequestHandlingTime() {
 		return requestHandlingTime;
 	}
 

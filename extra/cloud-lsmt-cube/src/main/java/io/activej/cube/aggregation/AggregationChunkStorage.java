@@ -43,8 +43,8 @@ import io.activej.fs.IFileSystem;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ExceptionStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.jmx.stats.StatsUtils;
-import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -100,7 +100,7 @@ public final class AggregationChunkStorage extends AbstractReactive
 
 	private MemSize bufferSize = DEFAULT_BUFFER_SIZE;
 
-	private final ValueStats chunksCount = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final LongValueStats chunksCount = LongValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseAsyncSupplier = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseOpenR = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseOpenW = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -546,7 +546,7 @@ public final class AggregationChunkStorage extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public ValueStats getChunksCount() {
+	public LongValueStats getChunksCount() {
 		return chunksCount;
 	}
 

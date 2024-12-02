@@ -28,7 +28,7 @@ import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -112,14 +112,14 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 		public static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
 		private final EventStats connects = EventStats.create(SMOOTHING_WINDOW);
-		private final ValueStats reads = ValueStats.builder(SMOOTHING_WINDOW)
+		private final LongValueStats reads = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withUnit("bytes")
 			.withRate()
 			.build();
 		private final EventStats readEndOfStreams = EventStats.create(SMOOTHING_WINDOW);
 		private final ExceptionStats readErrors = ExceptionStats.create();
 		private final EventStats readTimeouts = EventStats.create(SMOOTHING_WINDOW);
-		private final ValueStats writes = ValueStats.builder(SMOOTHING_WINDOW)
+		private final LongValueStats writes = LongValueStats.builder(SMOOTHING_WINDOW)
 			.withUnit("bytes")
 			.withRate()
 			.build();
@@ -181,7 +181,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 		}
 
 		@JmxAttribute
-		public ValueStats getReads() {
+		public LongValueStats getReads() {
 			return reads;
 		}
 
@@ -201,7 +201,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 		}
 
 		@JmxAttribute
-		public ValueStats getWrites() {
+		public LongValueStats getWrites() {
 			return writes;
 		}
 

@@ -33,7 +33,7 @@ import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 import io.activej.jmx.stats.JmxHistogram;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.launcher.LauncherService;
 import io.activej.trigger.Severity;
 import io.activej.trigger.Triggers.TriggerWithResult;
@@ -169,14 +169,14 @@ public final class JmxModule extends AbstractModule {
 		public Builder withHistogram(Type type, String attrName, Supplier<JmxHistogram> histogram) {
 			checkNotBuilt(this);
 			return withOptional(type, attrName + "_histogram")
-				.withModifier(type, attrName, (ValueStats attribute) ->
+				.withModifier(type, attrName, (LongValueStats attribute) ->
 					attribute.setHistogram(histogram.get()));
 		}
 
 		public Builder withHistogram(Key<?> key, String attrName, Supplier<JmxHistogram> histogram) {
 			checkNotBuilt(this);
 			return withOptional(key, attrName + "_histogram")
-				.withModifier(key, attrName, (ValueStats attribute) ->
+				.withModifier(key, attrName, (LongValueStats attribute) ->
 					attribute.setHistogram(histogram.get()));
 		}
 

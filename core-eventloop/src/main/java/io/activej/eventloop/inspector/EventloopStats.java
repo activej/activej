@@ -33,9 +33,9 @@ import static io.activej.jmx.stats.JmxHistogram.POWERS_OF_TWO;
 @SuppressWarnings("unused")
 public final class EventloopStats extends AbstractInspector<EventloopInspector> implements EventloopInspector {
 	private final EventStats loops;
-	private final ValueStats selectorSelectTimeout;
-	private final ValueStats selectorSelectTime;
-	private final ValueStats businessLogicTime;
+	private final LongValueStats selectorSelectTimeout;
+	private final LongValueStats selectorSelectTime;
+	private final LongValueStats businessLogicTime;
 	private final Tasks tasks;
 	private final Keys keys;
 	private final ExceptionStats fatalErrors;
@@ -46,15 +46,15 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 	private EventloopStats() {
 		loops = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
-		selectorSelectTimeout = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+		selectorSelectTimeout = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 			.withHistogram(new long[]{-256, -128, -64, -32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16, 32})
 			.withUnit("milliseconds")
 			.build();
-		selectorSelectTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+		selectorSelectTime = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 			.withHistogram(POWERS_OF_TWO)
 			.withUnit("milliseconds")
 			.build();
-		businessLogicTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+		businessLogicTime = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 			.withHistogram(POWERS_OF_TWO)
 			.withUnit("milliseconds")
 			.build();
@@ -116,7 +116,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		if (lastSelectedKeys != 0) keys.loopTime.recordValue(loopTime);
 	}
 
-	private void updateTaskDuration(ValueStats counter, DurationRunnable longestCounter, Runnable runnable, @Nullable Stopwatch sw) {
+	private void updateTaskDuration(LongValueStats counter, DurationRunnable longestCounter, Runnable runnable, @Nullable Stopwatch sw) {
 		if (sw != null) {
 			long elapsed = sw.elapsed(TimeUnit.MICROSECONDS);
 			counter.recordValue(elapsed);
@@ -194,17 +194,17 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	@JmxAttribute(extraSubAttributes = "histogram")
-	public ValueStats getSelectorSelectTime() {
+	public LongValueStats getSelectorSelectTime() {
 		return selectorSelectTime;
 	}
 
 	@JmxAttribute(extraSubAttributes = "histogram")
-	public ValueStats getSelectorSelectTimeout() {
+	public LongValueStats getSelectorSelectTimeout() {
 		return selectorSelectTimeout;
 	}
 
 	@JmxAttribute(extraSubAttributes = "histogram")
-	public ValueStats getBusinessLogicTime() {
+	public LongValueStats getBusinessLogicTime() {
 		return businessLogicTime;
 	}
 
@@ -281,20 +281,20 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 	@SuppressWarnings("WeakerAccess")
 	public static class TaskStats {
-		private final ValueStats tasksPerLoop;
-		private final ValueStats loopTime;
-		private final ValueStats oneTaskTime;
+		private final LongValueStats tasksPerLoop;
+		private final LongValueStats loopTime;
+		private final LongValueStats oneTaskTime;
 		private final DurationRunnable longestTask;
 
 		TaskStats() {
-			this.tasksPerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			this.tasksPerLoop = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.build();
-			this.loopTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			this.loopTime = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.withUnit("milliseconds")
 				.build();
-			this.oneTaskTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			this.oneTaskTime = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.withUnit("microseconds")
 				.build();
@@ -302,17 +302,17 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		}
 
 		@JmxAttribute(name = "perLoop", extraSubAttributes = "histogram")
-		public ValueStats getTasksPerLoop() {
+		public LongValueStats getTasksPerLoop() {
 			return tasksPerLoop;
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getLoopTime() {
+		public LongValueStats getLoopTime() {
 			return loopTime;
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getOneTaskTime() {
+		public LongValueStats getOneTaskTime() {
 			return oneTaskTime;
 		}
 
@@ -328,10 +328,10 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	public static final class ScheduledTaskStats extends TaskStats {
-		private final ValueStats overdues;
+		private final LongValueStats overdues;
 
 		ScheduledTaskStats() {
-			overdues = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			overdues = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.withRate()
 				.withUnit("milliseconds")
@@ -339,7 +339,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getOverdues() {
+		public LongValueStats getOverdues() {
 			return overdues;
 		}
 	}
@@ -347,12 +347,12 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	public static final class Keys {
 		private final EventStats all;
 		private final EventStats invalid;
-		private final ValueStats acceptPerLoop;
-		private final ValueStats connectPerLoop;
-		private final ValueStats readPerLoop;
-		private final ValueStats writePerLoop;
-		private final ValueStats loopTime;
-		private final ValueStats oneKeyTime;
+		private final LongValueStats acceptPerLoop;
+		private final LongValueStats connectPerLoop;
+		private final LongValueStats readPerLoop;
+		private final LongValueStats writePerLoop;
+		private final LongValueStats loopTime;
+		private final LongValueStats oneKeyTime;
 
 		public Keys() {
 			all = EventStats.builder(DEFAULT_SMOOTHING_WINDOW)
@@ -361,23 +361,23 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 			invalid = EventStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withRateUnit("keys")
 				.build();
-			acceptPerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			acceptPerLoop = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.build();
-			connectPerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			connectPerLoop = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.build();
-			readPerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			readPerLoop = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.build();
-			writePerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			writePerLoop = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.build();
-			loopTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			loopTime = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.withUnit("milliseconds")
 				.build();
-			oneKeyTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			oneKeyTime = LongValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 				.withHistogram(POWERS_OF_TWO)
 				.withUnit("microseconds")
 				.build();
@@ -394,32 +394,32 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getAcceptPerLoop() {
+		public LongValueStats getAcceptPerLoop() {
 			return acceptPerLoop;
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getConnectPerLoop() {
+		public LongValueStats getConnectPerLoop() {
 			return connectPerLoop;
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getReadPerLoop() {
+		public LongValueStats getReadPerLoop() {
 			return readPerLoop;
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getWritePerLoop() {
+		public LongValueStats getWritePerLoop() {
 			return writePerLoop;
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getLoopTime() {
+		public LongValueStats getLoopTime() {
 			return loopTime;
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
-		public ValueStats getOneKeyTime() {
+		public LongValueStats getOneKeyTime() {
 			return oneKeyTime;
 		}
 	}

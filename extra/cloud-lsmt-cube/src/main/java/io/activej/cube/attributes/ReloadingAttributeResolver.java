@@ -19,7 +19,7 @@ package io.activej.cube.attributes;
 import io.activej.async.service.ReactiveService;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.jmx.stats.ValueStats;
+import io.activej.jmx.stats.LongValueStats;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBean;
@@ -45,7 +45,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	private int reloadErrors;
 	private int resolveErrors;
 	private K lastResolveErrorKey;
-	private final ValueStats reloadTime = ValueStats.builder(Duration.ofHours(1))
+	private final LongValueStats reloadTime = LongValueStats.builder(Duration.ofHours(1))
 		.withRate("reloads")
 		.withUnit("milliseconds")
 		.build();
@@ -156,7 +156,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	}
 
 	@JmxAttribute
-	public ValueStats getReloadTime() {
+	public LongValueStats getReloadTime() {
 		return reloadTime;
 	}
 }
