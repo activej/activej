@@ -38,8 +38,35 @@ import static io.activej.http.HttpVersion.HTTP_1_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Represents HTTP response for {@link HttpRequest}. After handling {@code HttpResponse} will be recycled, so you cannot
- * use it afterward.
+ * Represents an HTTP response for a given {@link HttpRequest}.
+ * <p>
+ * This class is a final implementation that extends {@link HttpMessage} and implements the {@link ToPromise} interface.
+ * Instances of this class are used to create, modify, and send HTTP responses.
+ *
+ * <p>After handling, {@code HttpResponse} objects are recycled, meaning they cannot be reused.
+ * This response object is designed to be constructed through its internal {@link Builder} class,
+ * which allows for easy modification and customization of HTTP headers, status codes, and content.
+ *
+ * <p><strong>Key Features:</strong></p>
+ * <ul>
+ *     <li>Ability to set and customize HTTP response codes.</li>
+ *     <li>Provide a fluent builder API to simplify response creation.</li>
+ *     <li>Handle response cookies.</li>
+ * </ul>
+ *
+ * <p>This class supports common HTTP status codes (e.g., 200 OK, 404 Not Found) as well as common response
+ * methods for building typical responses (e.g., HTML content, JSON, redirects).
+ *
+ * <p><strong>Usage Example:</strong></p>
+ * <pre>{@code
+ * HttpResponse response = HttpResponse.ok200()
+ *     .withPlainText("Hello, World!")
+ *     .build();
+ * }</pre>
+ *
+ * @see HttpRequest
+ * @see HttpMessage
+ * @see ToPromise
  */
 public final class HttpResponse extends HttpMessage implements ToPromise<HttpResponse> {
 	private static final boolean CHECKS = Checks.isEnabled(HttpResponse.class);
@@ -116,28 +143,63 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 
 	private @Nullable Map<String, HttpCookie> parsedCookies;
 
+	/**
+	 * Constructs a new {@link HttpResponse} with the specified HTTP version and response code.
+	 *
+	 * @param version The HTTP version (HTTP/1.1).
+	 * @param code The HTTP response status code.
+	 * @param connection Optional {@link HttpClientConnection} associated with this response.
+	 */
 	HttpResponse(HttpVersion version, int code, @Nullable HttpClientConnection connection) {
 		super(version);
 		this.code = code;
 		this.connection = connection;
 	}
 
+	/**
+	 * Constructs a new {@link HttpResponse} with the specified HTTP version and response code,
+	 * without an associated connection.
+	 *
+	 * @param version The HTTP version (HTTP/1.1).
+	 * @param code The HTTP response status code.
+	 */
 	HttpResponse(HttpVersion version, int code) {
 		this(version, code, null);
 	}
 
+	/**
+	 * Creates a new instance of the {@link Builder} for constructing a custom {@link HttpResponse}.
+	 *
+	 * @return A new {@link Builder} instance.
+	 */
 	public static Builder builder() {
 		return new HttpResponse(HTTP_1_1, 0).new Builder();
 	}
 
+	/**
+	 * Creates a new {@link Builder} for constructing an {@link HttpResponse} with the specified status code.
+	 *
+	 * @param code The HTTP status code.
+	 * @return A {@link Builder} instance.
+	 */
 	public static Builder ofCode(int code) {
 		return builder().withCode(code);
 	}
 
+	/**
+	 * Convenience method for creating a response with a 200 OK status code.
+	 *
+	 * @return A {@link Builder} instance for an HTTP 200 OK response.
+	 */
 	public static Builder ok200() {
 		return ofCode(200);
 	}
 
+	/**
+	 * Convenience method for creating a response with a 201 Created status code.
+	 *
+	 * @return A {@link Builder} instance for an HTTP 201 Created response.
+	 */
 	public static Builder ok201() {
 		return ofCode(201);
 	}
@@ -146,6 +208,12 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		return ofCode(206);
 	}
 
+	/**
+	 * Convenience method for creating a response that redirects to a given URL with a 301 Moved Permanently status code.
+	 *
+	 * @param url The URL to which the client should be redirected.
+	 * @return A {@link Builder} instance for an HTTP 301 Moved Permanently response.
+	 */
 	public static Builder redirect301(String url) {
 		// RFC-7231, section 6.4.2 (https://tools.ietf.org/html/rfc7231#section-6.4.2)
 		return ofCode(301)
@@ -179,30 +247,62 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		return ofCode(404);
 	}
 
+	/**
+	 * Builder class for constructing {@link HttpResponse} objects.
+	 */
 	public final class Builder extends HttpMessage.Builder<Builder, HttpResponse> {
 		private Builder() {}
 
+		/**
+		 * Sets the HTTP status code for the response.
+		 *
+		 * @param code The HTTP status code to be set.
+		 * @return This {@link Builder} instance for method chaining.
+		 */
 		public Builder withCode(int code) {
 			if (CHECKS) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
 			HttpResponse.this.code = code;
 			return this;
 		}
 
+		/**
+		 * Sets the response body with plain text content.
+		 *
+		 * @param text The plain text content to be used as the response body.
+		 * @return This {@link Builder} instance for method chaining.
+		 */
 		public Builder withPlainText(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
 				.withBody(text.getBytes(UTF_8));
 		}
 
+		/**
+		 * Sets the response body with HTML content.
+		 *
+		 * @param text The HTML content to be used as the response body.
+		 * @return This {@link Builder} instance for method chaining.
+		 */
 		public Builder withHtml(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
 				.withBody(text.getBytes(UTF_8));
 		}
 
+		/**
+		 * Sets the response body with JSON content.
+		 *
+		 * @param text The JSON content to be used as the response body.
+		 * @return This {@link Builder} instance for method chaining.
+		 */
 		public Builder withJson(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBody(text.getBytes(UTF_8));
 		}
 
+		/**
+		 * Adds a list of cookies to the response.
+		 *
+		 * @param cookies The list of {@link HttpCookie} objects to be added to the response.
+		 */
 		@Override
 		protected void addCookies(List<HttpCookie> cookies) {
 			for (HttpCookie cookie : cookies) {
@@ -210,11 +310,22 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 			}
 		}
 
+		/**
+		 * Adds a single cookie to the response.
+		 *
+		 * @param cookie The {@link HttpCookie} object to be added to the response.
+		 */
 		@Override
 		protected void addCookie(HttpCookie cookie) {
 			headers.add(SET_COOKIE, new HttpHeaderValueOfSetCookies(cookie));
 		}
 
+		/**
+		 * Builds and returns the configured {@link HttpResponse} object.
+		 *
+		 * @return The constructed {@link HttpResponse} object.
+		 * @throws IllegalArgumentException if the response code has not been set.
+		 */
 		@Override
 		public HttpResponse build() {
 			HttpResponse httpResponse = super.build();
@@ -223,6 +334,11 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		}
 	}
 
+	/**
+	 * Converts the {@link HttpResponse} instance to a {@link Promise} that is resolved with this response.
+	 *
+	 * @return A {@link Promise} containing the {@link HttpResponse} instance.
+	 */
 	@Override
 	public Promise<HttpResponse> toPromise() {
 		return Promise.of(this);
@@ -233,14 +349,30 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		return true;
 	}
 
+	/**
+	 * Retrieves the connection associated with this response.
+	 *
+	 * @return The {@link HttpClientConnection} associated with this response, or {@code null} if none.
+	 */
 	public HttpClientConnection getConnection() {
 		return connection;
 	}
 
+	/**
+	 * Retrieves the HTTP response status code.
+	 *
+	 * @return The HTTP response status code.
+	 */
 	public int getCode() {
 		return code;
 	}
 
+	/**
+	 * Retrieves the cookies present in this response.
+	 * If the response has been recycled, an exception will be thrown.
+	 *
+	 * @return A map containing the cookie names and their corresponding {@link HttpCookie} objects.
+	 */
 	public Map<String, HttpCookie> getCookies() {
 		if (CHECKS) checkState(!isRecycled());
 		if (parsedCookies != null) {
@@ -253,11 +385,31 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		return parsedCookies = cookies;
 	}
 
+	/**
+	 * Retrieves a specific cookie by its name.
+	 *
+	 * @param cookie The name of the cookie to be retrieved.
+	 * @return The {@link HttpCookie} object representing the cookie, or {@code null} if not found.
+	 */
 	public @Nullable HttpCookie getCookie(String cookie) {
 		if (CHECKS) checkState(!isRecycled());
 		return getCookies().get(cookie);
 	}
 
+	/**
+	 * Writes the corresponding HTTP response code message to the specified {@link ByteBuf} buffer.
+	 *
+	 * <p>This method uses a {@code switch} statement to map the provided status code to its corresponding
+	 * predefined byte array representation. If the code matches a standard HTTP status code (e.g., 200 OK, 404 Not Found),
+	 * the corresponding pre-encoded byte array is written to the buffer. If the status code is not recognized
+	 * in the predefined set, it delegates the task to {@link #writeCodeMessage2(ByteBuf, int)}.
+	 *
+	 * <p>If the code is not covered in the predefined cases, the method calls {@code writeCodeMessage2} to handle
+	 * the response in a more generic way.
+	 *
+	 * @param buf The {@link ByteBuf} to which the response line should be written.
+	 * @param code The HTTP status code to be written.
+	 */
 	private static void writeCodeMessage(ByteBuf buf, int code) {
 		byte[] result;
 		switch (code) {
@@ -330,6 +482,18 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		buf.put(result);
 	}
 
+	/**
+	 * Writes an HTTP response code message to the given {@link ByteBuf} buffer.
+	 *
+	 * <p>This method is used to construct an HTTP response line starting with "HTTP/1.1", followed by
+	 * the response code, and appending either " OK" or " Error" based on the status code.
+	 *
+	 * <p>If the response code is 400 or greater, the phrase " Error" is appended, otherwise the phrase " OK" is appended.
+	 * This is typically used for handling non-standard HTTP codes.
+	 *
+	 * @param buf The {@link ByteBuf} to which the response line should be written.
+	 * @param code The HTTP status code to be written.
+	 */
 	private static void writeCodeMessage2(ByteBuf buf, int code) {
 		buf.put(HTTP11_BYTES);
 		putPositiveInt(buf, code);
@@ -340,11 +504,27 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		}
 	}
 
+	/**
+	 * Estimates the size of the response in bytes, considering headers and the response line.
+	 *
+	 * <p>This method is used internally to estimate the required size for the {@link ByteBuf} that stores
+	 * the response content. It uses {@code LONGEST_FIRST_LINE_SIZE} as the basis for calculating the response size.
+	 *
+	 * @return The estimated size of the HTTP response.
+	 */
 	@Override
 	protected int estimateSize() {
 		return estimateSize(LONGEST_FIRST_LINE_SIZE);
 	}
 
+	/**
+	 * Writes the entire HTTP response to the specified {@link ByteBuf}.
+	 *
+	 * <p>This method writes the response code message, followed by all HTTP headers.
+	 *
+	 * @param buf The {@link ByteBuf} buffer to which the response data should be written.
+	 * @throws IllegalStateException if the response has already been recycled.
+	 */
 	@Override
 	protected void writeTo(ByteBuf buf) {
 		if (CHECKS) checkState(!isRecycled());
