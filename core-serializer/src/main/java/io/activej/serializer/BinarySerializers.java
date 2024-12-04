@@ -22,8 +22,16 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Supplier;
 
+/**
+ * A utility class providing {@link BinarySerializer} instances for types,
+ * as well as factory methods for creating serializers for optional values, nullable values,
+ * collections, maps, and enums.
+ */
 public final class BinarySerializers {
 
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Byte} values.
+	 */
 	public static final BinarySerializer<Byte> BYTE_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Byte item) {
@@ -46,6 +54,9 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Integer} values.
+	 */
 	public static final BinarySerializer<Integer> INT_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Integer item) {
@@ -76,6 +87,9 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Long} values.
+	 */
 	public static final BinarySerializer<Long> LONG_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Long item) {
@@ -116,6 +130,9 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Float} values.
+	 */
 	public static final BinarySerializer<Float> FLOAT_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Float item) {
@@ -147,6 +164,9 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Double} values.
+	 */
 	public static final BinarySerializer<Double> DOUBLE_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Double item) {
@@ -188,6 +208,9 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * A {@link BinarySerializer} implementation for UTF-8 encoded {@link String} values.
+	 */
 	public static final BinarySerializer<String> UTF8_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, String item) throws ArrayIndexOutOfBoundsException {
@@ -200,6 +223,9 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * A {@link BinarySerializer} implementation for ISO-8859-1 encoded {@link String} values.
+	 */
 	public static final BinarySerializer<String> ISO_88591_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, String item) throws ArrayIndexOutOfBoundsException {
@@ -212,6 +238,9 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * A {@link BinarySerializer} implementation for {@code byte[]} arrays.
+	 */
 	public static final BinarySerializer<byte[]> BYTES_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, byte[] item) throws ArrayIndexOutOfBoundsException {
@@ -228,6 +257,13 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * Returns a {@link BinarySerializer} for {@link Optional} values of the given type.
+	 *
+	 * @param codec the {@link BinarySerializer} for the optional value type
+	 * @param <T> the type of the optional value
+	 * @return a {@link BinarySerializer} for {@link Optional} values
+	 */
 	public static <T> BinarySerializer<Optional<T>> ofOptional(BinarySerializer<T> codec) {
 		return new BinarySerializer<>() {
 			final BinarySerializer<T> nullable = ofNullable(codec);
@@ -244,6 +280,13 @@ public final class BinarySerializers {
 		};
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for nullable values of the given type.
+	 *
+	 * @param codec the {@link BinarySerializer} for the value type
+	 * @param <T> the type of the value
+	 * @return a {@link BinarySerializer} for nullable values
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> BinarySerializer<@Nullable T> ofNullable(BinarySerializer<T> codec) {
 		if (codec == UTF8_SERIALIZER) {
@@ -294,6 +337,15 @@ public final class BinarySerializers {
 		};
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for a {@link Collection} of the given element type.
+	 *
+	 * @param element the {@link BinarySerializer} for the element type
+	 * @param constructor a supplier that creates an empty collection
+	 * @param <E> the type of the elements
+	 * @param <C> the type of the collection
+	 * @return a {@link BinarySerializer} for a collection of elements
+	 */
 	private static <E, C extends Collection<E>> BinarySerializer<C> ofCollection(BinarySerializer<E> element, Supplier<C> constructor) {
 		return new BinarySerializer<>() {
 			@Override
@@ -316,14 +368,37 @@ public final class BinarySerializers {
 		};
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for a {@link List} of the given element type.
+	 *
+	 * @param element the {@link BinarySerializer} for the list element type
+	 * @param <E> the type of the list elements
+	 * @return a {@link BinarySerializer} for a list of elements
+	 */
 	public static <E> BinarySerializer<List<E>> ofList(BinarySerializer<E> element) {
 		return ofCollection(element, ArrayList::new);
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for a {@link Set} of the given element type.
+	 *
+	 * @param element the {@link BinarySerializer} for the set element type
+	 * @param <E> the type of the set elements
+	 * @return a {@link BinarySerializer} for a set of elements
+	 */
 	public static <E> BinarySerializer<Set<E>> ofSet(BinarySerializer<E> element) {
 		return ofCollection(element, LinkedHashSet::new);
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for a {@link Map} with keys and values of the given types.
+	 *
+	 * @param key the {@link BinarySerializer} for the key type
+	 * @param value the {@link BinarySerializer} for the value type
+	 * @param <K> the type of the map keys
+	 * @param <V> the type of the map values
+	 * @return a {@link BinarySerializer} for a map of key-value pairs
+	 */
 	public static <K, V> BinarySerializer<Map<K, V>> ofMap(BinarySerializer<K> key, BinarySerializer<V> value) {
 		return new BinarySerializer<>() {
 			@Override
@@ -347,6 +422,13 @@ public final class BinarySerializers {
 		};
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for the given {@link Enum} type.
+	 *
+	 * @param enumType the class of the enum type
+	 * @param <E> the enum type
+	 * @return a {@link BinarySerializer} for the enum type
+	 */
 	public static <E extends Enum<E>> BinarySerializer<E> ofEnum(Class<E> enumType) {
 		return new BinarySerializer<>() {
 			@Override
