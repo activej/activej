@@ -17,12 +17,6 @@ public class ObjectPoolStressTest {
 	public static final int TOTAL_THREADS = 100;
 	public static final int TOTAL_ITERATIONS = 100_000;
 
-	/**
-	 * Main method to run the stress test.
-	 *
-	 * @param args Command line arguments (not used).
-	 * @throws InterruptedException If the thread execution is interrupted.
-	 */
 	public static void main(String[] args) throws InterruptedException {
 		executeStressTest();
 	}
