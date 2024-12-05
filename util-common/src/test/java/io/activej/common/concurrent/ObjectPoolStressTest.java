@@ -2,8 +2,6 @@ package io.activej.common.concurrent;
 
 import io.activej.common.ref.RefInt;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +36,9 @@ public class ObjectPoolStressTest {
 	private static void executeStressTest() throws InterruptedException {
 		long startTime = System.currentTimeMillis();
 		RefInt allocationCounter = new RefInt(0);
-		ObjectPool<byte[]> objectPool = new ObjectPool<>(128); // Set fixed capacity to 128
+
+		// Use the original optimized ObjectPool version
+		ObjectPool<byte[]> objectPool = new ObjectPool<>(128);
 
 		for (int currentRound = 0; currentRound < TOTAL_ROUNDS; currentRound++) {
 			executeSingleRound(objectPool, allocationCounter);
@@ -83,63 +83,5 @@ public class ObjectPoolStressTest {
 			System.err.println("Executor did not terminate in the specified time.");
 			executorService.shutdownNow();
 		}
-	}
-}
-
-/**
- * A simple object pool class to manage the reuse of objects.
- *
- * @param <T> The type of objects managed by the pool.
- */
-class ObjectPool<T> {
-	private final List<T> pool;
-	private final int capacity;
-
-	/**
-	 * Creates an object pool with a specified capacity.
-	 *
-	 * @param capacity The maximum number of objects the pool can hold.
-	 */
-	public ObjectPool(int capacity) {
-		this.capacity = capacity;
-		this.pool = new ArrayList<>(capacity);
-	}
-
-	/**
-	 * Retrieves an object from the pool, or returns {@code null} if the pool is empty.
-	 *
-	 * @return an object from the pool or {@code null} if none are available.
-	 */
-	public synchronized T poll() {
-		return pool.isEmpty() ? null : pool.remove(pool.size() - 1);
-	}
-
-	/**
-	 * Returns an object to the pool.
-	 *
-	 * @param obj The object to be returned to the pool.
-	 */
-	public synchronized void offer(T obj) {
-		if (obj != null && pool.size() < capacity) {
-			pool.add(obj);
-		}
-	}
-
-	/**
-	 * Returns the current size of the pool.
-	 *
-	 * @return the number of objects currently in the pool.
-	 */
-	public synchronized int size() {
-		return pool.size();
-	}
-
-	/**
-	 * Returns the current capacity of the pool.
-	 *
-	 * @return the capacity of the pool.
-	 */
-	public synchronized int capacity() {
-		return capacity;
 	}
 }
