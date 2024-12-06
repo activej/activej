@@ -4,6 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.dns.DnsClient;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ActivePromisesRule;
@@ -21,6 +22,7 @@ import org.junit.runners.Parameterized.Parameters;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
@@ -33,11 +35,13 @@ import static io.activej.http.HttpHeaders.ACCEPT_ENCODING;
 import static io.activej.http.HttpHeaders.CONTENT_ENCODING;
 import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.fail;
+import static junit.framework.TestCase.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(Parameterized.class)
 public final class TestGzipProcessorUtils {
@@ -142,6 +146,41 @@ public final class TestGzipProcessorUtils {
 			.whenComplete(server::close));
 
 		assertEquals(text, body.asString(UTF_8));
+	}
+
+	@Test
+	public void testGzippedCommunicationBetweenClientServerConnectionDrop() throws IOException {
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer server = HttpServer.builder(reactor,
+				request -> request.loadBody(CHARACTERS_COUNT)
+					.then(body -> {
+
+						// Simulate connection drop
+						SocketChannel socketChannel = ((TcpSocket) request.getConnection().socket).getSocketChannel();
+						assertNotNull(socketChannel);
+						socketChannel.close();
+
+						return HttpResponse.ok200().toPromise();
+					}))
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build();
+
+		DnsClient dnsClient = DnsClient.create(reactor, inetAddress("8.8.8.8"));
+		HttpClient client = HttpClient.create(reactor, dnsClient);
+
+		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
+			.withHeader(ACCEPT_ENCODING, "gzip")
+			.withBodyGzipCompression()
+			.withBody(wrapUtf8(text))
+			.build();
+
+		server.listen();
+
+		Exception exception = awaitException(client.request(request));
+
+		assertThat(exception, instanceOf(MalformedHttpException.class));
+		assertEquals("Unexpected end of data", exception.getMessage());
 	}
 
 	@Test

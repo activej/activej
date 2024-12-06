@@ -504,7 +504,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 				if (e == null) {
 					assert this.readBuf == null;
 					this.readBuf = readBufs.hasRemaining() ? readBufs.takeRemaining() : null;
-					reactor.post(this::onBodyReceived);
+					reactor.post(() -> {if (!isClosed()) onBodyReceived();});
 				} else {
 					closeEx(translateToHttpException(e));
 				}
