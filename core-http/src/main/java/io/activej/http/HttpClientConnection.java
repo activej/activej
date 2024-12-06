@@ -266,7 +266,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			.subscribe(($, e) -> {
 				if (isClosed()) return;
 				if (e == null) {
-					reactor.post(this::onBodyReceived);
+					reactor.post(() -> {if (!isClosed()) onBodyReceived();});
 				} else {
 					closeEx(translateToHttpException(e));
 				}
