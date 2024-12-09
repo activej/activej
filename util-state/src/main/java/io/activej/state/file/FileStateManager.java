@@ -168,17 +168,10 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 
 	@Override
 	public T loadSnapshot(Long revision) throws IOException {
-		T loaded = tryLoadSnapshot(revision);
-		if (loaded == null) {
+		String filename = fileNamingScheme.encodeSnapshot(revision);
+		if (fileSystem.info(filename) == null) {
 			throw new IOException("Cannot find snapshot with revision " + revision);
 		}
-		return loaded;
-	}
-
-	@Override
-	public @Nullable T tryLoadSnapshot(Long revision) throws IOException {
-		String filename = fileNamingScheme.encodeSnapshot(revision);
-		if (fileSystem.info(filename) == null) return null;
 
 		InputStream inputStream = fileSystem.download(filename);
 		if (inputStreamWrapper != null) {
@@ -193,20 +186,12 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 	@Override
 	public T loadDiff(T state, Long revisionFrom, Long revisionTo) throws IOException {
 		if (!(fileNamingScheme instanceof FileNamingDiffScheme)) throw new UnsupportedOperationException();
-		T loaded = tryLoadDiff(state, revisionFrom, revisionTo);
-		if (loaded == null) {
+		FileNamingDiffScheme fileNamingScheme1 = (FileNamingDiffScheme) this.fileNamingScheme;
+		if (revisionFrom.equals(revisionTo)) return state;
+		String filename = fileNamingScheme1.encodeDiff(revisionFrom, revisionTo);
+		if (fileSystem.info(filename) == null) {
 			throw new IOException("Cannot find diffs between revision " + revisionFrom + " and " + revisionTo);
 		}
-		return loaded;
-	}
-
-	@Override
-	public @Nullable T tryLoadDiff(T state, Long revisionFrom, Long revisionTo) throws IOException {
-		if (!(fileNamingScheme instanceof FileNamingDiffScheme)) throw new UnsupportedOperationException();
-		FileNamingDiffScheme fileNamingScheme = (FileNamingDiffScheme) this.fileNamingScheme;
-		if (revisionFrom.equals(revisionTo)) return state;
-		String filename = fileNamingScheme.encodeDiff(revisionFrom, revisionTo);
-		if (fileSystem.info(filename) == null) return null;
 
 		InputStream inputStream = fileSystem.download(filename);
 		if (inputStreamWrapper != null) {
@@ -232,49 +217,6 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
 		DiffStreamEncoder<T> encoder = (DiffStreamEncoder<T>) encoderSupplier.get();
 		safeUpload(filenameDiff, output -> encoder.encodeDiff(output, stateFrom, state));
-	}
-
-	public FileState<T> load() throws IOException {
-		FileState<T> state = tryLoad();
-		if (state == null) {
-			throw new IOException("State is empty");
-		}
-		return state;
-	}
-
-	public @Nullable FileState<T> tryLoad() throws IOException {
-		Long lastRevision = getLastSnapshotRevision();
-		if (lastRevision != null) {
-			return new FileState<>(loadSnapshot(lastRevision), lastRevision);
-		}
-		return null;
-	}
-
-	public FileState<T> load(T stateFrom, Long revisionFrom) throws IOException {
-		FileState<T> state = tryLoad(stateFrom, revisionFrom);
-		if (state == null) {
-			throw new IOException("State is empty");
-		}
-		return state;
-	}
-
-	public @Nullable FileState<T> tryLoad(T stateFrom, Long revisionFrom) throws IOException {
-		Long lastRevision = getLastSnapshotRevision();
-		if (revisionFrom.equals(lastRevision)) {
-			return new FileState<>(stateFrom, revisionFrom);
-		}
-		if (fileNamingScheme instanceof FileNamingDiffScheme) {
-			Long lastDiffRevision = getLastDiffRevision(revisionFrom);
-			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
-				T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
-				return new FileState<>(state, lastDiffRevision);
-			}
-		}
-		if (lastRevision != null) {
-			T state = loadSnapshot(lastRevision);
-			return new FileState<>(state, lastRevision);
-		}
-		return null;
 	}
 
 	public Long save(T state) throws IOException {

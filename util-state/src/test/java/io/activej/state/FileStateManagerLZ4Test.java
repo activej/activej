@@ -7,7 +7,6 @@ import io.activej.serializer.stream.StreamInput;
 import io.activej.serializer.stream.StreamOutput;
 import io.activej.state.file.FileNamingScheme;
 import io.activej.state.file.FileNamingSchemes;
-import io.activej.state.file.FileState;
 import io.activej.state.file.FileStateManager;
 import net.jpountz.lz4.LZ4FrameInputStream;
 import net.jpountz.lz4.LZ4FrameOutputStream;
@@ -53,10 +52,12 @@ public class FileStateManagerLZ4Test {
 		Arrays.fill(state, (byte) 10);
 
 		long revision = manager.save(state);
-		FileState<byte[]> loaded = manager.load();
+		//noinspection DataFlowIssue
+		long lastSnapshotRevision = manager.getLastSnapshotRevision();
+		byte[] loaded = manager.loadSnapshot(lastSnapshotRevision);
 
-		assertArrayEquals(state, loaded.state());
-		assertEquals(revision, loaded.revision());
+		assertArrayEquals(state, loaded);
+		assertEquals(revision, lastSnapshotRevision);
 
 		Map<String, FileMetadata> list = fileSystem.list("**");
 		assertEquals(1, list.size());

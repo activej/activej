@@ -6,7 +6,6 @@ import io.activej.serializer.stream.StreamInput;
 import io.activej.serializer.stream.StreamOutput;
 import io.activej.state.file.FileNamingScheme;
 import io.activej.state.file.FileNamingSchemes;
-import io.activej.state.file.FileState;
 import io.activej.state.file.FileStateManager;
 import org.junit.Before;
 import org.junit.Rule;
@@ -15,7 +14,6 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
 
@@ -44,16 +42,12 @@ public class FileStateManagerTest {
 	@Test
 	public void saveAndLoad() throws IOException {
 		long revision = manager.save(100);
-		FileState<Integer> loaded = manager.load();
+		//noinspection DataFlowIssue
+		long lastSnapshotRevision = manager.getLastSnapshotRevision();
+		Integer loaded = manager.loadSnapshot(lastSnapshotRevision);
 
-		assertEquals(100, (int) loaded.state());
-		assertEquals(revision, loaded.revision());
-	}
-
-	@Test
-	public void tryLoadNone() throws IOException {
-		assertNull(manager.tryLoad());
-		assertNull(manager.tryLoad(100, 1L));
+		assertEquals(100, (int) loaded);
+		assertEquals(revision, lastSnapshotRevision);
 	}
 
 	@Test
@@ -69,10 +63,12 @@ public class FileStateManagerTest {
 		manager.save(150);
 		long lastRevision = manager.save(300);
 
-		FileState<Integer> loaded = manager.load();
+		//noinspection DataFlowIssue
+		long lastSnapshotRevision = manager.getLastSnapshotRevision();
+		Integer loaded = manager.loadSnapshot(lastSnapshotRevision);
 
-		assertEquals(300, (int) loaded.state());
-		assertEquals(lastRevision, loaded.revision());
+		assertEquals(300, (int) loaded);
+		assertEquals(lastRevision, lastSnapshotRevision);
 	}
 
 	@Test
@@ -159,22 +155,6 @@ public class FileStateManagerTest {
 	}
 
 	@Test
-	public void tryLoadSnapshotNone() throws IOException {
-		long revision = ThreadLocalRandom.current().nextLong();
-		assertThrows(IOException.class, () -> manager.loadSnapshot(revision));
-		assertNull(manager.tryLoadSnapshot(revision));
-	}
-
-	@Test
-	public void tryLoadDiffNone() throws IOException {
-		long revisionFrom = ThreadLocalRandom.current().nextLong();
-		long revisionTo = revisionFrom + 1;
-
-		assertThrows(IOException.class, () -> manager.loadDiff(0, revisionFrom, revisionTo));
-		assertNull(manager.tryLoadDiff(0, revisionFrom, revisionTo));
-	}
-
-	@Test
 	public void saveArbitraryRevision() throws IOException {
 		manager.save(100, 10L);
 		manager.save(200, 20L);
@@ -182,9 +162,11 @@ public class FileStateManagerTest {
 
 		assertThrows(IllegalArgumentException.class, () -> manager.save(500, 25L));
 
-		FileState<Integer> load1 = manager.load();
-		assertEquals(150, load1.state().intValue());
-		assertEquals(30L, load1.revision());
+		//noinspection DataFlowIssue
+		long lastSnapshotRevision = manager.getLastSnapshotRevision();
+		Integer loaded = manager.loadSnapshot(lastSnapshotRevision);
+		assertEquals(150, loaded.intValue());
+		assertEquals(30L, lastSnapshotRevision);
 
 		assertEquals(100, manager.loadSnapshot(10L).intValue());
 	}
@@ -199,9 +181,11 @@ public class FileStateManagerTest {
 		manager.saveSnapshot(345, 2L);
 		manager.saveSnapshot(-3245, 3L);
 
-		FileState<Integer> loaded = manager.load(123, 1L);
-		assertEquals(-3245, loaded.state().intValue());
-		assertEquals(3L, loaded.revision());
+		//noinspection DataFlowIssue
+		long lastSnapshotRevision = manager.getLastSnapshotRevision();
+		Integer loaded = manager.loadSnapshot(lastSnapshotRevision);
+		assertEquals(-3245, loaded.intValue());
+		assertEquals(3L, lastSnapshotRevision);
 	}
 
 	private static class IntegerCodec implements DiffStreamCodec<Integer> {
