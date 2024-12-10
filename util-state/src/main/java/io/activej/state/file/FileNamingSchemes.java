@@ -1,5 +1,6 @@
 package io.activej.state.file;
 
+import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -8,29 +9,22 @@ import java.util.regex.Pattern;
 
 public class FileNamingSchemes {
 
+	private static final @RegExp String INTEGER_REVISION_PATTERN = "[0-9]+";
+
 	public static FileNamingScheme<Long> ofLong(String prefix, String suffix) {
-		return new FileNamingSchemeImpl<>(RevisionParser.ofLong(), r -> r == null ? 1 : r + 1, prefix, suffix);
+		return new FileNamingSchemeImpl<>(RevisionParser.ofLong(), r -> r == null ? 1 : r + 1, prefix, suffix, INTEGER_REVISION_PATTERN);
 	}
 
 	public static FileNamingScheme<Long> ofLong(String prefix, String suffix, String diffPrefix, String diffSuffix, String diffSeparator) {
-		return new FileNamingSchemeImpl<>(RevisionParser.ofLong(), r -> r == null ? 1 : r + 1, prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
+		return new FileNamingSchemeImpl<>(RevisionParser.ofLong(), r -> r == null ? 1 : r + 1, prefix, suffix, INTEGER_REVISION_PATTERN, diffPrefix, diffSuffix, diffSeparator);
 	}
 
 	public static FileNamingScheme<Integer> ofInteger(String prefix, String suffix) {
-		return new FileNamingSchemeImpl<>(RevisionParser.ofInteger(), r -> r == null ? 1 : r + 1, prefix, suffix);
+		return new FileNamingSchemeImpl<>(RevisionParser.ofInteger(), r -> r == null ? 1 : r + 1, prefix, suffix, INTEGER_REVISION_PATTERN);
 	}
 
 	public static FileNamingScheme<Integer> ofInteger(String prefix, String suffix, String diffPrefix, String diffSuffix, String diffSeparator) {
-		return new FileNamingSchemeImpl<>(RevisionParser.ofInteger(), r -> r == null ? 1 : r + 1, prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
-	}
-
-	public static <R extends Comparable<R>> FileNamingScheme<R> of(
-		RevisionParser<R> revisionParser,
-		UnaryOperator<@Nullable R> nextRevisionSupplier,
-		String prefix,
-		String suffix
-	) {
-		return new FileNamingSchemeImpl<>(revisionParser, nextRevisionSupplier, prefix, suffix);
+		return new FileNamingSchemeImpl<>(RevisionParser.ofInteger(), r -> r == null ? 1 : r + 1, prefix, suffix, INTEGER_REVISION_PATTERN, diffPrefix, diffSuffix, diffSeparator);
 	}
 
 	public static <R extends Comparable<R>> FileNamingScheme<R> of(
@@ -38,11 +32,22 @@ public class FileNamingSchemes {
 		UnaryOperator<@Nullable R> nextRevisionSupplier,
 		String prefix,
 		String suffix,
+		@RegExp String revisionPattern
+	) {
+		return new FileNamingSchemeImpl<>(revisionParser, nextRevisionSupplier, prefix, suffix, revisionPattern);
+	}
+
+	public static <R extends Comparable<R>> FileNamingScheme<R> of(
+		RevisionParser<R> revisionParser,
+		UnaryOperator<@Nullable R> nextRevisionSupplier,
+		String prefix,
+		String suffix,
+		@RegExp String revisionPattern,
 		String diffPrefix,
 		String diffSuffix,
 		String diffSeparator
 	) {
-		return new FileNamingSchemeImpl<>(revisionParser, nextRevisionSupplier, prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
+		return new FileNamingSchemeImpl<>(revisionParser, nextRevisionSupplier, prefix, suffix, revisionPattern, diffPrefix, diffSuffix, diffSeparator);
 	}
 
 	@SuppressWarnings("Convert2Lambda")
@@ -82,19 +87,20 @@ public class FileNamingSchemes {
 
 		private final String prefix;
 		private final String suffix;
+		private final String revisionPattern;
 
 		private final String diffPrefix;
 		private final String diffSuffix;
 		private final String diffSeparator;
 
 		public FileNamingSchemeImpl(RevisionParser<R> revisionParser, UnaryOperator<@Nullable R> nextRevisionSupplier,
-			String prefix, String suffix
+			String prefix, String suffix, @RegExp String revisionPattern
 		) {
-			this(revisionParser, nextRevisionSupplier, prefix, suffix, null, null, null);
+			this(revisionParser, nextRevisionSupplier, prefix, suffix, revisionPattern, null, null, null);
 		}
 
 		public FileNamingSchemeImpl(RevisionParser<R> revisionParser, UnaryOperator<@Nullable R> nextRevisionSupplier,
-			String prefix, String suffix,
+			String prefix, String suffix, @RegExp String revisionPattern,
 			String diffPrefix, String diffSuffix, String diffSeparator
 		) {
 			this.revisionParser = revisionParser;
@@ -102,6 +108,7 @@ public class FileNamingSchemes {
 
 			this.prefix = prefix;
 			this.suffix = suffix;
+			this.revisionPattern = revisionPattern;
 
 			this.diffPrefix = diffPrefix;
 			this.diffSuffix = diffSuffix;
@@ -120,7 +127,7 @@ public class FileNamingSchemes {
 
 		@Override
 		public Pattern snapshotPattern() {
-			return Pattern.compile(Pattern.quote(prefix) + "[0-9]+" + Pattern.quote(suffix));
+			return Pattern.compile(Pattern.quote(prefix) + revisionPattern + Pattern.quote(suffix));
 		}
 
 		@Override
@@ -139,7 +146,7 @@ public class FileNamingSchemes {
 		@Override
 		public Pattern diffPattern() {
 			if (!hasDiffsSupport()) throw new UnsupportedOperationException();
-			return Pattern.compile(Pattern.quote(diffPrefix) + "[0-9]+" + Pattern.quote(diffSeparator) + "[0-9]+" + Pattern.quote(diffSuffix));
+			return Pattern.compile(Pattern.quote(diffPrefix) + revisionPattern + Pattern.quote(diffSeparator) + revisionPattern + Pattern.quote(diffSuffix));
 		}
 
 		@Override
