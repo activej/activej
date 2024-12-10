@@ -22,9 +22,9 @@ public class FileStateManagerTest {
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
-	public static final FileNamingScheme NAMING_SCHEME = FileNamingSchemes.create("", "", "", "", '-');
+	public static final FileNamingScheme<Long> NAMING_SCHEME = FileNamingSchemes.ofLong("", "", "", "", "-");
 
-	private FileStateManager<Integer> manager;
+	private FileStateManager<Long, Integer> manager;
 
 	private BlockingFileSystem fileSystem;
 
@@ -34,7 +34,7 @@ public class FileStateManagerTest {
 		fileSystem = BlockingFileSystem.create(storage);
 		fileSystem.start();
 
-		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, NAMING_SCHEME)
 			.withCodec(new IntegerCodec())
 			.build();
 	}
@@ -52,7 +52,7 @@ public class FileStateManagerTest {
 
 	@Test
 	public void saveAndLoadWithRevisions() throws IOException {
-		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, NAMING_SCHEME)
 			.withCodec(new IntegerCodec())
 			.withMaxSaveDiffs(3)
 			.build();
@@ -95,7 +95,7 @@ public class FileStateManagerTest {
 	@Test
 	public void getLastDiffRevision() throws IOException {
 		int maxSaveDiffs = 3;
-		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, NAMING_SCHEME)
 			.withCodec(new IntegerCodec())
 			.withMaxSaveDiffs(maxSaveDiffs)
 			.build();
@@ -132,7 +132,7 @@ public class FileStateManagerTest {
 	@Test
 	public void uploadsAreAtomic() throws IOException {
 		IOException expectedException = new IOException("Failed");
-		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, NAMING_SCHEME)
 			.withEncoder((stream, item) -> {
 				stream.writeInt(1); // some header
 				if (item <= 100) {
@@ -173,7 +173,7 @@ public class FileStateManagerTest {
 
 	@Test
 	public void saveAndLoadFromWithoutDiff() throws IOException {
-		manager = FileStateManager.<Integer>builder(fileSystem, FileNamingSchemes.create("", ""))
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, FileNamingSchemes.ofLong("", ""))
 			.withCodec(new IntegerCodec())
 			.build();
 

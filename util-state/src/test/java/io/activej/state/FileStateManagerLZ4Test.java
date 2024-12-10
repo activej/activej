@@ -27,9 +27,9 @@ public class FileStateManagerLZ4Test {
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
-	public static final FileNamingScheme NAMING_SCHEME = FileNamingSchemes.create("", "", "", "", '-');
+	public static final FileNamingScheme<Long> NAMING_SCHEME = FileNamingSchemes.ofLong("", "", "", "", "-");
 
-	private FileStateManager<byte[]> manager;
+	private FileStateManager<Long, byte[]> manager;
 
 	private BlockingFileSystem fileSystem;
 
@@ -39,7 +39,7 @@ public class FileStateManagerLZ4Test {
 		fileSystem = BlockingFileSystem.create(storage);
 		fileSystem.start();
 
-		manager = FileStateManager.<byte[]>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, byte[]>builder(fileSystem, NAMING_SCHEME)
 			.withCodec(new BytesCodec())
 			.withUploadWrapper(LZ4FrameOutputStream::new)
 			.withDownloadWrapper(LZ4FrameInputStream::new)
