@@ -161,6 +161,7 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		for (String s : list.keySet()) {
 			if (!pattern.matcher(s).matches()) continue;
 			R revision = fileNamingScheme.decodeSnapshot(s);
+			assert revision != null;
 			if (best == null || revision.compareTo(best) > 0) {
 				best = revision;
 			}
@@ -177,6 +178,7 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		for (String s : list.keySet()) {
 			if (!pattern.matcher(s).matches()) continue;
 			var diff = fileNamingScheme.decodeDiff(s);
+			assert diff != null;
 			if (!diff.from().equals(currentRevision)) continue;
 			if (best == null || diff.to().compareTo(best) > 0) {
 				best = diff.to();
@@ -251,13 +253,13 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 	}
 
 	private void doSave(T state, R revision) throws IOException {
-		if (maxSaveDiffs != 0) {
+		if (hasDiffsSupport() && maxSaveDiffs != 0) {
 			Pattern pattern = fileNamingScheme.snapshotGlob();
 			Map<String, FileMetadata> filenames = fileSystem.list("*");
 			PriorityQueue<R> top = new PriorityQueue<>(maxSaveDiffs);
-			for (var entry : filenames.entrySet()) {
-				if (!pattern.matcher(entry.getKey()).matches()) continue;
-				R snapshotRevision = fileNamingScheme.decodeSnapshot(entry.getKey());
+			for (var filename : filenames.keySet()) {
+				if (!pattern.matcher(filename).matches()) continue;
+				R snapshotRevision = fileNamingScheme.decodeSnapshot(filename);
 				top.add(snapshotRevision);
 				if (top.size() > maxSaveDiffs) top.poll();
 			}
@@ -315,25 +317,34 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 
 	public void cleanup(int maxRevisions) throws IOException {
 		Map<String, FileMetadata> filenames = fileSystem.list("**");
+		Pattern snapshotPattern = fileNamingScheme.snapshotGlob();
 
 		PriorityQueue<R> top = new PriorityQueue<>(maxRevisions);
-		for (var entry : filenames.entrySet()) {
-			R snapshotRevision = fileNamingScheme.decodeSnapshot(entry.getKey());
+		for (var filename : filenames.keySet()) {
+			if (!snapshotPattern.matcher(filename).matches()) continue;
+			R snapshotRevision = fileNamingScheme.decodeSnapshot(filename);
 			top.add(snapshotRevision);
-			if (top.size() > maxSaveDiffs) top.poll();
+			if (top.size() > maxRevisions) top.poll();
 		}
 
 		if (top.isEmpty()) return;
 		R minRetainedRevision = top.poll();
-		for (String filename : filenames.keySet()) {
-			FileNamingScheme.Diff<R> diff = fileNamingScheme.decodeDiff(filename);
-			if (diff != null && diff.from().compareTo(minRetainedRevision) < 0) {
-				fileSystem.delete(filename);
+		if (hasDiffsSupport()) {
+			Pattern diffPattern = fileNamingScheme.diffGlob();
+			for (String filename : filenames.keySet()) {
+				if (!diffPattern.matcher(filename).matches()) continue;
+				FileNamingScheme.Diff<R> diff = fileNamingScheme.decodeDiff(filename);
+				assert diff != null;
+				if (diff.from().compareTo(minRetainedRevision) < 0) {
+					fileSystem.delete(filename);
+				}
 			}
 		}
 		for (String filename : filenames.keySet()) {
+			if (!snapshotPattern.matcher(filename).matches()) continue;
 			R snapshot = fileNamingScheme.decodeSnapshot(filename);
-			if (snapshot != null && snapshot.compareTo(minRetainedRevision) < 0) {
+			assert snapshot != null;
+			if (snapshot.compareTo(minRetainedRevision) < 0) {
 				fileSystem.delete(filename);
 			}
 		}

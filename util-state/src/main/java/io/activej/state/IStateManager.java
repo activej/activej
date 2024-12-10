@@ -5,7 +5,7 @@ import io.activej.common.annotation.ComponentInterface;
 import java.io.IOException;
 
 @ComponentInterface
-public interface IStateManager<R extends Comparable<R>, T> extends IStateLoader<T, R> {
+public interface IStateManager<R extends Comparable<R>, T> extends IStateLoader<R, T> {
 	boolean hasDiffsSupport();
 
 	R newRevision() throws IOException;

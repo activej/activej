@@ -16,11 +16,41 @@ public class FileNamingSchemes {
 		return new FileNamingSchemeImpl<>(RevisionParser.ofLong(), r -> r == null ? 1 : r + 1, prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
 	}
 
+	public static FileNamingScheme<Integer> ofInteger(String prefix, String suffix) {
+		return new FileNamingSchemeImpl<>(RevisionParser.ofInteger(), r -> r == null ? 1 : r + 1, prefix, suffix);
+	}
+
+	public static FileNamingScheme<Integer> ofInteger(String prefix, String suffix, String diffPrefix, String diffSuffix, String diffSeparator) {
+		return new FileNamingSchemeImpl<>(RevisionParser.ofInteger(), r -> r == null ? 1 : r + 1, prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
+	}
+
+	public static <R extends Comparable<R>> FileNamingScheme<R> of(
+		RevisionParser<R> revisionParser,
+		UnaryOperator<@Nullable R> nextRevisionSupplier,
+		String prefix,
+		String suffix
+	) {
+		return new FileNamingSchemeImpl<>(revisionParser, nextRevisionSupplier, prefix, suffix);
+	}
+
+	public static <R extends Comparable<R>> FileNamingScheme<R> of(
+		RevisionParser<R> revisionParser,
+		UnaryOperator<@Nullable R> nextRevisionSupplier,
+		String prefix,
+		String suffix,
+		String diffPrefix,
+		String diffSuffix,
+		String diffSeparator
+	) {
+		return new FileNamingSchemeImpl<>(revisionParser, nextRevisionSupplier, prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
+	}
+
+	@SuppressWarnings("Convert2Lambda")
 	public interface RevisionParser<R extends Comparable<R>> {
 		R parse(String string) throws IOException;
 
 		static RevisionParser<Long> ofLong() {
-			return new RevisionParser<Long>() {
+			return new RevisionParser<>() {
 				@Override
 				public Long parse(String string) throws IOException {
 					try {
@@ -33,7 +63,7 @@ public class FileNamingSchemes {
 		}
 
 		static RevisionParser<Integer> ofInteger() {
-			return new RevisionParser<Integer>() {
+			return new RevisionParser<>() {
 				@Override
 				public Integer parse(String string) throws IOException {
 					try {
@@ -99,7 +129,7 @@ public class FileNamingSchemes {
 		}
 
 		@Override
-		public R decodeSnapshot(String filename) throws IOException {
+		public @Nullable R decodeSnapshot(String filename) throws IOException {
 			if (!filename.startsWith(prefix)) return null;
 			if (!filename.endsWith(suffix)) return null;
 			String substring = filename.substring(prefix.length(), filename.length() - suffix.length());
@@ -130,7 +160,7 @@ public class FileNamingSchemes {
 			String substringTo = substring.substring(pos + diffSeparator.length());
 			R revisionFrom = revisionParser.parse(substringFrom);
 			R revisionTo = revisionParser.parse(substringTo);
-			return new Diff<R>(revisionFrom, revisionTo);
+			return new Diff<>(revisionFrom, revisionTo);
 		}
 	}
 }

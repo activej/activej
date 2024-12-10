@@ -2,7 +2,7 @@ package io.activej.state;
 
 import java.io.IOException;
 
-public interface IStateLoader<T, R extends Comparable<R>> {
+public interface IStateLoader<R extends Comparable<R>, T> {
 	R getLastSnapshotRevision() throws IOException;
 
 	R getLastDiffRevision(R currentRevision) throws IOException;
