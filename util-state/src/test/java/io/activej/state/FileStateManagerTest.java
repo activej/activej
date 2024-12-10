@@ -216,6 +216,40 @@ public class FileStateManagerTest {
 		assertEquals(3L, lastSnapshotRevision);
 	}
 
+	@Test
+	public void cleanup() throws IOException {
+		int maxSaveDiffs = 3;
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, fileNamingScheme)
+			.withCodec(new IntegerCodec())
+			.withMaxSaveDiffs(maxSaveDiffs)
+			.build();
+
+		manager.save(100);  // 1
+		manager.save(200);  // 2
+		manager.save(300);  // 3
+		manager.save(400);  // 4
+		manager.save(500);  // 5
+
+		Long lastSnapshotRevision = manager.getLastSnapshotRevision();
+		assertNotNull(lastSnapshotRevision);
+		assertEquals(5, (long) lastSnapshotRevision);
+
+		assertEquals(300, manager.loadSnapshot(3L).intValue());
+
+		if (fileNamingScheme.hasDiffsSupport()) {
+			Long lastDiffRevision = manager.getLastDiffRevision(3L);
+			assertEquals(5, lastDiffRevision.longValue());
+			System.out.println(lastDiffRevision);
+		}
+
+		manager.cleanup(2);
+
+		assertThrows(IOException.class, () -> manager.loadSnapshot(3L));
+		if (fileNamingScheme.hasDiffsSupport()) {
+			assertNull(manager.getLastDiffRevision(3L));
+		}
+	}
+
 	private static class IntegerCodec implements DiffStreamCodec<Integer> {
 		@Override
 		public Integer decode(StreamInput input) throws IOException {
