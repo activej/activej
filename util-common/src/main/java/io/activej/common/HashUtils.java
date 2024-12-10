@@ -16,8 +16,20 @@
 
 package io.activej.common;
 
+/**
+ * Utility class that provides hashing functions based on the MurmurHash3 algorithm.
+ * <p>
+ * MurmurHash3 is a non-cryptographic hash function suitable for general hash-based lookup.
+ * This class contains methods that allow hashing of long and int values.
+ */
 public final class HashUtils {
 
+	/**
+	 * Applies the MurmurHash3 hashing algorithm to a given long value.
+	 *
+	 * @param k the long value to be hashed
+	 * @return the hashed value
+	 */
 	public static long murmur3hash(long k) {
 		k ^= k >>> 33;
 		k *= 0xff51afd7ed558ccdL;
@@ -27,6 +39,12 @@ public final class HashUtils {
 		return k;
 	}
 
+	/**
+	 * Applies the MurmurHash3 hashing algorithm to a given int value.
+	 *
+	 * @param k the int value to be hashed
+	 * @return the hashed value as an int
+	 */
 	public static int murmur3hash(int k) {
 		return (int) murmur3hash((long) k);
 	}
