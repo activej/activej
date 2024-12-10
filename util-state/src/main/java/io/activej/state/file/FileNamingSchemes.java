@@ -87,11 +87,12 @@ public class FileNamingSchemes {
 
 		private final String prefix;
 		private final String suffix;
-		private final String revisionPattern;
+		private final Pattern snapshotPattern;
 
 		private final String diffPrefix;
 		private final String diffSuffix;
 		private final String diffSeparator;
+		private final Pattern diffPattern;
 
 		public FileNamingSchemeImpl(RevisionParser<R> revisionParser, UnaryOperator<@Nullable R> nextRevisionSupplier,
 			String prefix, String suffix, @RegExp String revisionPattern
@@ -108,16 +109,19 @@ public class FileNamingSchemes {
 
 			this.prefix = prefix;
 			this.suffix = suffix;
-			this.revisionPattern = revisionPattern;
+			this.snapshotPattern = Pattern.compile(Pattern.quote(prefix) + revisionPattern + Pattern.quote(suffix));
 
 			this.diffPrefix = diffPrefix;
 			this.diffSuffix = diffSuffix;
 			this.diffSeparator = diffSeparator;
+			this.diffPattern = diffPrefix != null && diffSuffix != null && diffSeparator != null ?
+				Pattern.compile(Pattern.quote(diffPrefix) + revisionPattern + Pattern.quote(diffSeparator) + revisionPattern + Pattern.quote(diffSuffix)) :
+				null;
 		}
 
 		@Override
 		public boolean hasDiffsSupport() {
-			return diffPrefix != null && diffSuffix != null && diffSeparator != null;
+			return diffPattern != null;
 		}
 
 		@Override
@@ -127,7 +131,7 @@ public class FileNamingSchemes {
 
 		@Override
 		public Pattern snapshotPattern() {
-			return Pattern.compile(Pattern.quote(prefix) + revisionPattern + Pattern.quote(suffix));
+			return snapshotPattern;
 		}
 
 		@Override
@@ -146,7 +150,7 @@ public class FileNamingSchemes {
 		@Override
 		public Pattern diffPattern() {
 			if (!hasDiffsSupport()) throw new UnsupportedOperationException();
-			return Pattern.compile(Pattern.quote(diffPrefix) + revisionPattern + Pattern.quote(diffSeparator) + revisionPattern + Pattern.quote(diffSuffix));
+			return diffPattern;
 		}
 
 		@Override
