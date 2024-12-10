@@ -156,7 +156,7 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 	@Override
 	public @Nullable R getLastSnapshotRevision() throws IOException {
 		Pattern pattern = fileNamingScheme.snapshotPattern();
-		Map<String, FileMetadata> list = fileSystem.list("*");
+		Map<String, FileMetadata> list = fileSystem.list("**");
 		R best = null;
 		for (String s : list.keySet()) {
 			if (!pattern.matcher(s).matches()) continue;
@@ -173,7 +173,7 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 	public @Nullable R getLastDiffRevision(R currentRevision) throws IOException {
 		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
 		Pattern pattern = fileNamingScheme.diffPattern();
-		Map<String, FileMetadata> list = fileSystem.list("*");
+		Map<String, FileMetadata> list = fileSystem.list("**");
 		R best = null;
 		for (String s : list.keySet()) {
 			if (!pattern.matcher(s).matches()) continue;
@@ -255,7 +255,7 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 	private void doSave(T state, R revision) throws IOException {
 		if (hasDiffsSupport() && maxSaveDiffs != 0) {
 			Pattern pattern = fileNamingScheme.snapshotPattern();
-			Map<String, FileMetadata> filenames = fileSystem.list("*");
+			Map<String, FileMetadata> filenames = fileSystem.list("**");
 			PriorityQueue<R> top = new PriorityQueue<>(maxSaveDiffs);
 			for (var filename : filenames.keySet()) {
 				if (!pattern.matcher(filename).matches()) continue;

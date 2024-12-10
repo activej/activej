@@ -7,26 +7,54 @@ import io.activej.serializer.stream.StreamOutput;
 import io.activej.state.file.FileNamingScheme;
 import io.activej.state.file.FileNamingSchemes;
 import io.activej.state.file.FileStateManager;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
+@RunWith(Parameterized.class)
 public class FileStateManagerTest {
 
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
-	public static final FileNamingScheme<Long> NAMING_SCHEME = FileNamingSchemes.ofLong("", "", "", "", "-");
-
 	private FileStateManager<Long, Integer> manager;
 
 	private BlockingFileSystem fileSystem;
+
+	@Parameter()
+	public String testName;
+
+	@Parameter(1)
+	public FileNamingScheme<Long> fileNamingScheme;
+
+	@Parameters(name = "{0}")
+	public static Collection<Object[]> getParameters() {
+		return List.of(
+			new Object[]{"Long file naming scheme", FileNamingSchemes.ofLong("", "")},
+			new Object[]{"Long file naming scheme with diffs", FileNamingSchemes.ofLong("", "", "", "", "-")},
+
+			new Object[]{"Long file naming scheme with prefix and suffix", FileNamingSchemes.ofLong("snapshotPrefix", "snapshotSuffix")},
+			new Object[]{"Long file naming scheme with diffs, prefix and suffix", FileNamingSchemes.ofLong("snapshotPrefix", "snapshotSuffix", "diffPrefix", "diffSuffix", "-")},
+
+			new Object[]{"Long file naming scheme with directories", FileNamingSchemes.ofLong("snapshots/", "")},
+			new Object[]{"Long file naming scheme with diffs and directories", FileNamingSchemes.ofLong("snapshots/", "", "diffs/", "", "-")},
+			new Object[]{"Long file naming scheme with diffs and nested directories", FileNamingSchemes.ofLong("a/snapshots/", "", "b/diffs/", "", "-")},
+			new Object[]{"Long file naming scheme with diffs and nested within one another directories", FileNamingSchemes.ofLong("snapshots/", "", "snapshots/diffs/", "", "-")}
+		);
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -34,7 +62,7 @@ public class FileStateManagerTest {
 		fileSystem = BlockingFileSystem.create(storage);
 		fileSystem.start();
 
-		manager = FileStateManager.<Long, Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, fileNamingScheme)
 			.withCodec(new IntegerCodec())
 			.build();
 	}
@@ -52,7 +80,7 @@ public class FileStateManagerTest {
 
 	@Test
 	public void saveAndLoadWithRevisions() throws IOException {
-		manager = FileStateManager.<Long, Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, fileNamingScheme)
 			.withCodec(new IntegerCodec())
 			.withMaxSaveDiffs(3)
 			.build();
@@ -94,8 +122,10 @@ public class FileStateManagerTest {
 
 	@Test
 	public void getLastDiffRevision() throws IOException {
+		Assume.assumeTrue(fileNamingScheme.hasDiffsSupport());
+
 		int maxSaveDiffs = 3;
-		manager = FileStateManager.<Long, Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, fileNamingScheme)
 			.withCodec(new IntegerCodec())
 			.withMaxSaveDiffs(maxSaveDiffs)
 			.build();
@@ -123,6 +153,8 @@ public class FileStateManagerTest {
 
 	@Test
 	public void saveAndLoadDiff() throws IOException {
+		Assume.assumeTrue(fileNamingScheme.hasDiffsSupport());
+
 		manager.saveDiff(100, 10L, 25, 1L);
 
 		int integer = manager.loadDiff(25, 1L, 10L);
@@ -132,7 +164,7 @@ public class FileStateManagerTest {
 	@Test
 	public void uploadsAreAtomic() throws IOException {
 		IOException expectedException = new IOException("Failed");
-		manager = FileStateManager.<Long, Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Long, Integer>builder(fileSystem, fileNamingScheme)
 			.withEncoder((stream, item) -> {
 				stream.writeInt(1); // some header
 				if (item <= 100) {
@@ -172,11 +204,7 @@ public class FileStateManagerTest {
 	}
 
 	@Test
-	public void saveAndLoadFromWithoutDiff() throws IOException {
-		manager = FileStateManager.<Long, Integer>builder(fileSystem, FileNamingSchemes.ofLong("", ""))
-			.withCodec(new IntegerCodec())
-			.build();
-
+	public void saveAndLoadFrom() throws IOException {
 		manager.saveSnapshot(123, 1L);
 		manager.saveSnapshot(345, 2L);
 		manager.saveSnapshot(-3245, 3L);
