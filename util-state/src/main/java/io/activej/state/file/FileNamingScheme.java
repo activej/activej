@@ -16,11 +16,15 @@ public interface FileNamingScheme<R extends Comparable<R>> {
 
 	Pattern snapshotPattern();
 
+	String snapshotPrefix();
+
 	String encodeSnapshot(R revision);
 
 	@Nullable R decodeSnapshot(String filename) throws IOException;
 
 	Pattern diffPattern();
+
+	String diffPrefix();
 
 	String encodeDiff(R from, R to);
 

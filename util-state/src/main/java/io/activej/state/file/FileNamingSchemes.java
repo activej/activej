@@ -135,6 +135,11 @@ public class FileNamingSchemes {
 		}
 
 		@Override
+		public String snapshotPrefix() {
+			return prefix;
+		}
+
+		@Override
 		public String encodeSnapshot(R revision) {
 			return prefix + revision + suffix;
 		}
@@ -151,6 +156,12 @@ public class FileNamingSchemes {
 		public Pattern diffPattern() {
 			if (!hasDiffsSupport()) throw new UnsupportedOperationException();
 			return diffPattern;
+		}
+
+		@Override
+		public String diffPrefix() {
+			if (!hasDiffsSupport()) throw new UnsupportedOperationException();
+			return diffPrefix;
 		}
 
 		@Override
