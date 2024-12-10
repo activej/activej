@@ -119,7 +119,7 @@ public class FileNamingSchemes {
 		}
 
 		@Override
-		public Pattern snapshotGlob() {
+		public Pattern snapshotPattern() {
 			return Pattern.compile(Pattern.quote(prefix) + "[0-9]+" + Pattern.quote(suffix));
 		}
 
@@ -137,7 +137,7 @@ public class FileNamingSchemes {
 		}
 
 		@Override
-		public Pattern diffGlob() {
+		public Pattern diffPattern() {
 			if (!hasDiffsSupport()) throw new UnsupportedOperationException();
 			return Pattern.compile(Pattern.quote(diffPrefix) + "[0-9]+" + Pattern.quote(diffSeparator) + "[0-9]+" + Pattern.quote(diffSuffix));
 		}

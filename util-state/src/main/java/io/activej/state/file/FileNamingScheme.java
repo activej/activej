@@ -14,13 +14,13 @@ public interface FileNamingScheme<R extends Comparable<R>> {
 		return nextRevision(null);
 	}
 
-	Pattern snapshotGlob();
+	Pattern snapshotPattern();
 
 	String encodeSnapshot(R revision);
 
 	@Nullable R decodeSnapshot(String filename) throws IOException;
 
-	Pattern diffGlob();
+	Pattern diffPattern();
 
 	String encodeDiff(R from, R to);
 
