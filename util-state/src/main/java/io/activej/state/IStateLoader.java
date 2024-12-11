@@ -3,6 +3,8 @@ package io.activej.state;
 import java.io.IOException;
 
 public interface IStateLoader<R extends Comparable<R>, T> {
+	boolean hasDiffsSupport();
+
 	R getLastSnapshotRevision() throws IOException;
 
 	R getLastDiffRevision(R currentRevision) throws IOException;

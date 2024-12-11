@@ -6,8 +6,6 @@ import java.io.IOException;
 
 @ComponentInterface
 public interface IStateManager<R extends Comparable<R>, T> extends IStateLoader<R, T> {
-	boolean hasDiffsSupport();
-
 	R newRevision() throws IOException;
 
 	void saveSnapshot(T state, R revision) throws IOException;
