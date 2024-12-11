@@ -228,6 +228,8 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		StreamEncoder<T> encoder = encoderSupplier.get();
 		safeUpload(filename, output -> encoder.encode(output, state));
+
+		silentlyCleanupUpToMaxRevisions();
 	}
 
 	@Override
@@ -236,6 +238,8 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
 		DiffStreamEncoder<T> encoder = (DiffStreamEncoder<T>) encoderSupplier.get();
 		safeUpload(filenameDiff, output -> encoder.encodeDiff(output, stateFrom, state));
+
+		silentlyCleanupUpToMaxRevisions();
 	}
 
 	public R save(T state) throws IOException {
@@ -286,6 +290,8 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		StreamEncoder<T> encoder = encoderSupplier.get();
 		safeUpload(filename, output -> encoder.encode(output, state));
+
+		silentlyCleanupUpToMaxRevisions();
 	}
 
 	private void safeUpload(String filename, StreamOutputConsumer consumer) throws IOException {
@@ -306,13 +312,6 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		}
 
 		fileSystem.move(tempFilename, filename);
-
-		if (maxRevisions != 0) {
-			try {
-				cleanup(maxRevisions);
-			} catch (IOException ignored) {
-			}
-		}
 	}
 
 	public void cleanup(int maxRevisions) throws IOException {
@@ -347,6 +346,14 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 			if (snapshot.compareTo(minRetainedRevision) < 0) {
 				fileSystem.delete(filename);
 			}
+		}
+	}
+
+	private void silentlyCleanupUpToMaxRevisions() {
+		if (maxRevisions == 0) return;
+		try {
+			cleanup(maxRevisions);
+		} catch (IOException ignored) {
 		}
 	}
 
