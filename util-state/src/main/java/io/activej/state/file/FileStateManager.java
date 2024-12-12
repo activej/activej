@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -224,6 +225,35 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 	}
 
 	@Override
+	public StateWithRevision<R, T> load() throws IOException {
+		R lastRevision = getLastSnapshotRevision();
+		if (lastRevision == null) throw new IOException("State is empty");
+
+		return new StateWithRevision<>(lastRevision, loadSnapshot(lastRevision));
+	}
+
+	@Override
+	public StateWithRevision<R, T> load(T stateFrom, R revisionFrom) throws IOException {
+		R lastRevision = getLastSnapshotRevision();
+		if (Objects.equals(revisionFrom, lastRevision)) {
+			return new StateWithRevision<>(revisionFrom, stateFrom);
+		}
+
+		if (hasDiffsSupport()) {
+			R lastDiffRevision = getLastDiffRevision(revisionFrom);
+			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
+				T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
+				return new StateWithRevision<>(lastDiffRevision, state);
+			}
+		}
+
+		if (lastRevision == null) throw new IOException("State is empty");
+
+		T state = loadSnapshot(lastRevision);
+		return new StateWithRevision<>(lastRevision, state);
+	}
+
+	@Override
 	public void saveSnapshot(T state, R revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		StreamEncoder<T> encoder = encoderSupplier.get();
@@ -242,12 +272,14 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		silentlyCleanupUpToMaxRevisions();
 	}
 
+	@Override
 	public R save(T state) throws IOException {
 		R revision = newRevision();
 		doSave(state, revision);
 		return revision;
 	}
 
+	@Override
 	public void save(T state, R revision) throws IOException {
 		R lastRevision = getLastSnapshotRevision();
 		if (lastRevision != null && lastRevision.compareTo(revision) >= 0) {

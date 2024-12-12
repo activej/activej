@@ -4,6 +4,7 @@ import io.activej.fs.BlockingFileSystem;
 import io.activej.serializer.stream.DiffStreamCodec;
 import io.activej.serializer.stream.StreamInput;
 import io.activej.serializer.stream.StreamOutput;
+import io.activej.state.IStateLoader.StateWithRevision;
 import io.activej.state.file.FileNamingScheme;
 import io.activej.state.file.FileNamingSchemes;
 import io.activej.state.file.FileStateManager;
@@ -70,12 +71,10 @@ public class FileStateManagerTest {
 	@Test
 	public void saveAndLoad() throws IOException {
 		long revision = manager.save(100);
-		//noinspection DataFlowIssue
-		long lastSnapshotRevision = manager.getLastSnapshotRevision();
-		Integer loaded = manager.loadSnapshot(lastSnapshotRevision);
+		StateWithRevision<Long, Integer> loaded = manager.load();
 
-		assertEquals(100, (int) loaded);
-		assertEquals(revision, lastSnapshotRevision);
+		assertEquals(100, loaded.state().intValue());
+		assertEquals(revision, loaded.revision().longValue());
 	}
 
 	@Test
