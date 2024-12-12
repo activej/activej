@@ -4,13 +4,25 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.SortedSet;
 
 public interface IStateLoader<R extends Comparable<R>, T> {
 	boolean hasDiffsSupport();
 
-	@Nullable R getLastSnapshotRevision() throws IOException;
+	SortedSet<R> listSnapshotRevisions() throws IOException;
 
-	@Nullable R getLastDiffRevision(R currentRevision) throws IOException;
+	SortedSet<R> listDiffRevisions(R currentRevision) throws IOException;
+
+	default @Nullable R getLastSnapshotRevision() throws IOException {
+		SortedSet<R> snapshotRevisions = listSnapshotRevisions();
+		return snapshotRevisions.isEmpty() ? null : snapshotRevisions.last();
+	}
+
+	default @Nullable R getLastDiffRevision(R currentRevision) throws IOException {
+		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
+		SortedSet<R> diffRevisions = listDiffRevisions(currentRevision);
+		return diffRevisions.isEmpty() ? null : diffRevisions.last();
+	}
 
 	T loadSnapshot(R revision) throws IOException;
 

@@ -10,9 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -148,43 +146,38 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 	}
 
 	@Override
-	public R newRevision() throws IOException {
-		R lastSnapshotRevision = getLastSnapshotRevision();
-		return fileNamingScheme.nextRevision(lastSnapshotRevision);
-	}
-
-	@Override
-	public @Nullable R getLastSnapshotRevision() throws IOException {
+	public SortedSet<R> listSnapshotRevisions() throws IOException {
 		Pattern pattern = fileNamingScheme.snapshotPattern();
 		Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.snapshotPrefix() + "**");
-		R best = null;
+		SortedSet<R> revisions = new TreeSet<>();
 		for (String s : list.keySet()) {
 			if (!pattern.matcher(s).matches()) continue;
 			R revision = fileNamingScheme.decodeSnapshot(s);
-			assert revision != null;
-			if (best == null || revision.compareTo(best) > 0) {
-				best = revision;
-			}
+			revisions.add(revision);
 		}
-		return best;
+		return revisions;
 	}
 
 	@Override
-	public @Nullable R getLastDiffRevision(R currentRevision) throws IOException {
+	public SortedSet<R> listDiffRevisions(R currentRevision) throws IOException {
 		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
 		Pattern pattern = fileNamingScheme.diffPattern();
 		Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.diffPrefix() + "**");
-		R best = null;
+		SortedSet<R> revisions = new TreeSet<>();
 		for (String s : list.keySet()) {
 			if (!pattern.matcher(s).matches()) continue;
 			var diff = fileNamingScheme.decodeDiff(s);
 			assert diff != null;
 			if (!diff.from().equals(currentRevision)) continue;
-			if (best == null || diff.to().compareTo(best) > 0) {
-				best = diff.to();
-			}
+			revisions.add(diff.to());
 		}
-		return best;
+		return revisions;
+	}
+
+	@Override
+	public R newRevision() throws IOException {
+		R lastSnapshotRevision = getLastSnapshotRevision();
+		return fileNamingScheme.nextRevision(lastSnapshotRevision);
 	}
 
 	@Override
