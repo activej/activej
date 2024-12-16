@@ -43,13 +43,11 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		return new FileStateManager<R, T>(fileSystem, fileNamingScheme).new Builder();
 	}
 
-	@Override
 	public @Nullable R getLastSnapshotRevision() throws IOException {
 		SortedSet<R> snapshotRevisions = listSnapshotRevisions();
 		return snapshotRevisions.isEmpty() ? null : snapshotRevisions.last();
 	}
 
-	@Override
 	public @Nullable R getLastDiffRevision(R currentRevision) throws IOException {
 		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
 		SortedSet<R> diffRevisions = listDiffRevisions(currentRevision);
@@ -59,8 +57,7 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 	@Override
 	public StateWithRevision<R, T> load() throws IOException {
 		R lastRevision = getLastSnapshotRevision();
-		if (lastRevision == null) throw new IOException("State is empty");
-
+		if (lastRevision == null) return null;
 		return new StateWithRevision<>(lastRevision, loadSnapshot(lastRevision));
 	}
 
@@ -182,7 +179,6 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		return decoderSupplier.get();
 	}
 
-	@Override
 	public boolean hasDiffsSupport() {
 		return fileNamingScheme.hasDiffsSupport();
 	}
@@ -214,13 +210,11 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		return revisions;
 	}
 
-	@Override
 	public R newRevision() throws IOException {
 		R lastSnapshotRevision = getLastSnapshotRevision();
 		return fileNamingScheme.nextRevision(lastSnapshotRevision);
 	}
 
-	@Override
 	public T loadSnapshot(R revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		if (fileSystem.info(filename) == null) {
@@ -237,7 +231,6 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		}
 	}
 
-	@Override
 	public T loadDiff(T state, R revisionFrom, R revisionTo) throws IOException {
 		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
 		if (revisionFrom.equals(revisionTo)) return state;
@@ -256,7 +249,6 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		}
 	}
 
-	@Override
 	public void saveSnapshot(T state, R revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		StreamEncoder<T> encoder = encoderSupplier.get();
@@ -265,7 +257,6 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		silentlyCleanupUpToMaxRevisions();
 	}
 
-	@Override
 	public void saveDiff(T state, R revision, T stateFrom, R revisionFrom) throws IOException {
 		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
