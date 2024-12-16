@@ -43,6 +43,48 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		return new FileStateManager<R, T>(fileSystem, fileNamingScheme).new Builder();
 	}
 
+	@Override
+	public @Nullable R getLastSnapshotRevision() throws IOException {
+		SortedSet<R> snapshotRevisions = listSnapshotRevisions();
+		return snapshotRevisions.isEmpty() ? null : snapshotRevisions.last();
+	}
+
+	@Override
+	public @Nullable R getLastDiffRevision(R currentRevision) throws IOException {
+		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
+		SortedSet<R> diffRevisions = listDiffRevisions(currentRevision);
+		return diffRevisions.isEmpty() ? null : diffRevisions.last();
+	}
+
+	@Override
+	public StateWithRevision<R, T> load() throws IOException {
+		R lastRevision = getLastSnapshotRevision();
+		if (lastRevision == null) throw new IOException("State is empty");
+
+		return new StateWithRevision<>(lastRevision, loadSnapshot(lastRevision));
+	}
+
+	@Override
+	public StateWithRevision<R, T> load(T stateFrom, R revisionFrom) throws IOException {
+		R lastRevision = getLastSnapshotRevision();
+		if (Objects.equals(revisionFrom, lastRevision)) {
+			return new StateWithRevision<>(revisionFrom, stateFrom);
+		}
+
+		if (hasDiffsSupport()) {
+			R lastDiffRevision = getLastDiffRevision(revisionFrom);
+			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
+				T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
+				return new StateWithRevision<>(lastDiffRevision, state);
+			}
+		}
+
+		if (lastRevision == null) throw new IOException("State is empty");
+
+		T state = loadSnapshot(lastRevision);
+		return new StateWithRevision<>(lastRevision, state);
+	}
+
 	public final class Builder extends AbstractBuilder<Builder, FileStateManager<R, T>> {
 		private Builder() {}
 
@@ -145,7 +187,6 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		return fileNamingScheme.hasDiffsSupport();
 	}
 
-	@Override
 	public SortedSet<R> listSnapshotRevisions() throws IOException {
 		Pattern pattern = fileNamingScheme.snapshotPattern();
 		Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.snapshotPrefix() + "**");
@@ -158,7 +199,6 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		return revisions;
 	}
 
-	@Override
 	public SortedSet<R> listDiffRevisions(R currentRevision) throws IOException {
 		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
 		Pattern pattern = fileNamingScheme.diffPattern();
