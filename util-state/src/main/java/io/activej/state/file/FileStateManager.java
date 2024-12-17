@@ -158,6 +158,9 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		}
 
 		if (lastRevision == null) throw new IOException("State is empty");
+		if (lastRevision.compareTo(revisionFrom) < 0) {
+			throw new IOException("Last revision [" + lastRevision + "] is  less than 'from' revision");
+		}
 
 		T state = loadSnapshot(lastRevision);
 		return new StateWithRevision<>(lastRevision, state);

@@ -90,6 +90,20 @@ public class FileStateManagerTest {
 	}
 
 	@Test
+	public void loadInvalidState() throws IOException {
+		manager.save(100);
+		manager.save(200);
+		manager.save(300);
+		StateWithRevision<Long, Integer> loaded = manager.load();
+		assertNotNull(loaded);
+
+		String snapshot = fileNamingScheme.encodeSnapshot(loaded.revision());
+		fileSystem.delete(snapshot);
+
+		assertThrows(IOException.class, () -> manager.load(loaded.state(), loaded.revision()));
+	}
+
+	@Test
 	public void saveAndLoad() throws IOException {
 		long revision = manager.save(100);
 		StateWithRevision<Long, Integer> loaded = manager.load();
