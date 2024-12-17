@@ -69,9 +69,31 @@ public class FileStateManagerTest {
 	}
 
 	@Test
+	public void loadEmptyState() throws IOException {
+		StateWithRevision<Long, Integer> loaded = manager.load();
+		assertNull(loaded);
+	}
+
+	@Test
+	public void loadEmptyStateWithPrevious() {
+		assertThrows(IOException.class, () -> manager.load(1, 1L));
+	}
+
+	@Test
+	public void loadStateNoChanges() throws IOException {
+		manager.save(100);
+		StateWithRevision<Long, Integer> loaded = manager.load();
+		assertNotNull(loaded);
+
+		StateWithRevision<Long, Integer> loaded2 = manager.load(loaded.state(), loaded.revision());
+		assertNull(loaded2);
+	}
+
+	@Test
 	public void saveAndLoad() throws IOException {
 		long revision = manager.save(100);
 		StateWithRevision<Long, Integer> loaded = manager.load();
+		assertNotNull(loaded);
 
 		assertEquals(100, loaded.state().intValue());
 		assertEquals(revision, loaded.revision().longValue());
@@ -237,6 +259,7 @@ public class FileStateManagerTest {
 
 		if (fileNamingScheme.hasDiffsSupport()) {
 			Long lastDiffRevision = manager.getLastDiffRevision(3L);
+			assertNotNull(lastDiffRevision);
 			assertEquals(5, lastDiffRevision.longValue());
 			System.out.println(lastDiffRevision);
 		}

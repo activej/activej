@@ -9,5 +9,5 @@ public interface IStateLoader<R extends Comparable<R>, T> {
 
 	@Nullable StateWithRevision<R, T> load() throws IOException;
 
-	StateWithRevision<R, T> load(T stateFrom, R revisionFrom) throws IOException;
+	@Nullable StateWithRevision<R, T> load(T stateFrom, R revisionFrom) throws IOException;
 }

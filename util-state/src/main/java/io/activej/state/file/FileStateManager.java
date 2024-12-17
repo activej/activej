@@ -143,10 +143,10 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 	}
 
 	@Override
-	public StateWithRevision<R, T> load(T stateFrom, R revisionFrom) throws IOException {
+	public @Nullable StateWithRevision<R, T> load(T stateFrom, R revisionFrom) throws IOException {
 		R lastRevision = getLastSnapshotRevision();
 		if (Objects.equals(revisionFrom, lastRevision)) {
-			return new StateWithRevision<>(revisionFrom, stateFrom);
+			return null;
 		}
 
 		if (hasDiffsSupport()) {
