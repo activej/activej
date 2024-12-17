@@ -43,45 +43,6 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 		return new FileStateManager<R, T>(fileSystem, fileNamingScheme).new Builder();
 	}
 
-	public @Nullable R getLastSnapshotRevision() throws IOException {
-		SortedSet<R> snapshotRevisions = listSnapshotRevisions();
-		return snapshotRevisions.isEmpty() ? null : snapshotRevisions.last();
-	}
-
-	public @Nullable R getLastDiffRevision(R currentRevision) throws IOException {
-		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
-		SortedSet<R> diffRevisions = listDiffRevisions(currentRevision);
-		return diffRevisions.isEmpty() ? null : diffRevisions.last();
-	}
-
-	@Override
-	public StateWithRevision<R, T> load() throws IOException {
-		R lastRevision = getLastSnapshotRevision();
-		if (lastRevision == null) return null;
-		return new StateWithRevision<>(lastRevision, loadSnapshot(lastRevision));
-	}
-
-	@Override
-	public StateWithRevision<R, T> load(T stateFrom, R revisionFrom) throws IOException {
-		R lastRevision = getLastSnapshotRevision();
-		if (Objects.equals(revisionFrom, lastRevision)) {
-			return new StateWithRevision<>(revisionFrom, stateFrom);
-		}
-
-		if (hasDiffsSupport()) {
-			R lastDiffRevision = getLastDiffRevision(revisionFrom);
-			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
-				T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
-				return new StateWithRevision<>(lastDiffRevision, state);
-			}
-		}
-
-		if (lastRevision == null) throw new IOException("State is empty");
-
-		T state = loadSnapshot(lastRevision);
-		return new StateWithRevision<>(lastRevision, state);
-	}
-
 	public final class Builder extends AbstractBuilder<Builder, FileStateManager<R, T>> {
 		private Builder() {}
 
@@ -161,6 +122,45 @@ public final class FileStateManager<R extends Comparable<R>, T> implements IStat
 			checkState(encoderSupplier != null || decoderSupplier != null, "Neither encoder nor decoder are set");
 			return FileStateManager.this;
 		}
+	}
+
+	public @Nullable R getLastSnapshotRevision() throws IOException {
+		SortedSet<R> snapshotRevisions = listSnapshotRevisions();
+		return snapshotRevisions.isEmpty() ? null : snapshotRevisions.last();
+	}
+
+	public @Nullable R getLastDiffRevision(R currentRevision) throws IOException {
+		if (!hasDiffsSupport()) throw new UnsupportedOperationException();
+		SortedSet<R> diffRevisions = listDiffRevisions(currentRevision);
+		return diffRevisions.isEmpty() ? null : diffRevisions.last();
+	}
+
+	@Override
+	public @Nullable StateWithRevision<R, T> load() throws IOException {
+		R lastRevision = getLastSnapshotRevision();
+		if (lastRevision == null) return null;
+		return new StateWithRevision<>(lastRevision, loadSnapshot(lastRevision));
+	}
+
+	@Override
+	public StateWithRevision<R, T> load(T stateFrom, R revisionFrom) throws IOException {
+		R lastRevision = getLastSnapshotRevision();
+		if (Objects.equals(revisionFrom, lastRevision)) {
+			return new StateWithRevision<>(revisionFrom, stateFrom);
+		}
+
+		if (hasDiffsSupport()) {
+			R lastDiffRevision = getLastDiffRevision(revisionFrom);
+			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
+				T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
+				return new StateWithRevision<>(lastDiffRevision, state);
+			}
+		}
+
+		if (lastRevision == null) throw new IOException("State is empty");
+
+		T state = loadSnapshot(lastRevision);
+		return new StateWithRevision<>(lastRevision, state);
 	}
 
 	public FileNamingScheme<R> getFileNamingScheme() {
