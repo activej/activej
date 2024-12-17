@@ -28,7 +28,7 @@ import static io.activej.http.HttpHeaders.CACHE_CONTROL;
  */
 @FunctionalInterface
 public interface HttpExceptionFormatter {
-	String ACTIVEJ_VERSION = "6.0-SNAPSHOT";
+	String ACTIVEJ_VERSION = "6.0-rc2";
 
 	@Language("HTML")
 	String HTTP_ERROR_HTML = """

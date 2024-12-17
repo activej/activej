@@ -49,7 +49,7 @@
         <dependency>
             <groupId>io.activej</groupId>
             <artifactId>activej-launchers-http</artifactId>
-            <version>6.0-SNAPSHOT</version>
+            <version>6.0-rc2</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
