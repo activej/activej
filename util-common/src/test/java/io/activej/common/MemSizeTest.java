@@ -6,138 +6,146 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 public class MemSizeTest {
+
+	private void testFormat(long bytes, String expectedFormat) {
+		assertEquals(expectedFormat, MemSize.of(bytes).format());
+	}
+
+	private void testParsing(String input, long expectedBytes) {
+		assertEquals(expectedBytes, MemSize.valueOf(input).toLong());
+	}
+
 	@Test
 	public void testMemSize() {
-		long bytes;
+		// Formatting tests
+		testFormat(0, "0");
+		testFormat(512, "512");
+		testFormat(1024, "1Kb");
+		testFormat(2048, "2Kb");
+		testFormat(1025, "1025");
+		testFormat(1536, "1536");
 
-		bytes = 0;
-		assertEquals(bytes + "", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("0 b").toLong());
+		testFormat(1024L * 1024L, "1Mb");
+		testFormat(1024L * 1024L + 15, "1048591");
 
-		bytes = 512;
-		assertEquals("" + bytes, MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("512").toLong());
+		testFormat(1024L * 1024L * 10, "10Mb");
+		testFormat(1024L * 1024L * 10 - 1, "10485759");
 
-		bytes = 1024;
-		assertEquals("1Kb", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("1kb").toLong());
+		testFormat(1024L * 1024L * 1024L, "1Gb");
+		testFormat(1024L * 1024L * 1024L + 15, "1073741839");
 
-		bytes = 2048;
-		assertEquals("2Kb", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("1 k 1024b").toLong());
+		testFormat(1024L * 1024L * 1024L * 10, "10Gb");
+		testFormat(1024L * 1024L * 1024L * 10 - 1, "10737418239");
 
-		bytes = 1025;
-		assertEquals("" + bytes, MemSize.of(bytes).format());
+		testFormat(1024L * 1024L * 1024L * 1024L, "1Tb");
+		testFormat(1024L * 1024L * 1024L * 1024L + 15, "1099511627791");
 
-		bytes = 1024L * 1024L;
-		assertEquals("1Mb", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("1 mb").toLong());
-		assertEquals(bytes, MemSize.valueOf("1024kb").toLong());
+		testFormat(1024L * 1024L * 1024L * 1024L * 10, "10Tb");
+		testFormat(1024L * 1024L * 1024L * 1024L * 10 - 1, "10995116277759");
 
-		bytes = 1024L * 1024L + 15;
-		assertEquals("" + bytes, MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("1 m 15").toLong());
+		// Parsing tests
+		testParsing("0 b", 0);
+		testParsing("512", 512);
+		testParsing("1kb", 1024);
+		testParsing("1 k 1024b", 2048);
+		testParsing("1 mb", 1024L * 1024L);
+		testParsing("1024kb", 1024L * 1024L);
+		testParsing("1 m 15", 1024L * 1024L + 15);
+		testParsing("10mb", 1024L * 1024L * 10);
+		testParsing("9 m 1023kb 1023b", 1024L * 1024L * 10 - 1);
+		testParsing("1gb", 1024L * 1024L * 1024L);
+		testParsing("1g  15 b", 1024L * 1024L * 1024L + 15);
+		testParsing("10gb", 1024L * 1024L * 1024L * 10);
+		testParsing("9gb 1023 b 1023mb 1023kb", 1024L * 1024L * 1024L * 10 - 1);
+		testParsing("1 TB", 1024L * 1024L * 1024L * 1024L);
+		testParsing("1Tb 15B", 1024L * 1024L * 1024L * 1024L + 15);
+		testParsing("9tB 1024 G", 1024L * 1024L * 1024L * 1024L * 10);
+		testParsing("9 tb 1023 G 1023 mB 1023KB 1023B", 1024L * 1024L * 1024L * 1024L * 10 - 1);
+		testParsing("228", 228);
+		testParsing("228 1 kb", 1024 + 228);
+		testParsing("1.5kb", 1536);
+		testParsing("1.5 mB", 1024 * 1024 + 512 * 1024);
+		testParsing("1.5 Gb", 1024L * 1024L * 1024L + 512L * 1024L * 1024L);
+		testParsing("1.5 TB", 1024L * 1024L * 1024L * 1024L + 512L * 1024L * 1024L * 1024L);
 
-		bytes = 1024L * 1024L * 10;
-		assertEquals("10Mb", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("10mb").toLong());
-
-		bytes = 1024L * 1024L * 10 - 1;
-		assertEquals("" + bytes, MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("9 m 1023kb 1023b").toLong());
-
-		bytes = 1024L * 1024L * 1024L;
-		assertEquals("1Gb", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("1gb").toLong());
-
-		bytes = 1024L * 1024L * 1024L + 15;
-		assertEquals("" + bytes, MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("1g  15 b").toLong());
-
-		bytes = 1024L * 1024L * 1024L * 10;
-		assertEquals("10Gb", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("10gb").toLong());
-
-		bytes = 1024L * 1024L * 1024L * 10 - 1;
-		assertEquals("" + bytes, MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("9gb 1023 b 1023mb 1023kb").toLong());
-
-		bytes = 1024L * 1024L * 1024L * 1024L;
-		assertEquals("1Tb", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("1 TB").toLong());
-
-		bytes = 1024L * 1024L * 1024L * 1024L + 15;
-		assertEquals("" + bytes, MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("1Tb 15B").toLong());
-
-		bytes = 1024L * 1024L * 1024L * 1024L * 10;
-		assertEquals("10Tb", MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("9tB 1024 G").toLong());
-
-		bytes = 1024L * 1024L * 1024L * 1024L * 10 - 1;
-		assertEquals("" + bytes, MemSize.of(bytes).format());
-		assertEquals(bytes, MemSize.valueOf("9 tb 1023 G 1023 mB 1023KB 1023B").toLong());
-
-		assertEquals(228, MemSize.valueOf("228").toLong());
-		assertEquals(1024 + 228, MemSize.valueOf("228 1 kb").toLong());
-		assertEquals(1536, MemSize.valueOf("1.5kb").toLong());
-		assertEquals(1024 * 1024 + 512 * 1024, MemSize.valueOf("1.5 mB").toLong());
-		assertEquals(1024L * 1024L * 1024L + 512L * 1024L * 1024L, MemSize.valueOf("1.5 Gb").toLong());
-		assertEquals(1024L * 1024L * 1024L * 1024L + 512L * 1024L * 1024L * 1024L, MemSize.valueOf("1.5 TB").toLong());
+		// Testing toString()
 		assertEquals("2000000", MemSize.of(2000000L).toString());
 
-		//      2 tb                                3 gb                        228 mb                1 b
-		bytes = 1024L * 1024L * 1024L * 1024L * 2 + 1024L * 1024L * 1024L * 3 + 1024L * 1024L * 228 + 1;
-		assertEquals(MemSize.valueOf("2 Tb 3gb 1b 228mb").format(), MemSize.of(bytes).format());
+		// Combined parsing and formatting test
+		long bytes = 1024L * 1024L * 1024L * 1024L * 2 + 1024L * 1024L * 1024L * 3 + 1024L * 1024L * 228 + 1;
+		MemSize memSize = MemSize.valueOf("2 Tb 3gb 1b 228mb");
+		assertEquals(bytes, memSize.toLong());
+		assertEquals(MemSize.of(bytes).format(), memSize.format());
 
-		MemSize memSize = MemSize.kilobytes(1423998);
+		// Additional test case
+		memSize = MemSize.kilobytes(1423998);
 		assertEquals(1458173952L, memSize.toLong());
 		assertEquals("1423998Kb", StringFormatUtils.formatMemSize(memSize));
 	}
 
 	@Test
 	public void testHumanReadableFormat() {
-		assertEquals("0", StringFormatUtils.formatMemSizeHumanReadable(MemSize.bytes(0)));
-		assertEquals("1", StringFormatUtils.formatMemSizeHumanReadable(MemSize.bytes(1)));
+		Object[][] testCases = new Object[][]{
+			{MemSize.bytes(0), "0"},
+			{MemSize.bytes(1), "1"},
+			{MemSize.bytes(100), "100"},
+			{MemSize.kilobytes(1).map(x -> x - 1), "1023"},
+			{MemSize.kilobytes(1), "1024"},
+			{MemSize.kilobytes(1).map(x -> x + 1), "1025"},
+			{MemSize.kilobytes(10).map(x -> x - 1), "10239"},
+			{MemSize.kilobytes(10), "10Kb"},
+			{MemSize.kilobytes(10).map(x -> x + 1), "10Kb"},
+			{MemSize.megabytes(10).map(x -> x - 1), "10239Kb"},
+			{MemSize.megabytes(10), "10Mb"},
+			{MemSize.megabytes(10).map(x -> x + 1), "10Mb"},
+			{MemSize.terabytes(5).map(x -> x - 1), "5119Gb"},
+			{MemSize.terabytes(5), "5120Gb"},
+			{MemSize.terabytes(5).map(x -> x + 1), "5120Gb"},
+			{MemSize.terabytes(10 * 1024).map(x -> x - 1), "10239Tb"},
+			{MemSize.terabytes(10 * 1024), "10240Tb"},
+			{MemSize.terabytes(10 * 1024).map(x -> x + 1), "10240Tb"},
+		};
 
-		assertEquals("100", StringFormatUtils.formatMemSizeHumanReadable(MemSize.bytes(100)));
-
-		assertEquals("1023", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(1).map(x -> x - 1)));
-		assertEquals("1024", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(1)));
-		assertEquals("1025", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(1).map(x -> x + 1)));
-
-		assertEquals("10239", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(10).map(x -> x - 1)));
-		assertEquals("10Kb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(10)));
-		assertEquals("10Kb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(10).map(x -> x + 1)));
-
-		assertEquals("10239Kb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.megabytes(10).map(x -> x - 1)));
-		assertEquals("10Mb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.megabytes(10)));
-		assertEquals("10Mb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.megabytes(10).map(x -> x + 1)));
-
-		assertEquals("5119Gb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(5).map(x -> x - 1)));
-		assertEquals("5120Gb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(5)));
-		assertEquals("5120Gb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(5).map(x -> x + 1)));
-
-		assertEquals("10239Tb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(10 * 1024).map(x -> x - 1)));
-		assertEquals("10240Tb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(10 * 1024)));
-		assertEquals("10240Tb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(10 * 1024).map(x -> x + 1)));
+		for (Object[] testCase : testCases) {
+			MemSize memSize = (MemSize) testCase[0];
+			String expected = (String) testCase[1];
+			assertEquals(expected, StringFormatUtils.formatMemSizeHumanReadable(memSize));
+		}
 	}
 
 	@Test
 	public void testParsingExceptions() {
 		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("2.2b"));
 		assertEquals("MemSize unit bytes cannot be fractional", e.getMessage());
+
+		// Additional invalid inputs
+		assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("abc"));
+		assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("1.5.5kb"));
+		assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("1kb1mb"));
+		assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("-1kb"));
+		assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("1kb -1b"));
+		assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("1kb xyz"));
 	}
 
 	@Test
 	public void testLongOverflow() {
 		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> MemSize.kilobytes(Long.MAX_VALUE));
 		assertEquals("Resulting number of bytes exceeds Long.MAX_VALUE", e.getMessage());
+
+		// Additional test for overflow in parsing
+		assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("9223372036854775808b")); // Long.MAX_VALUE + 1
+		assertThrows(IllegalArgumentException.class, () -> MemSize.valueOf("1024Pb")); // Exceeds Long.MAX_VALUE
 	}
 
 	@Test
 	public void testMemSizeOfNegative() {
 		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> MemSize.kilobytes(-1));
 		assertEquals("Cannot create MemSize of negative value", e.getMessage());
+
+		// Additional negative values
+		assertThrows(IllegalArgumentException.class, () -> MemSize.bytes(-100));
+		assertThrows(IllegalArgumentException.class, () -> MemSize.megabytes(-5));
+		assertThrows(IllegalArgumentException.class, () -> MemSize.gigabytes(-10));
+		assertThrows(IllegalArgumentException.class, () -> MemSize.terabytes(-2));
 	}
 }
