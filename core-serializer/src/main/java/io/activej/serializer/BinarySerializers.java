@@ -1,217 +1,76 @@
-/*
- * Copyright (C) 2020 ActiveJ LLC.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package io.activej.serializer;
 
-import io.activej.serializer.util.BinaryOutputUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Supplier;
 
+/**
+ * A utility class providing {@link BinarySerializer} instances for types,
+ * as well as factory methods for creating serializers for optional values, nullable values,
+ * collections, maps, and enums.
+ */
 public final class BinarySerializers {
 
-	public static final BinarySerializer<Byte> BYTE_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public int encode(byte[] array, int pos, Byte item) {
-			return BinaryOutputUtils.writeByte(array, pos, item);
-		}
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Byte} values.
+	 */
+	public static final BinarySerializer<Byte> BYTE_SERIALIZER = new SimpleBinarySerializer<>(
+		BinaryOutput::writeByte,
+		BinaryInput::readByte
+	);
 
-		@Override
-		public Byte decode(byte[] array, int pos) {
-			return array[pos];
-		}
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Integer} values.
+	 */
+	public static final BinarySerializer<Integer> INT_SERIALIZER = new SimpleBinarySerializer<>(
+		BinaryOutput::writeInt,
+		BinaryInput::readInt
+	);
 
-		@Override
-		public void encode(BinaryOutput out, Byte item) throws ArrayIndexOutOfBoundsException {
-			out.writeByte(item);
-		}
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Long} values.
+	 */
+	public static final BinarySerializer<Long> LONG_SERIALIZER = new SimpleBinarySerializer<>(
+		BinaryOutput::writeLong,
+		BinaryInput::readLong
+	);
 
-		@Override
-		public Byte decode(BinaryInput in) {
-			return in.readByte();
-		}
-	};
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Float} values.
+	 */
+	public static final BinarySerializer<Float> FLOAT_SERIALIZER = new SimpleBinarySerializer<>(
+		BinaryOutput::writeFloat,
+		BinaryInput::readFloat
+	);
 
-	public static final BinarySerializer<Integer> INT_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public int encode(byte[] array, int pos, Integer item) {
-			array[pos] = (byte) (item >>> 24);
-			array[pos + 1] = (byte) (item >>> 16);
-			array[pos + 2] = (byte) (item >>> 8);
-			array[pos + 3] = (byte) (int) item;
-			return pos + 4;
-		}
+	/**
+	 * A {@link BinarySerializer} implementation for {@link Double} values.
+	 */
+	public static final BinarySerializer<Double> DOUBLE_SERIALIZER = new SimpleBinarySerializer<>(
+		BinaryOutput::writeDouble,
+		BinaryInput::readDouble
+	);
 
-		@Override
-		public Integer decode(byte[] array, int pos) {
-			return
-				(array[pos] & 0xFF) << 24 |
-				(array[pos + 1] & 0xFF) << 16 |
-				(array[pos + 2] & 0xFF) << 8 |
-				array[pos + 3] & 0xFF;
-		}
+	/**
+	 * A {@link BinarySerializer} implementation for UTF-8 encoded {@link String} values.
+	 */
+	public static final BinarySerializer<String> UTF8_SERIALIZER = new SimpleBinarySerializer<>(
+		BinaryOutput::writeUTF8,
+		BinaryInput::readUTF8
+	);
 
-		@Override
-		public void encode(BinaryOutput out, Integer item) throws ArrayIndexOutOfBoundsException {
-			out.writeInt(item);
-		}
+	/**
+	 * A {@link BinarySerializer} implementation for ISO-8859-1 encoded {@link String} values.
+	 */
+	public static final BinarySerializer<String> ISO_88591_SERIALIZER = new SimpleBinarySerializer<>(
+		BinaryOutput::writeIso88591,
+		BinaryInput::readIso88591
+	);
 
-		@Override
-		public Integer decode(BinaryInput in) {
-			return in.readInt();
-		}
-	};
-
-	public static final BinarySerializer<Long> LONG_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public int encode(byte[] array, int pos, Long item) {
-			int high = (int) (item >>> 32);
-			int low = (int) (long) item;
-			array[pos] = (byte) (high >>> 24);
-			array[pos + 1] = (byte) (high >>> 16);
-			array[pos + 2] = (byte) (high >>> 8);
-			array[pos + 3] = (byte) high;
-			array[pos + 4] = (byte) (low >>> 24);
-			array[pos + 5] = (byte) (low >>> 16);
-			array[pos + 6] = (byte) (low >>> 8);
-			array[pos + 7] = (byte) low;
-			return pos + 8;
-		}
-
-		@Override
-		public Long decode(byte[] array, int pos) {
-			return
-				(long) array[pos] << 56 |
-				(long) (array[pos + 1] & 0xFF) << 48 |
-				(long) (array[pos + 2] & 0xFF) << 40 |
-				(long) (array[pos + 3] & 0xFF) << 32 |
-				(long) (array[pos + 4] & 0xFF) << 24 |
-				(long) ((array[pos + 5] & 0xFF) << 16) |
-				(long) ((array[pos + 6] & 0xFF) << 8) |
-				(long) (array[pos + 7] & 0xFF);
-		}
-
-		@Override
-		public void encode(BinaryOutput out, Long item) throws ArrayIndexOutOfBoundsException {
-			out.writeLong(item);
-		}
-
-		@Override
-		public Long decode(BinaryInput in) {
-			return in.readLong();
-		}
-	};
-
-	public static final BinarySerializer<Float> FLOAT_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public int encode(byte[] array, int pos, Float item) {
-			int v = Float.floatToIntBits(item);
-			array[pos] = (byte) (v >>> 24);
-			array[pos + 1] = (byte) (v >>> 16);
-			array[pos + 2] = (byte) (v >>> 8);
-			array[pos + 3] = (byte) v;
-			return pos + 4;
-		}
-
-		@Override
-		public Float decode(byte[] array, int pos) {
-			return Float.intBitsToFloat(
-				((array[pos] & 0xFF) << 24) |
-				((array[pos + 1] & 0xFF) << 16) |
-				((array[pos + 2] & 0xFF) << 8) |
-				(array[pos + 3] & 0xFF));
-		}
-
-		@Override
-		public void encode(BinaryOutput out, Float item) throws ArrayIndexOutOfBoundsException {
-			out.writeFloat(item);
-		}
-
-		@Override
-		public Float decode(BinaryInput in) {
-			return in.readFloat();
-		}
-	};
-
-	public static final BinarySerializer<Double> DOUBLE_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public int encode(byte[] array, int pos, Double item) {
-			long value = Double.doubleToLongBits(item);
-			int high = (int) (value >>> 32);
-			int low = (int) value;
-			array[pos] = (byte) (high >>> 24);
-			array[pos + 1] = (byte) (high >>> 16);
-			array[pos + 2] = (byte) (high >>> 8);
-			array[pos + 3] = (byte) high;
-			array[pos + 4] = (byte) (low >>> 24);
-			array[pos + 5] = (byte) (low >>> 16);
-			array[pos + 6] = (byte) (low >>> 8);
-			array[pos + 7] = (byte) low;
-			return 8;
-		}
-
-		@Override
-		public Double decode(byte[] array, int pos) {
-			return Double.longBitsToDouble(
-				(long) array[pos] << 56 |
-				(long) (array[pos + 1] & 0xFF) << 48 |
-				(long) (array[pos + 2] & 0xFF) << 40 |
-				(long) (array[pos + 3] & 0xFF) << 32 |
-				(long) (array[pos + 4] & 0xFF) << 24 |
-				(long) (array[pos + 5] & 0xFF) << 16 |
-				(long) (array[pos + 6] & 0xFF) << 8 |
-				(long) (array[pos + 7] & 0xFF));
-		}
-
-		@Override
-		public void encode(BinaryOutput out, Double item) throws ArrayIndexOutOfBoundsException {
-			out.writeDouble(item);
-		}
-
-		@Override
-		public Double decode(BinaryInput in) {
-			return in.readDouble();
-		}
-	};
-
-	public static final BinarySerializer<String> UTF8_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public void encode(BinaryOutput out, String item) throws ArrayIndexOutOfBoundsException {
-			out.writeUTF8(item);
-		}
-
-		@Override
-		public String decode(BinaryInput in) {
-			return in.readUTF8();
-		}
-	};
-
-	public static final BinarySerializer<String> ISO_88591_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public void encode(BinaryOutput out, String item) throws ArrayIndexOutOfBoundsException {
-			out.writeIso88591(item);
-		}
-
-		@Override
-		public String decode(BinaryInput in) {
-			return in.readIso88591();
-		}
-	};
-
+	/**
+	 * A {@link BinarySerializer} implementation for {@code byte[]} arrays.
+	 */
 	public static final BinarySerializer<byte[]> BYTES_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, byte[] item) throws ArrayIndexOutOfBoundsException {
@@ -228,6 +87,13 @@ public final class BinarySerializers {
 		}
 	};
 
+	/**
+	 * Returns a {@link BinarySerializer} for {@link Optional} values of the given type.
+	 *
+	 * @param codec the {@link BinarySerializer} for the optional value type
+	 * @param <T> the type of the optional value
+	 * @return a {@link BinarySerializer} for {@link Optional} values
+	 */
 	public static <T> BinarySerializer<Optional<T>> ofOptional(BinarySerializer<T> codec) {
 		return new BinarySerializer<>() {
 			final BinarySerializer<T> nullable = ofNullable(codec);
@@ -244,33 +110,26 @@ public final class BinarySerializers {
 		};
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for nullable values of the given type.
+	 *
+	 * @param codec the {@link BinarySerializer} for the value type
+	 * @param <T> the type of the value
+	 * @return a {@link BinarySerializer} for nullable values
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> BinarySerializer<@Nullable T> ofNullable(BinarySerializer<T> codec) {
 		if (codec == UTF8_SERIALIZER) {
-			return (BinarySerializer<T>) new BinarySerializer<String>() {
-				@Override
-				public void encode(BinaryOutput out, String item) {
-					out.writeUTF8Nullable(item);
-				}
-
-				@Override
-				public String decode(BinaryInput in) {
-					return in.readUTF8Nullable();
-				}
-			};
+			return (BinarySerializer<T>) new SimpleNullableBinarySerializer<>(
+				BinaryOutput::writeUTF8Nullable,
+				BinaryInput::readUTF8Nullable
+			);
 		}
 		if (codec == ISO_88591_SERIALIZER) {
-			return (BinarySerializer<T>) new BinarySerializer<String>() {
-				@Override
-				public void encode(BinaryOutput out, String item) {
-					out.writeIso88591Nullable(item);
-				}
-
-				@Override
-				public String decode(BinaryInput in) {
-					return in.readIso88591Nullable();
-				}
-			};
+			return (BinarySerializer<T>) new SimpleNullableBinarySerializer<>(
+				BinaryOutput::writeIso88591Nullable,
+				BinaryInput::readIso88591Nullable
+			);
 		}
 		return new BinarySerializer<>() {
 			@Override
@@ -294,6 +153,15 @@ public final class BinarySerializers {
 		};
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for a {@link Collection} of the given element type.
+	 *
+	 * @param element the {@link BinarySerializer} for the element type
+	 * @param constructor a supplier that creates an empty collection
+	 * @param <E> the type of the elements
+	 * @param <C> the type of the collection
+	 * @return a {@link BinarySerializer} for a collection of elements
+	 */
 	private static <E, C extends Collection<E>> BinarySerializer<C> ofCollection(BinarySerializer<E> element, Supplier<C> constructor) {
 		return new BinarySerializer<>() {
 			@Override
@@ -316,14 +184,37 @@ public final class BinarySerializers {
 		};
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for a {@link List} of the given element type.
+	 *
+	 * @param element the {@link BinarySerializer} for the list element type
+	 * @param <E> the type of the list elements
+	 * @return a {@link BinarySerializer} for a list of elements
+	 */
 	public static <E> BinarySerializer<List<E>> ofList(BinarySerializer<E> element) {
 		return ofCollection(element, ArrayList::new);
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for a {@link Set} of the given element type.
+	 *
+	 * @param element the {@link BinarySerializer} for the set element type
+	 * @param <E> the type of the set elements
+	 * @return a {@link BinarySerializer} for a set of elements
+	 */
 	public static <E> BinarySerializer<Set<E>> ofSet(BinarySerializer<E> element) {
 		return ofCollection(element, LinkedHashSet::new);
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for a {@link Map} with keys and values of the given types.
+	 *
+	 * @param key the {@link BinarySerializer} for the key type
+	 * @param value the {@link BinarySerializer} for the value type
+	 * @param <K> the type of the map keys
+	 * @param <V> the type of the map values
+	 * @return a {@link BinarySerializer} for a map of key-value pairs
+	 */
 	public static <K, V> BinarySerializer<Map<K, V>> ofMap(BinarySerializer<K> key, BinarySerializer<V> value) {
 		return new BinarySerializer<>() {
 			@Override
@@ -347,7 +238,15 @@ public final class BinarySerializers {
 		};
 	}
 
+	/**
+	 * Returns a {@link BinarySerializer} for the given {@link Enum} type.
+	 *
+	 * @param enumType the class of the enum type
+	 * @param <E> the enum type
+	 * @return a {@link BinarySerializer} for the enum type
+	 */
 	public static <E extends Enum<E>> BinarySerializer<E> ofEnum(Class<E> enumType) {
+		E[] constants = enumType.getEnumConstants();
 		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, E item) {
@@ -356,9 +255,64 @@ public final class BinarySerializers {
 
 			@Override
 			public E decode(BinaryInput in) throws CorruptedDataException {
-				return enumType.getEnumConstants()[in.readVarInt()];
+				int ordinal = in.readVarInt();
+				if (ordinal < 0 || ordinal >= constants.length) {
+					throw new CorruptedDataException("Invalid enum ordinal: " + ordinal);
+				}
+				return constants[ordinal];
 			}
 		};
+	}
+
+	// Helper classes to reduce redundancy
+	private static class SimpleBinarySerializer<T> implements BinarySerializer<T> {
+		private final Encoder<T> encoder;
+		private final Decoder<T> decoder;
+
+		SimpleBinarySerializer(Encoder<T> encoder, Decoder<T> decoder) {
+			this.encoder = encoder;
+			this.decoder = decoder;
+		}
+
+		@Override
+		public void encode(BinaryOutput out, T item) throws ArrayIndexOutOfBoundsException {
+			encoder.encode(out, item);
+		}
+
+		@Override
+		public T decode(BinaryInput in) {
+			return decoder.decode(in);
+		}
+	}
+
+	private static class SimpleNullableBinarySerializer<T> implements BinarySerializer<@Nullable T> {
+		private final Encoder<@Nullable T> encoder;
+		private final Decoder<@Nullable T> decoder;
+
+		SimpleNullableBinarySerializer(Encoder<@Nullable T> encoder, Decoder<@Nullable T> decoder) {
+			this.encoder = encoder;
+			this.decoder = decoder;
+		}
+
+		@Override
+		public void encode(BinaryOutput out, @Nullable T item) throws ArrayIndexOutOfBoundsException {
+			encoder.encode(out, item);
+		}
+
+		@Override
+		public @Nullable T decode(BinaryInput in) {
+			return decoder.decode(in);
+		}
+	}
+
+	@FunctionalInterface
+	private interface Encoder<T> {
+		void encode(BinaryOutput out, T item) throws ArrayIndexOutOfBoundsException;
+	}
+
+	@FunctionalInterface
+	private interface Decoder<T> {
+		T decode(BinaryInput in);
 	}
 
 }
