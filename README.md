@@ -65,7 +65,7 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       .streamTo(StreamConsumers.ofConsumer(System.out::println));
   ```
 
-* **HTTP** - High-performance HTTP server and client with WebSocket support. It can be used as a simple web server or as an
+* **HTTP** - High-performance HTTP 1.1 server and client with WebSocket support. It can be used as a simple web server or as an
   application server. Alternative to other conventional HTTP clients and servers. ([HTTP](https://activej.io/http))
 
   ```java
