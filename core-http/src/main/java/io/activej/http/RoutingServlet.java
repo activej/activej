@@ -174,20 +174,27 @@ public final class RoutingServlet extends AbstractReactive
 		if (urlPart.isEmpty()) {
 			AsyncServlet servlet = getOrDefault(servlets, ordinal);
 			if (servlet != null) {
+				if (request.routePattern() == null) {
+					request.setRoutePattern("/");
+				}
 				return servlet.serve(request);
 			}
 		} else {
 			int position = request.getPos();
+			String savedRoutePattern = request.routePattern();
 			RoutingServlet transit = routes.get(urlPart);
 			if (transit != null) {
+				request.appendRoutePattern("/" + urlPart);
 				Promise<HttpResponse> result = transit.tryServe(request);
 				if (result != null) {
 					return result;
 				}
 				request.setPos(position);
+				request.setRoutePattern(savedRoutePattern);
 			}
 			for (Entry<String, RoutingServlet> entry : parameters.entrySet()) {
 				String key = entry.getKey();
+				request.appendRoutePattern("/{" + key + "}");
 				request.putPathParameter(key, urlPart);
 				Promise<HttpResponse> result = entry.getValue().tryServe(request);
 				if (result != null) {
@@ -195,12 +202,14 @@ public final class RoutingServlet extends AbstractReactive
 				}
 				request.removePathParameter(key);
 				request.setPos(position);
+				request.setRoutePattern(savedRoutePattern);
 			}
 		}
 
 		AsyncServlet servlet = getOrDefault(fallbackServlets, ordinal);
 		if (servlet != null) {
 			request.setPos(introPosition);
+			request.appendRoutePattern("/*");
 			return servlet.serve(request);
 		}
 		return null;

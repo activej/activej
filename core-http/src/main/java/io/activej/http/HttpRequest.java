@@ -58,6 +58,7 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 	private final UrlParser url;
 	private final HttpServerConnection connection;
 	private InetAddress remoteAddress;
+	private String routePattern;
 	private Map<String, String> pathParameters;
 	private Map<String, String> queryParameters;
 	private Map<String, String> postParameters;
@@ -151,6 +152,25 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 	public String getPath() {
 		if (CHECKS) checkState(!isRecycled());
 		return url.getPath();
+	}
+
+	public String getRoutePattern() {
+		if (CHECKS) checkState(!isRecycled());
+		return checkNotNull(routePattern, "Route pattern not set - was this request routed through RoutingServlet?");
+	}
+
+	@Nullable String routePattern() {
+		return routePattern;
+	}
+
+	void setRoutePattern(@Nullable String routePattern) {
+		if (CHECKS) checkState(!isRecycled());
+		this.routePattern = routePattern;
+	}
+
+	void appendRoutePattern(String pathSegment) {
+		if (CHECKS) checkState(!isRecycled());
+		this.routePattern = this.routePattern == null ? pathSegment : this.routePattern + pathSegment;
 	}
 
 	public String getPathAndQuery() {
