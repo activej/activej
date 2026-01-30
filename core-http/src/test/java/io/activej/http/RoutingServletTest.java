@@ -500,4 +500,37 @@ public final class RoutingServletTest {
 		HttpError e = assertThrows(HttpError.class, () -> router.serve(HttpRequest.get("http://example.com/a%2").build()));
 		assertEquals("HTTP code 400: Path contains bad percent encoding", e.getMessage());
 	}
+
+	@Test
+	public void testRoutePattern() throws Exception {
+		RoutingServlet servlet = RoutingServlet.builder(getCurrentReactor())
+			.with(GET, "/user/:id", request -> {
+				ByteBuf body = wrapUtf8(request.getRoutePattern());
+				return HttpResponse.ofCode(200).withBody(body).toPromise();
+			})
+			.with(GET, "/orders/:orderId/items/:itemId", request -> {
+				ByteBuf body = wrapUtf8(request.getRoutePattern());
+				return HttpResponse.ofCode(200).withBody(body).toPromise();
+			})
+			.with(GET, "/static/path", request -> {
+				ByteBuf body = wrapUtf8(request.getRoutePattern());
+				return HttpResponse.ofCode(200).withBody(body).toPromise();
+			})
+			.with(GET, "/wildcard/*", request -> {
+				ByteBuf body = wrapUtf8(request.getRoutePattern());
+				return HttpResponse.ofCode(200).withBody(body).toPromise();
+			})
+			.with(GET, "/", request -> {
+				ByteBuf body = wrapUtf8(request.getRoutePattern());
+				return HttpResponse.ofCode(200).withBody(body).toPromise();
+			})
+			.build();
+
+		check(servlet.serve(HttpRequest.get(TEMPLATE + "/user/123").build()), "/user/{id}", 200);
+		check(servlet.serve(HttpRequest.get(TEMPLATE + "/user/456").build()), "/user/{id}", 200);
+		check(servlet.serve(HttpRequest.get(TEMPLATE + "/orders/789/items/abc").build()), "/orders/{orderId}/items/{itemId}", 200);
+		check(servlet.serve(HttpRequest.get(TEMPLATE + "/static/path").build()), "/static/path", 200);
+		check(servlet.serve(HttpRequest.get(TEMPLATE + "/wildcard/anything/here").build()), "/wildcard/*", 200);
+		check(servlet.serve(HttpRequest.get(TEMPLATE + "/").build()), "/", 200);
+	}
 }
