@@ -142,14 +142,26 @@ public final class BlockingSocketServer {
 	}
 
 	public void stop() throws Exception {
-		for (ServerSocket serverSocket : serverSockets) {
-			Thread acceptThread = acceptThreads.get(serverSocket);
-			acceptThread.interrupt();
-			serverSocket.close();
-		}
-		for (Thread acceptThread : acceptThreads.values()) {
-			acceptThread.join();
-		}
-		serverSockets.clear();
-	}
+        IOException first = null;
+        for (ServerSocket serverSocket : serverSockets) {
+            Thread acceptThread = acceptThreads.get(serverSocket);
+            acceptThread.interrupt();
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                if (first == null) {
+                    first = e;
+                } else {
+                    first.addSuppressed(e);
+                }
+            }
+        }
+        for (Thread acceptThread : acceptThreads.values()) {
+            acceptThread.join();
+        }
+        serverSockets.clear();
+        if (first != null) {
+            throw first;
+        }
+    }
 }
